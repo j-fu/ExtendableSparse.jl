@@ -32,6 +32,9 @@ ExtendableSparseMatrix(::Type{Tv}, ::Type{Ti}, m::Integer, n::Integer) where {Tv
 
 
 
+
+
+
 """
 $(TYPEDSIGNATURES)
 
@@ -43,16 +46,19 @@ function findindex(S::SparseMatrixCSC{T}, i::Integer, j::Integer) where T
     r1 = Int(S.colptr[j])
     r2 = Int(S.colptr[j+1]-1)
     if r1>r2
-        return 0
+        return zero(T)
     end
 
     # See sparsematrix.jl
     r1 = searchsortedfirst(S.rowval, i, r1, r2, Base.Forward)
-    if (r1>length(S.rowval) ||S.rowval[r1] != i)
-        return 0
+    if (r1>r2 ||S.rowval[r1] != i)
+        return zero(T)
     end
     return r1
 end
+
+
+
 
 
 """
@@ -70,6 +76,10 @@ function Base.setindex!(M::ExtendableSparseMatrix, v, i::Integer, j::Integer)
     end
 end
 
+
+
+
+
 """
 $(TYPEDSIGNATURES)
 
@@ -86,6 +96,10 @@ function Base.getindex(M::ExtendableSparseMatrix,i::Integer, j::Integer)
 end
 
 
+
+
+
+
 """
 $(TYPEDSIGNATURES)
 
@@ -94,12 +108,21 @@ Matrix size.
 Base.size(E::ExtendableSparseMatrix) = (E.cscmatrix.m, E.cscmatrix.n)
 
 
+
+
+
+
 """
 $(TYPEDSIGNATURES)
 
 Number of nonzeros.
 """
 SparseArrays.nnz(E::ExtendableSparseMatrix)=(nnz(E.cscmatrix)+nnz(E.extmatrix))
+
+
+
+
+
 
 
 
@@ -112,7 +135,6 @@ end
 
 # Comparison method for sorting
 Base.isless(x::ColEntry{Tv, Ti},y::ColEntry{Tv, Ti}) where {Tv,Ti<:Integer} = (x.i<y.i)
-
 
 
 function _splice(E::SparseMatrixExtension{Tv,Ti},S::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
@@ -130,7 +152,7 @@ function _splice(E::SparseMatrixExtension{Tv,Ti},S::SparseMatrixCSC{Tv,Ti}) wher
     rowval=Vector{Ti}(undef,xnnz)
     nzval=Vector{Tv}(undef,xnnz)
 
-    # Detect the maximum column lenght of E
+    # Detect the maximum column length of E
     E_maxcol=0
     for j=1:S.n
         lcol=0
@@ -143,7 +165,7 @@ function _splice(E::SparseMatrixExtension{Tv,Ti},S::SparseMatrixCSC{Tv,Ti}) wher
     end
 
     # pre-allocate column 
-    col=[ColEntry{Tv,Ti}(0,0) for i=1:E_maxcol+1]
+    col=[ColEntry{Tv,Ti}(0,0) for i=1:E_maxcol]
 
 
     
@@ -199,6 +221,9 @@ function _splice(E::SparseMatrixExtension{Tv,Ti},S::SparseMatrixCSC{Tv,Ti}) wher
 end
 
 
+
+
+
 """
 $(TYPEDSIGNATURES)
 
@@ -215,6 +240,9 @@ end
 
 
 
+
+
+
 """
 $(TYPEDSIGNATURES)
 
@@ -224,6 +252,9 @@ function SparseArrays.nonzeros(E::ExtendableSparseMatrix)
     @inbounds flush!(E)
     return nonzeros(E.cscmatrix)
 end
+
+
+
 
 """
 $(TYPEDSIGNATURES)
@@ -236,6 +267,9 @@ function SparseArrays.rowvals(E::ExtendableSparseMatrix)
 end
 
 
+
+
+
 """
 $(TYPEDSIGNATURES)
 
@@ -245,6 +279,9 @@ function xcolptrs(E::ExtendableSparseMatrix)
     @inbounds flush!(E)
     return E.cscmatrix.colptr
 end
+
+
+
 
 """
 $(TYPEDSIGNATURES)
@@ -257,6 +294,16 @@ function colptrs(E::ExtendableSparseMatrix)
 end
 
 
+"""
+$(TYPEDSIGNATURES)
+
+Flush and delegate to cscmatrix.
+"""
+function SparseArrays.findnz(E::ExtendableSparseMatrix)
+    flush!(E)
+    return findnz(E.cscmatrix)
+end
+
 
 """
 $(TYPEDSIGNATURES)
@@ -268,6 +315,8 @@ function LinearAlgebra.lu(E::ExtendableSparseMatrix)
     @inbounds flush!(E)
     return LinearAlgebra.lu(E.cscmatrix)
 end
+
+
 
 
 """
