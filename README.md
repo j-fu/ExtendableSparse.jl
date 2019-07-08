@@ -1,8 +1,9 @@
 # ExtendableSparse
 
-Sparse matrix class which allows cheaper assembly by using
-a different data structure for extension.
+Sparse matrix class with efficient assembly.
 
-Still work in progress.
+While SparseMatrixCSC is extendable as well, extending it is expensive for larger problems,
+due to the implementation of extension without an intermediate data structure.
+
 
 
