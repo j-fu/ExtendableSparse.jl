@@ -40,7 +40,7 @@ end
 
 
 function check(;m=1000,n=1000,nnz=5000,nsplice=1)
-    mat=ExtendableSparseMatrix(Float64,Int64,m,n)
+    mat=ExtendableSparseMatrix{Float64,Int64}(m,n)
     return randtest!(mat,nnz,nsplice)
 end
 
@@ -53,11 +53,11 @@ function benchmark(;n=10000,m=10000,nnz=50000)
     @time sprand!(mat,nnz)
     
     println("SparseMatrixExtension:")
-    extmat=SparseMatrixExtension(Float64,Int64,m,n)
+    extmat=SparseMatrixExtension{Float64,Int64}(m,n)
     @time sprand!(extmat,nnz)
     
     println("ExtendableSparseMatrix:")
-    xextmat=ExtendableSparseMatrix(Float64,Int64,m,n)
+    xextmat=ExtendableSparseMatrix{Float64,Int64}(m,n)
     @time begin
         sprand!(xextmat,nnz)
         @inbounds flush!(xextmat)

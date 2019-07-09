@@ -56,7 +56,7 @@ $(TYPEDSIGNATURES)
     
 Constructor of empty extension
 """
-SparseMatrixExtension(::Type{Tv}, ::Type{Ti}, m::Integer, n::Integer)  where {Tv,Ti<:Integer} =    SparseMatrixExtension{Tv,Ti}(m,n,0,zeros(Ti,n),zeros(Ti,n),zeros(Tv,n))
+SparseMatrixExtension{Tv,Ti}(m::Integer, n::Integer)  where {Tv,Ti<:Integer} =    SparseMatrixExtension{Tv,Ti}(m,n,0,zeros(Ti,n),zeros(Ti,n),zeros(Tv,n))
 
 
 

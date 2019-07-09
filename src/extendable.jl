@@ -28,7 +28,7 @@ Create empty ExtendablSparseMatrix.
 This is a pendant to spzeros.
 
 """
-ExtendableSparseMatrix(::Type{Tv}, ::Type{Ti}, m::Integer, n::Integer) where {Tv,Ti<:Integer}=ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),SparseMatrixExtension(Tv, Ti,m,n))
+ExtendableSparseMatrix{Tv,Ti}(m::Integer, n::Integer) where {Tv,Ti<:Integer}=ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),SparseMatrixExtension{Tv, Ti}(m,n))
 
 
 
@@ -233,7 +233,7 @@ and reset extension.
 function flush!(M::ExtendableSparseMatrix{Tv,Ti}) where {Tv, Ti<:Integer}
     if nnz(M.extmatrix)>0
         M.cscmatrix=_splice(M.extmatrix,M.cscmatrix)
-        M.extmatrix=SparseMatrixExtension(Tv,Ti,M.cscmatrix.m, M.cscmatrix.n)
+        M.extmatrix=SparseMatrixExtension{Tv,Ti}(M.cscmatrix.m, M.cscmatrix.n)
     end
     return M
 end
