@@ -17,3 +17,4 @@ test = ["Test","Printf"]
 
 [compat]
 julia = "1"
+DocStringExtensions >= "0.8.0"
