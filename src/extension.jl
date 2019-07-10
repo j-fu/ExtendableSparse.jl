@@ -144,7 +144,6 @@ $(TYPEDSIGNATURES)
 
 Return tuple containing size of the matrix.
 """
-
 Base.size(E::SparseMatrixExtension) = (E.m, E.n)
 
 
