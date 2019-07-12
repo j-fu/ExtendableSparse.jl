@@ -26,14 +26,6 @@ notifications:
 
   
 after_success: skip
-#  - julia -e 'using Pkg; Pkg.add("Documenter");'
-#  - julia -e 'import ExtendableSparse; cd(dirname(dirname(pathof(ExtendableSparse)))); include(joinpath("docs", "make.jl"))'
-
-
-# - julia -e 'using Pkg; Pkg.add("Documenter"); Pkg.add("Coverage");'
-# - julia -e 'import Triangle; cd(dirname(dirname(pathof(Triangle)))); include(joinpath("docs", "make.jl"))'
-# - julia -e 'using Coverage; import Triangle; cd(dirname(dirname(pathof(Triangle)))); Codecov.submit(process_folder())' 
-
 
 jobs:
   include:
@@ -41,7 +33,7 @@ jobs:
       julia: 1.0
       os: linux
       script:
-        - julia --project=docs/ -e 'using Pkg; Pkg.update(); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+        - julia --project=docs/ -e 'using Pkg; Pkg.update(); Pkg.add("Documenter"); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
         - julia --project=docs/ docs/make.jl
       after_success: skip
 
