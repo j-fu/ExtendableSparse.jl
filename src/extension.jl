@@ -7,6 +7,7 @@ Struct to hold extension data of sparse matrix.
 $(TYPEDFIELDS)
 """
 mutable struct SparseMatrixExtension{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv,Ti}
+
     """
     Number of rows
     """
@@ -17,6 +18,7 @@ mutable struct SparseMatrixExtension{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv,
     Number of columns
     """
     n::Ti
+
 
     """
     Number of nonzeros
@@ -32,6 +34,7 @@ mutable struct SparseMatrixExtension{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv,
     starts at index 1<=j<=n for each column j.
     """
     colptr::Vector{Ti}      
+
 
     """
     Row numbers. For each index it contains the zero (initial state)
@@ -50,6 +53,7 @@ mutable struct SparseMatrixExtension{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv,
     """
     nzval::Vector{Tv}       
 end
+
 
 """
 $(TYPEDSIGNATURES)

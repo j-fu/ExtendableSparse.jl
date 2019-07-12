@@ -324,7 +324,6 @@ $(TYPEDSIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
-
 function LinearAlgebra.mul!(r::AbstractArray{Tv,1},
                             E::ExtendableSparse.ExtendableSparseMatrix{Tv,Ti},
                             x::AbstractArray{Tv,1}) where{Tv,Ti<:Integer}
