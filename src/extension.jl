@@ -1,4 +1,4 @@
-##################################################################
+
 """
 $(TYPEDEF)
 
@@ -25,6 +25,7 @@ mutable struct SparseMatrixExtension{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv,
     """
     nnz::Ti
 
+
     """
     Linked list of column entries. Initial length is n,
     it grows with each new entry.
@@ -40,7 +41,7 @@ mutable struct SparseMatrixExtension{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv,
     Row numbers. For each index it contains the zero (initial state)
     or the row numbers corresponding to the column entry list in colptr.
 
-     Initial length is n,
+    Initial length is n,
     it grows with each new entry.
     """
     rowval::Vector{Ti}
@@ -55,6 +56,7 @@ mutable struct SparseMatrixExtension{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv,
 end
 
 
+
 """
 $(TYPEDSIGNATURES)
     
@@ -66,7 +68,7 @@ SparseMatrixExtension{Tv,Ti}(m::Integer, n::Integer)  where {Tv,Ti<:Integer} =  
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
     
 Return value stored for entry or zero if not found
 """
@@ -90,7 +92,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
     
 Update value of existing entry, otherwise extend matrix.
 """
@@ -168,3 +170,4 @@ used in thest methods
 function flush!(M::SparseMatrixExtension{Tv, Ti}) where{Tv, Ti}
     return M
 end
+

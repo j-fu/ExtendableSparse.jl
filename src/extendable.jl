@@ -5,7 +5,6 @@ $(TYPEDEF)
 Extendable sparse matrix. A nonzero  entry of this matrix is contained
 either in cscmatrix, or in extmatrix, never in both.
 
-
 $(TYPEDFIELDS)
 """
 mutable struct ExtendableSparseMatrix{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv,Ti}
@@ -20,19 +19,15 @@ mutable struct ExtendableSparseMatrix{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv
     extmatrix::SparseMatrixExtension{Tv,Ti}
 end
 
+
 """
 $(TYPEDSIGNATURES)
 
 Create empty ExtendablSparseMatrix.
 
 This is a pendant to spzeros.
-
 """
 ExtendableSparseMatrix{Tv,Ti}(m::Integer, n::Integer) where {Tv,Ti<:Integer}=ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),SparseMatrixExtension{Tv, Ti}(m,n))
-
-
-
-
 
 
 """
@@ -59,10 +54,8 @@ end
 
 
 
-
-
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Find index in CSC matrix and set value if it exists. Otherwise,
 set index in extension.
@@ -81,7 +74,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Find index in CSC matrix and return value, if it exists.
 Otherwise, return value from extension.
@@ -95,34 +88,20 @@ function Base.getindex(M::ExtendableSparseMatrix,i::Integer, j::Integer)
     end
 end
 
-
-
-
-
-
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
-Matrix size.
+Size of ExtendableSparseMatrix.
 """
 Base.size(E::ExtendableSparseMatrix) = (E.cscmatrix.m, E.cscmatrix.n)
 
 
-
-
-
-
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
-Number of nonzeros.
+Number of nonzeros of ExtendableSparseMatrix.
 """
 SparseArrays.nnz(E::ExtendableSparseMatrix)=(nnz(E.cscmatrix)+nnz(E.extmatrix))
-
-
-
-
-
 
 
 
@@ -221,9 +200,6 @@ function _splice(E::SparseMatrixExtension{Tv,Ti},S::SparseMatrixCSC{Tv,Ti}) wher
 end
 
 
-
-
-
 """
 $(TYPEDSIGNATURES)
 
@@ -240,11 +216,8 @@ end
 
 
 
-
-
-
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -257,7 +230,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -267,11 +240,8 @@ function SparseArrays.rowvals(E::ExtendableSparseMatrix)
 end
 
 
-
-
-
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -281,10 +251,8 @@ function xcolptrs(E::ExtendableSparseMatrix)
 end
 
 
-
-
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -295,7 +263,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -320,7 +288,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Flush and delegate to cscmatrix.
 """

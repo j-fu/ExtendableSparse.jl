@@ -18,9 +18,6 @@ Order = [:constant]
 
 ```@autodocs
 Modules = [ExtendableSparse]
-Pages = ["extension.jl","extendable.jl","sprand.md"]
+Pages = ["extension.jl","extendable.jl", "sprand.jl"]
 Order = [:function]
 ```
-
-
-
