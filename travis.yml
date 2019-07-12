@@ -1,0 +1,35 @@
+language: julia
+
+os:
+  - linux
+  - osx
+
+branches:
+  only:
+  - master
+
+addons:
+  apt:
+    update: true
+
+julia:
+  - 1.0
+  - 1.1
+#  - nightly
+
+# matrix:
+#   allow_failures:
+#   - julia: nightly
+
+notifications:
+  email: false
+
+  
+after_success:
+  - julia -e 'using Pkg; Pkg.add("Documenter");'
+  - julia -e 'import ExtendableSparse; cd(dirname(dirname(pathof(ExtendableSparse)))); include(joinpath("docs", "make.jl"))'
+
+
+# - julia -e 'using Pkg; Pkg.add("Documenter"); Pkg.add("Coverage");'
+# - julia -e 'import Triangle; cd(dirname(dirname(pathof(Triangle)))); include(joinpath("docs", "make.jl"))'
+# - julia -e 'using Coverage; import Triangle; cd(dirname(dirname(pathof(Triangle)))); Codecov.submit(process_folder())' 
