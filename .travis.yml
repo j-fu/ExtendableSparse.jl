@@ -22,7 +22,7 @@ julia:
 #   - julia: nightly
 
 notifications:
-  email: false
+  email: true
 
   
 after_success: skip
