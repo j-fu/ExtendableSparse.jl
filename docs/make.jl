@@ -13,5 +13,6 @@ makedocs(sitename="ExtendableSparse.jl",
          ])
 
 deploydocs(
-    repo = "github.com/j-fu/ExtendableSparse.jl.git"
+    repo = "github.com/j-fu/ExtendableSparse.jl.git",
+    versions = ["stable" => "v^", "v#.#", devurl => devurl]
 )
