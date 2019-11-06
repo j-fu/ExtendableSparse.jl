@@ -2,4 +2,5 @@ QUARRY
 .project.jl
 docs/build
 *~
+./Manifest.toml
 
