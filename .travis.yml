@@ -35,7 +35,6 @@ jobs:
       julia: 1.2
       os: linux
       script:
-#        - julia --project=docs/ -e 'using Pkg; Pkg.update(); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate();'
         - julia --project=docs/ -e 'using Pkg; Pkg.update(); Pkg.instantiate();'
         - julia --project=docs/ docs/make.jl
       after_success: skip

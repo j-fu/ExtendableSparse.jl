@@ -3,6 +3,7 @@ using Documenter, ExtendableSparse
 
 makedocs(sitename="ExtendableSparse.jl",
          modules = [ExtendableSparse],
+         doctest = false,
          clean = true,
          authors = "J. Fuhrmann",
          repo="https://github.com/j-fu/ExtendableSparse.jl",
