@@ -107,7 +107,7 @@ SparseArrays.nnz(E::ExtendableSparseMatrix)=(nnz(E.cscmatrix)+nnz(E.extmatrix))
 
 # Struct holding pair of value and row
 # number, for sorting
-mutable struct ColEntry{Tv,Ti<:Integer}
+struct ColEntry{Tv,Ti<:Integer}
     i::Ti
     v::Tv
 end
@@ -158,8 +158,7 @@ function _splice(E::SparseMatrixExtension{Tv,Ti},S::SparseMatrixCSC{Tv,Ti}) wher
         while k>0
             if E.rowval[k]>0
                 lxcol+=1
-                col[lxcol].i=E.rowval[k]
-                col[lxcol].v=E.nzval[k]
+                col[lxcol]=ColEntry(E.rowval[k],E.nzval[k])
             end
             k=E.colptr[k]
         end
