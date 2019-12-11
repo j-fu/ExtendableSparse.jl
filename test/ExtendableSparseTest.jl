@@ -62,8 +62,6 @@ function benchmark(;n=10000,m=10000,nnz=50000)
         sprand!(xextmat,nnz)
         @inbounds flush!(xextmat)
     end
-    return
-    b
 end
 
 

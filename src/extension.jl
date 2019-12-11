@@ -105,10 +105,6 @@ function Base.setindex!(E::SparseMatrixExtension{Tv,Ti}, _v, _i::Integer, _j::In
         throw(BoundsError(E, (i,j)))
     end
     
-    if iszero(v)
-        return E
-    end
-
     # Set the first  column entry if it was not yet set.
     if E.rowval[j]==0
         E.rowval[j]=i       
