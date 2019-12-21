@@ -16,7 +16,7 @@ mutable struct ExtendableSparseMatrix{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv
     """
     Intermediate structure holding data of extension
     """
-    extmatrix::SparseMatrixExtension{Tv,Ti}
+    extmatrix::Union{SparseMatrixExtension{Tv,Ti},Nothing}
 end
 
 
@@ -27,7 +27,7 @@ Create empty ExtendablSparseMatrix.
 
 This is a pendant to spzeros.
 """
-ExtendableSparseMatrix{Tv,Ti}(m::Integer, n::Integer) where {Tv,Ti<:Integer}=ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),SparseMatrixExtension{Tv, Ti}(m,n))
+ExtendableSparseMatrix{Tv,Ti}(m::Integer, n::Integer) where{Tv,Ti<:Integer}=ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),nothing)
 
 
 """
@@ -60,11 +60,14 @@ $(SIGNATURES)
 Find index in CSC matrix and set value if it exists. Otherwise,
 set index in extension.
 """
-function Base.setindex!(M::ExtendableSparseMatrix, v, i::Integer, j::Integer)
+function Base.setindex!(M::ExtendableSparseMatrix{Tv,Ti}, v, i::Integer, j::Integer) where{Tv,Ti<:Integer}
     k=findindex(M.cscmatrix,i,j)
     if k>0
         M.cscmatrix.nzval[k]=v
     else
+        if M.extmatrix==nothing
+            M.extmatrix=SparseMatrixExtension{Tv, Ti}(M.cscmatrix.m, M.cscmatrix.n)
+        end
         M.extmatrix[i,j]=v
     end
 end
@@ -79,10 +82,12 @@ $(SIGNATURES)
 Find index in CSC matrix and return value, if it exists.
 Otherwise, return value from extension.
 """
-function Base.getindex(M::ExtendableSparseMatrix,i::Integer, j::Integer)
+function Base.getindex(M::ExtendableSparseMatrix{Tv,Ti},i::Integer, j::Integer) where{Tv,Ti<:Integer}
     k=findindex(M.cscmatrix,i,j)
     if k>0
         return M.cscmatrix.nzval[k]
+    elseif M.extmatrix==nothing
+        return zero(Tv)
     else
         return M.extmatrix[i,j]
     end
@@ -101,7 +106,13 @@ $(SIGNATURES)
 
 Number of nonzeros of ExtendableSparseMatrix.
 """
-SparseArrays.nnz(E::ExtendableSparseMatrix)=(nnz(E.cscmatrix)+nnz(E.extmatrix))
+function SparseArrays.nnz(E::ExtendableSparseMatrix)
+    ennz=0
+    if E.extmatrix!=nothing
+        ennz=nnz(E.extmatrix)
+    end
+    return nnz(E.cscmatrix)+ennz
+end
 
 
 
@@ -206,9 +217,9 @@ If there are new entries in extension, create new CSC matrix
 and reset extension.
 """
 function flush!(M::ExtendableSparseMatrix{Tv,Ti}) where {Tv, Ti<:Integer}
-    if nnz(M.extmatrix)>0
+    if M.extmatrix!=nothing && nnz(M.extmatrix)>0
         M.cscmatrix=_splice(M.extmatrix,M.cscmatrix)
-        M.extmatrix=SparseMatrixExtension{Tv,Ti}(M.cscmatrix.m, M.cscmatrix.n)
+        M.extmatrix=nothing
     end
     return M
 end
