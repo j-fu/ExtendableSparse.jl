@@ -324,27 +324,51 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Drop in replacement for LU factorization.
-
+Delegating LU factorization.
 """
 function LinearAlgebra.lu(E::ExtendableSparseMatrix)
     @inbounds flush!(E)
     return LinearAlgebra.lu(E.cscmatrix)
 end
 
-
-
-
 """
 $(SIGNATURES)
 
-Flush and delegate to cscmatrix.
+Delegating Matrix multiplication
 """
-function LinearAlgebra.mul!(r::AbstractArray{Tv,1},
-                            E::ExtendableSparse.ExtendableSparseMatrix{Tv,Ti},
-                            x::AbstractArray{Tv,1}) where{Tv,Ti<:Integer}
+function  LinearAlgebra.mul!(r::AbstractArray{T,1} where T, E::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,1} where T)
     @inbounds flush!(E)
     return LinearAlgebra.mul!(r,E.cscmatrix,x)
 end
 
 
+"""
+$(SIGNATURES)
+
+Delegating Matrix ldiv
+"""
+function  LinearAlgebra.ldiv!(r::AbstractArray{T,1} where T, E::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,1} where T)
+    @inbounds flush!(E)
+    return LinearAlgebra.ldiv!(r,E.cscmatrix,x)
+end
+
+"""
+$(SIGNATURES)
+
+Delegating Matrix multiplication
+"""
+function  LinearAlgebra.mul!(r::AbstractArray{T,2} where T, E::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,2} where T)
+    @inbounds flush!(E)
+    return LinearAlgebra.mul!(r,E.cscmatrix,x)
+end
+
+
+"""
+$(SIGNATURES)
+
+Delegating Matrix ldiv
+"""
+function  LinearAlgebra.ldiv!(r::AbstractArray{T,2} where T, E::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,2} where T)
+    @inbounds flush!(E)
+    return LinearAlgebra.ldiv!(r,E.cscmatrix,x)
+end

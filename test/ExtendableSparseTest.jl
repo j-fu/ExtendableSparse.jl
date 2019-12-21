@@ -78,4 +78,24 @@ function constructors()
     
     true
 end
+
+
+function optest(n)
+    println("optest:")
+    A=ExtendableSparseMatrix(n,n)
+    nrow=min(div(n,4),5)
+    @time for i=1:n
+        A[i,i]=2*n
+        for k=1:nrow
+            j=rand((1:n))
+            if i!=j
+                A[i,j]=-rand()
+            end
+        end
+    end
+    b=rand(n)
+    @time x=A\b
+    Ax=A*x
+    b≈ Ax
+end
 end

@@ -29,5 +29,7 @@ include("ExtendableSparseTest.jl")
         @test ExtendableSparseTest.check(m=m,n=n,nnz=nnz,nsplice=nsplice)
     end
         
-    
+    @test ExtendableSparseTest.optest(10)
+    @test ExtendableSparseTest.optest(100)
+    @test ExtendableSparseTest.optest(1000)
 end
