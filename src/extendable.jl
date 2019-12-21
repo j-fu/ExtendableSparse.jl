@@ -21,7 +21,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Create empty ExtendablSparseMatrix.
 """
@@ -30,7 +30,7 @@ function ExtendableSparseMatrix{Tv,Ti}(m::Integer, n::Integer) where{Tv,Ti<:Inte
 end
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Create empty ExtendablSparseMatrix.
 """
@@ -57,7 +57,7 @@ ExtendableSparseMatrix(m::Integer, n::Integer)=ExtendableSparseMatrix{Float64,In
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
   Create ExtendablSparseMatrix from sparse matrix
 """
@@ -132,7 +132,7 @@ function Base.getindex(M::ExtendableSparseMatrix{Tv,Ti},i::Integer, j::Integer) 
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Size of ExtendableSparseMatrix.
 """
@@ -140,7 +140,7 @@ Base.size(E::ExtendableSparseMatrix) = (E.cscmatrix.m, E.cscmatrix.n)
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Number of nonzeros of ExtendableSparseMatrix.
 """
@@ -249,7 +249,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 If there are new entries in extension, create new CSC matrix
 and reset extension.
@@ -265,7 +265,7 @@ end
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -278,7 +278,7 @@ end
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -289,7 +289,7 @@ end
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -300,7 +300,7 @@ end
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -311,7 +311,7 @@ end
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -332,7 +332,7 @@ function LinearAlgebra.lu(E::ExtendableSparseMatrix)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Delegating Matrix multiplication
 """
@@ -343,7 +343,7 @@ end
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Delegating Matrix ldiv
 """
@@ -353,7 +353,7 @@ function  LinearAlgebra.ldiv!(r::AbstractArray{T,1} where T, E::ExtendableSparse
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Delegating Matrix multiplication
 """
@@ -364,7 +364,7 @@ end
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Delegating Matrix ldiv
 """
