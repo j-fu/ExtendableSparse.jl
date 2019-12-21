@@ -39,7 +39,7 @@ function ExtendableSparseMatrix(::Type{Tv},::Type{Ti},m::Integer, n::Integer) wh
 end
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Create empty ExtendablSparseMatrix.
 This is a pendant to spzeros.
@@ -48,7 +48,7 @@ ExtendableSparseMatrix(::Type{Tv},m::Integer, n::Integer) where{Tv}=ExtendableSp
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Create empty ExtendablSparseMatrix.
 This is a pendant to spzeros.
@@ -69,7 +69,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Return index corresponding to entry (i,j) in the array of nonzeros,
 if the entry exists, otherwise, return 0.
@@ -132,7 +132,7 @@ function Base.getindex(M::ExtendableSparseMatrix{Tv,Ti},i::Integer, j::Integer) 
 end
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Size of ExtendableSparseMatrix.
 """
@@ -140,7 +140,7 @@ Base.size(E::ExtendableSparseMatrix) = (E.cscmatrix.m, E.cscmatrix.n)
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Number of nonzeros of ExtendableSparseMatrix.
 """
@@ -165,13 +165,12 @@ end
 Base.isless(x::ColEntry{Tv, Ti},y::ColEntry{Tv, Ti}) where {Tv,Ti<:Integer} = (x.i<y.i)
 
 
+# Create new CSC matrix with sorted entries from  CSC matrix S and matrix extension E.
+#
+# This method assumes that there are no entries with the same
+# indices in E and S, therefore  it appears too dangerous for general use and
+# so we don't export it. Generalizations appear to be possible, though.
 function _splice(E::SparseMatrixExtension{Tv,Ti},S::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
-    # Create new CSC matrix with sorted entries from  CSC matrix S and matrix extension E.
-    #
-    # This method assumes that there are no entries with the same
-    # indices in E and S, therefore  it appears too dangerous for general use and
-    # so we don't export it. Generalizations appear to be possible, though.
-
     @assert(S.m==E.m)
     @assert(S.n==E.n)
 
@@ -191,8 +190,8 @@ function _splice(E::SparseMatrixExtension{Tv,Ti},S::SparseMatrixCSC{Tv,Ti}) wher
         end
         E_maxcol=max(lcol,E_maxcol)
     end
-
-    # pre-allocate column 
+    
+    # pre-allocate column  data
     col=[ColEntry{Tv,Ti}(0,0) for i=1:E_maxcol]
 
 
@@ -265,7 +264,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -276,9 +275,8 @@ end
 
 
 
-
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -289,29 +287,18 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
-function xcolptrs(E::ExtendableSparseMatrix)
+function colptrs(E::ExtendableSparseMatrix)
     @inbounds flush!(E)
     return E.cscmatrix.colptr
 end
 
 
 """
-$(TYPEDSIGNATURES)
-
-Flush and delegate to cscmatrix.
-"""
-function colptrs(E::ExtendableSparseMatrix)
-    flush!(E)
-    return E.cscmatrix.colptr
-end
-
-
-"""
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Flush and delegate to cscmatrix.
 """
@@ -322,7 +309,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Delegating LU factorization.
 """
@@ -332,7 +319,7 @@ function LinearAlgebra.lu(E::ExtendableSparseMatrix)
 end
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Delegating Matrix multiplication
 """
@@ -343,7 +330,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Delegating Matrix ldiv
 """
@@ -353,7 +340,7 @@ function  LinearAlgebra.ldiv!(r::AbstractArray{T,1} where T, E::ExtendableSparse
 end
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Delegating Matrix multiplication
 """
@@ -364,7 +351,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Delegating Matrix ldiv
 """

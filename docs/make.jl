@@ -9,6 +9,7 @@ makedocs(sitename="ExtendableSparse.jl",
          repo="https://github.com/j-fu/ExtendableSparse.jl",
          pages=[
              "Home"=>"index.md",
+             "example.md",
              "changes.md",
              "api.md"
          ])

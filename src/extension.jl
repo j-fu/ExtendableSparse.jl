@@ -58,7 +58,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
     
 Constructor of empty extension
 """
@@ -142,7 +142,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Return tuple containing size of the matrix.
 """
@@ -150,7 +150,7 @@ Base.size(E::SparseMatrixExtension) = (E.m, E.n)
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Return number of nonzero entries.
 """
@@ -158,7 +158,7 @@ SparseArrays.nnz(E::SparseMatrixExtension)=E.nnz
 
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Dummy flush! method for Sparse matrix extension. Just
 used in thest methods

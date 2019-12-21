@@ -7,7 +7,7 @@ include("extension.jl")
 include("extendable.jl")
 include("sprand.jl")
 
-export SparseMatrixExtension,ExtendableSparseMatrix,flush!,nnz,sprand!
+export SparseMatrixExtension,ExtendableSparseMatrix,flush!,nnz, sprand!,sprand_sdd!
 
-export xcolptrs,colptrs
+export colptrs
 end # module

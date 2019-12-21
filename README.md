@@ -1,6 +1,6 @@
 # ExtendableSparse.jl
 
-[![Build Status](https://img.shields.io/travis/j-fu/ExtendableSparse.jl/master.svg?label=Linux+MacOSX)](https://travis-ci.org/j-fu/ExtendableSparse.jl)
+[![Build Status](https://img.shields.io/travis/j-fu/ExtendableSparse.jl/master.svg?label=Linux+MacOSX+Windows)](https://travis-ci.org/j-fu/ExtendableSparse.jl)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://j-fu.github.io/ExtendableSparse.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://j-fu.github.io/ExtendableSparse.jl/dev)
 
@@ -12,5 +12,4 @@ Without an intermediate data structure, efficient successive insertion/update of
 
 `ExtendableSparseMatrix` is aimed to work as a drop-in replacement to `SparseMatrixCSC` in finite element and finite volume codes.
 
-Currently it has the methods required for `AbstractSparseMatrix` (`getindex`, `setindex!`,`size`,`nnz`), as well as `lufact` and `mul!`, which is already sufficient for a number of interesting applications.
 
