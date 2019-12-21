@@ -62,7 +62,20 @@ function benchmark(;n=10000,m=10000,nnz=50000)
         sprand!(xextmat,nnz)
         @inbounds flush!(xextmat)
     end
+    true
 end
 
+function constructors()
+    println("Constructors:")
+    m1=ExtendableSparseMatrix(10,10)
+    m2=ExtendableSparseMatrix(Float16,10,10)
+    m3=ExtendableSparseMatrix(Float32,Int16,10,10)
 
+    csc=sprand(10,10,0.1)
+    m4=ExtendableSparseMatrix(csc)
+    sprand!(m4,6)
+    flush!(m4)
+    
+    true
+end
 end

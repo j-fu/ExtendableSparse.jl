@@ -24,10 +24,48 @@ end
 $(TYPEDSIGNATURES)
 
 Create empty ExtendablSparseMatrix.
+"""
+function ExtendableSparseMatrix{Tv,Ti}(m::Integer, n::Integer) where{Tv,Ti<:Integer}
+    ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),nothing)
+end
 
+"""
+$(TYPEDSIGNATURES)
+
+Create empty ExtendablSparseMatrix.
+"""
+function ExtendableSparseMatrix(::Type{Tv},::Type{Ti},m::Integer, n::Integer) where{Tv,Ti<:Integer}
+    ExtendableSparseMatrix{Tv,Ti}(m,n)
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Create empty ExtendablSparseMatrix.
 This is a pendant to spzeros.
 """
-ExtendableSparseMatrix{Tv,Ti}(m::Integer, n::Integer) where{Tv,Ti<:Integer}=ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),nothing)
+ExtendableSparseMatrix(::Type{Tv},m::Integer, n::Integer) where{Tv}=ExtendableSparseMatrix{Tv,Int}(m,n)
+
+
+"""
+$(TYPEDSIGNATURES)
+
+Create empty ExtendablSparseMatrix.
+This is a pendant to spzeros.
+"""
+ExtendableSparseMatrix(m::Integer, n::Integer)=ExtendableSparseMatrix{Float64,Int}(m,n)
+
+
+"""
+$(TYPEDSIGNATURES)
+
+  Create ExtendablSparseMatrix from sparse matrix
+"""
+function ExtendableSparseMatrix(M::SparseMatrixCSC{Tv,Ti}) where{Tv,Ti<:Integer}
+    return ExtendableSparseMatrix{Tv,Ti}(M, nothing)
+end
+
+
 
 
 """

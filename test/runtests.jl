@@ -1,11 +1,13 @@
 using Test
 include("ExtendableSparseTest.jl")
 
-ExtendableSparseTest.benchmark()
+
+@test ExtendableSparseTest.constructors()
+@test ExtendableSparseTest.benchmark()
 
 
 @time begin
-    
+
     
     @test ExtendableSparseTest.check(m=10,n=10,nnz=5)
     @test ExtendableSparseTest.check(m=100,n=100,nnz=500,nsplice=2)
