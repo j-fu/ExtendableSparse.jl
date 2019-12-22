@@ -17,7 +17,7 @@ hard to verify, as it indeed appears that the source code of SPARSPAK [vanished 
 
 The advantage of the linked list structure is the fact that upon insertion
 of a new entry, the arrays describing the structure grow at their respective ends and
-can be conveniently updated via `push!`.  Now copying of existing data is necessary.
+can be conveniently updated via `push!`.  No copying of existing data is necessary.
 
 $(TYPEDFIELDS)
 """
@@ -87,18 +87,18 @@ $(SIGNATURES)
     
 Return value stored for entry or zero if not found
 """
-function Base.getindex(E::SparseMatrixLNK{Tv,Ti},i::Integer, j::Integer) where {Tv,Ti<:Integer}
+function Base.getindex(lnk::SparseMatrixLNK{Tv,Ti},i::Integer, j::Integer) where {Tv,Ti<:Integer}
 
-    if !((1 <= i <= E.m) & (1 <= j <= E.n))
-        throw(BoundsError(E, (i,j)))
+    if !((1 <= i <= lnk.m) & (1 <= j <= lnk.n))
+        throw(BoundsError(lnk, (i,j)))
     end
     
     k=j
     while k>0
-        if E.rowval[k]==i
-            return E.nzval[k]
+        if lnk.rowval[k]==i
+            return lnk.nzval[k]
         end
-        k=E.colptr[k]
+        k=lnk.colptr[k]
     end
 
     return zero(Tv)
@@ -111,21 +111,21 @@ $(SIGNATURES)
     
 Update value of existing entry, otherwise extend matrix.
 """
-function Base.setindex!(E::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Integer) where {Tv,Ti<:Integer}
+function Base.setindex!(lnk::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Integer) where {Tv,Ti<:Integer}
     v = convert(Tv, _v)
     i = convert(Ti, _i)
     j = convert(Ti, _j)
 
-    if !((1 <= i <= E.m) & (1 <= j <= E.n))
-        throw(BoundsError(E, (i,j)))
+    if !((1 <= i <= lnk.m) & (1 <= j <= lnk.n))
+        throw(BoundsError(lnk, (i,j)))
     end
     
     # Set the first  column entry if it was not yet set.
-    if E.rowval[j]==0
-        E.rowval[j]=i       
-        E.nzval[j]=v
-        E.nnz+=1
-        return E
+    if lnk.rowval[j]==0
+        lnk.rowval[j]=i       
+        lnk.nzval[j]=v
+        lnk.nnz+=1
+        return lnk
     end
 
     # Traverse list for existing entry
@@ -133,26 +133,26 @@ function Base.setindex!(E::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Integer)
     k0=j
     while k>0
         # Update value and return if entry has been found
-        if E.rowval[k]==i
-            E.nzval[k]=v
-            return E
+        if lnk.rowval[k]==i
+            lnk.nzval[k]=v
+            return lnk
         end
         k0=k
         # Next element in the list
-        k=E.colptr[k]
+        k=lnk.colptr[k]
     end
 
     # Append entry if not found
-    push!(E.nzval,v)
-    push!(E.rowval,i)
+    push!(lnk.nzval,v)
+    push!(lnk.rowval,i)
 
     # Shift the end of the list
-    push!(E.colptr,0)
-    E.colptr[k0]=length(E.nzval)
+    push!(lnk.colptr,0)
+    lnk.colptr[k0]=length(lnk.nzval)
 
     # Update number of nonzero entries
-    E.nnz+=1
-    return E
+    lnk.nnz+=1
+    return lnk
 end
 
 
@@ -161,7 +161,7 @@ $(SIGNATURES)
 
 Return tuple containing size of the matrix.
 """
-Base.size(E::SparseMatrixLNK) = (E.m, E.n)
+Base.size(lnk::SparseMatrixLNK) = (lnk.m, lnk.n)
 
 
 """
@@ -169,7 +169,7 @@ $(SIGNATURES)
 
 Return number of nonzero entries.
 """
-SparseArrays.nnz(E::SparseMatrixLNK)=E.nnz
+SparseArrays.nnz(lnk::SparseMatrixLNK)=lnk.nnz
 
 
 """
@@ -178,7 +178,7 @@ $(SIGNATURES)
 Dummy flush! method for Sparse matrix extension. Just
 used in test methods
 """
-function flush!(M::SparseMatrixLNK{Tv, Ti}) where{Tv, Ti}
-    return M
+function flush!(lnk::SparseMatrixLNK{Tv, Ti}) where{Tv, Ti}
+    return lnk
 end
 

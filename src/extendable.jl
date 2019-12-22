@@ -34,7 +34,7 @@ $(SIGNATURES)
 
 Create empty ExtendableSparseMatrix.
 """
-function ExtendableSparseMatrix(::Type{Tv},::Type{Ti},m::Integer, n::Integer) where{Tv,Ti<:Integer}
+function ExtendableSparseMatrix(valuetype::Type{Tv},indextype::Type{Ti},m::Integer, n::Integer) where{Tv,Ti<:Integer}
     ExtendableSparseMatrix{Tv,Ti}(m,n)
 end
 
@@ -44,7 +44,7 @@ $(SIGNATURES)
 Create empty ExtendablSparseMatrix.
 This is a pendant to spzeros.
 """
-ExtendableSparseMatrix(::Type{Tv},m::Integer, n::Integer) where{Tv}=ExtendableSparseMatrix{Tv,Int}(m,n)
+ExtendableSparseMatrix(valuetype::Type{Tv},m::Integer, n::Integer) where{Tv}=ExtendableSparseMatrix{Tv,Int}(m,n)
 
 
 """
@@ -59,10 +59,10 @@ ExtendableSparseMatrix(m::Integer, n::Integer)=ExtendableSparseMatrix{Float64,In
 """
 $(SIGNATURES)
 
-  Create ExtendableSparseMatrix from sparse matrix
+  Create ExtendableSparseMatrix from SparseMatrixCSC
 """
-function ExtendableSparseMatrix(M::SparseMatrixCSC{Tv,Ti}) where{Tv,Ti<:Integer}
-    return ExtendableSparseMatrix{Tv,Ti}(M, nothing)
+function ExtendableSparseMatrix(csc::SparseMatrixCSC{Tv,Ti}) where{Tv,Ti<:Integer}
+    return ExtendableSparseMatrix{Tv,Ti}(csc, nothing)
 end
 
 
@@ -73,17 +73,17 @@ $(SIGNATURES)
 Return index corresponding to entry [i,j] in the array of nonzeros,
 if the entry exists, otherwise, return 0.
 """
-function findindex(S::SparseMatrixCSC{T}, i::Integer, j::Integer) where T
-    if !(1 <= i <= S.m && 1 <= j <= S.n); throw(BoundsError()); end
-    r1 = Int(S.colptr[j])
-    r2 = Int(S.colptr[j+1]-1)
+function findindex(csc::SparseMatrixCSC{T}, i::Integer, j::Integer) where T
+    if !(1 <= i <= csc.m && 1 <= j <= csc.n); throw(BoundsError()); end
+    r1 = Int(csc.colptr[j])
+    r2 = Int(csc.colptr[j+1]-1)
     if r1>r2
         return 0
     end
 
     # See sparsematrix.jl
-    r1 = searchsortedfirst(S.rowval, i, r1, r2, Base.Forward)
-    if (r1>r2 ||S.rowval[r1] != i)
+    r1 = searchsortedfirst(csc.rowval, i, r1, r2, Base.Forward)
+    if (r1>r2 ||csc.rowval[r1] != i)
         return 0
     end
     return r1
@@ -97,15 +97,15 @@ $(SIGNATURES)
 Find index in CSC matrix and set value if it exists. Otherwise,
 set index in extension.
 """
-function Base.setindex!(M::ExtendableSparseMatrix{Tv,Ti}, v, i::Integer, j::Integer) where{Tv,Ti<:Integer}
-    k=findindex(M.cscmatrix,i,j)
+function Base.setindex!(ext::ExtendableSparseMatrix{Tv,Ti}, v, i::Integer, j::Integer) where{Tv,Ti<:Integer}
+    k=findindex(ext.cscmatrix,i,j)
     if k>0
-        M.cscmatrix.nzval[k]=v
+        ext.cscmatrix.nzval[k]=v
     else
-        if M.lnkmatrix==nothing
-            M.lnkmatrix=SparseMatrixLNK{Tv, Ti}(M.cscmatrix.m, M.cscmatrix.n)
+        if ext.lnkmatrix==nothing
+            ext.lnkmatrix=SparseMatrixLNK{Tv, Ti}(ext.cscmatrix.m, ext.cscmatrix.n)
         end
-        M.lnkmatrix[i,j]=v
+        ext.lnkmatrix[i,j]=v
     end
 end
 
@@ -119,14 +119,14 @@ $(SIGNATURES)
 Find index in CSC matrix and return value, if it exists.
 Otherwise, return value from extension.
 """
-function Base.getindex(M::ExtendableSparseMatrix{Tv,Ti},i::Integer, j::Integer) where{Tv,Ti<:Integer}
-    k=findindex(M.cscmatrix,i,j)
+function Base.getindex(ext::ExtendableSparseMatrix{Tv,Ti},i::Integer, j::Integer) where{Tv,Ti<:Integer}
+    k=findindex(ext.cscmatrix,i,j)
     if k>0
-        return M.cscmatrix.nzval[k]
-    elseif M.lnkmatrix==nothing
+        return ext.cscmatrix.nzval[k]
+    elseif ext.lnkmatrix==nothing
         return zero(Tv)
     else
-        return M.lnkmatrix[i,j]
+        return ext.lnkmatrix[i,j]
     end
 end
 
@@ -135,7 +135,7 @@ $(SIGNATURES)
 
 Size of ExtendableSparseMatrix.
 """
-Base.size(E::ExtendableSparseMatrix) = (E.cscmatrix.m, E.cscmatrix.n)
+Base.size(ext::ExtendableSparseMatrix) = (ext.cscmatrix.m, ext.cscmatrix.n)
 
 
 """
@@ -143,12 +143,12 @@ $(SIGNATURES)
 
 Number of nonzeros of ExtendableSparseMatrix.
 """
-function SparseArrays.nnz(E::ExtendableSparseMatrix)
+function SparseArrays.nnz(ext::ExtendableSparseMatrix)
     ennz=0
-    if E.lnkmatrix!=nothing
-        ennz=nnz(E.lnkmatrix)
+    if ext.lnkmatrix!=nothing
+        ennz=nnz(ext.lnkmatrix)
     end
-    return nnz(E.cscmatrix)+ennz
+    return nnz(ext.cscmatrix)+ennz
 end
 
 
@@ -254,14 +254,14 @@ end
 $(SIGNATURES)
 
 If there are new entries in extension, create new CSC matrix using [`_splice`](@ref)
-and reset extension.
+and reset linked list based extension.
 """
-function flush!(M::ExtendableSparseMatrix{Tv,Ti}) where {Tv, Ti<:Integer}
-    if M.lnkmatrix!=nothing && nnz(M.lnkmatrix)>0
-        M.cscmatrix=_splice(M.lnkmatrix,M.cscmatrix)
-        M.lnkmatrix=nothing
+function flush!(ext::ExtendableSparseMatrix{Tv,Ti}) where {Tv, Ti<:Integer}
+    if ext.lnkmatrix!=nothing && nnz(ext.lnkmatrix)>0
+        ext.cscmatrix=_splice(ext.lnkmatrix,ext.cscmatrix)
+        ext.lnkmatrix=nothing
     end
-    return M
+    return ext
 end
 
 
@@ -269,11 +269,11 @@ end
 """
 $(SIGNATURES)
 
-Flush and delegate to cscmatrix.
+[`flush!`](@ref) and return nonzeros in ext.cscmatrix.
 """
-function SparseArrays.nonzeros(E::ExtendableSparseMatrix)
-    @inbounds flush!(E)
-    return nonzeros(E.cscmatrix)
+function SparseArrays.nonzeros(ext::ExtendableSparseMatrix)
+    @inbounds flush!(ext)
+    return nonzeros(ext.cscmatrix)
 end
 
 
@@ -281,84 +281,84 @@ end
 """
 $(SIGNATURES)
 
-Flush and delegate to cscmatrix.
+[`flush!`](@ref) and return rowvals in ext.cscmatrix.
 """
-function SparseArrays.rowvals(E::ExtendableSparseMatrix)
-    @inbounds flush!(E)
-    return rowvals(E.cscmatrix)
+function SparseArrays.rowvals(ext::ExtendableSparseMatrix)
+    @inbounds flush!(ext)
+    return rowvals(ext.cscmatrix)
 end
 
 
 """
 $(SIGNATURES)
 
-Flush and delegate to cscmatrix.
+[`flush!`](@ref) and return colptr of  in ext.cscmatrix.
 """
-function colptrs(E::ExtendableSparseMatrix)
-    @inbounds flush!(E)
-    return E.cscmatrix.colptr
+function colptrs(ext::ExtendableSparseMatrix)
+    @inbounds flush!(ext)
+    return ext.cscmatrix.colptr
 end
 
 
 """
 $(SIGNATURES)
 
-Flush and delegate to cscmatrix.
+[`flush!`](@ref) and return findnz(ext.cscmatrix).
 """
-function SparseArrays.findnz(E::ExtendableSparseMatrix)
-    @inbounds flush!(E)
-    return findnz(E.cscmatrix)
+function SparseArrays.findnz(ext::ExtendableSparseMatrix)
+    @inbounds flush!(ext)
+    return findnz(ext.cscmatrix)
 end
 
 
 """
 $(SIGNATURES)
 
-Delegating LU factorization.
+[`flush!`](@ref) and return LU factorization of ext.cscmatrix
 """
-function LinearAlgebra.lu(E::ExtendableSparseMatrix)
-    @inbounds flush!(E)
-    return LinearAlgebra.lu(E.cscmatrix)
+function LinearAlgebra.lu(ext::ExtendableSparseMatrix)
+    @inbounds flush!(ext)
+    return LinearAlgebra.lu(ext.cscmatrix)
 end
 
 """
 $(SIGNATURES)
 
-Delegating Matrix multiplication
+[`flush!`](@ref) and multiply with ext.cscmatrix
 """
-function  LinearAlgebra.mul!(r::AbstractArray{T,1} where T, E::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,1} where T)
-    @inbounds flush!(E)
-    return LinearAlgebra.mul!(r,E.cscmatrix,x)
-end
-
-
-"""
-$(SIGNATURES)
-
-Delegating Matrix ldiv
-"""
-function  LinearAlgebra.ldiv!(r::AbstractArray{T,1} where T, E::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,1} where T)
-    @inbounds flush!(E)
-    return LinearAlgebra.ldiv!(r,E.cscmatrix,x)
-end
-
-"""
-$(SIGNATURES)
-
-Delegating Matrix multiplication
-"""
-function  LinearAlgebra.mul!(r::AbstractArray{T,2} where T, E::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,2} where T)
-    @inbounds flush!(E)
-    return LinearAlgebra.mul!(r,E.cscmatrix,x)
+function  LinearAlgebra.mul!(r::AbstractArray{T,1} where T, ext::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,1} where T)
+    @inbounds flush!(ext)
+    return LinearAlgebra.mul!(r,ext.cscmatrix,x)
 end
 
 
 """
 $(SIGNATURES)
 
-Delegating Matrix ldiv
+[`flush!`](@ref) and ldiv with ext.cscmatrix
 """
-function  LinearAlgebra.ldiv!(r::AbstractArray{T,2} where T, E::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,2} where T)
-    @inbounds flush!(E)
-    return LinearAlgebra.ldiv!(r,E.cscmatrix,x)
+function  LinearAlgebra.ldiv!(r::AbstractArray{T,1} where T, ext::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,1} where T)
+    @inbounds flush!(ext)
+    return LinearAlgebra.ldiv!(r,ext.cscmatrix,x)
+end
+
+"""
+$(SIGNATURES)
+
+[`flush!`](@ref) and multiply with ext.cscmatrix
+"""
+function  LinearAlgebra.mul!(r::AbstractArray{T,2} where T, ext::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,2} where T)
+    @inbounds flush!(ext)
+    return LinearAlgebra.mul!(r,ext.cscmatrix,x)
+end
+
+
+"""
+$(SIGNATURES)
+
+[`flush!`](@ref) and ldiv with ext.cscmatrix
+"""
+function  LinearAlgebra.ldiv!(r::AbstractArray{T,2} where T, ext::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,2} where T)
+    @inbounds flush!(ext)
+    return LinearAlgebra.ldiv!(r,ext.cscmatrix,x)
 end
