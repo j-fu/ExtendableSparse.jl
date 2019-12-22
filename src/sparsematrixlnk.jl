@@ -75,9 +75,48 @@ end
 """
 $(SIGNATURES)
     
-Constructor of empty extension
+Constructor of empty matrix.
 """
 SparseMatrixLNK{Tv,Ti}(m::Integer, n::Integer)  where {Tv,Ti<:Integer} =    SparseMatrixLNK{Tv,Ti}(m,n,0,zeros(Ti,n),zeros(Ti,n),zeros(Tv,n))
+
+"""
+$(SIGNATURES)
+    
+Constructor of empty matrix.
+"""
+SparseMatrixLNK(valuetype::Type{Tv},indextype::Type{Ti},m::Integer, n::Integer)  where {Tv,Ti<:Integer} =SparseMatrixLNK{Tv,Ti}(m,n)
+
+"""
+$(SIGNATURES)
+    
+Constructor of empty matrix.
+"""
+SparseMatrixLNK(valuetype::Type{Tv},m::Integer, n::Integer)  where {Tv} =SparseMatrixLNK(Tv,Int,m,n)
+
+"""
+$(SIGNATURES)
+    
+Constructor of empty matrix.
+"""
+SparseMatrixLNK(m::Integer, n::Integer)  where {Tv} =SparseMatrixLNK(Float64,m,n)
+
+
+"""
+$(SIGNATURES)
+    
+Constructor from SparseMatrixCSC.
+
+"""
+function SparseMatrixLNK(csc::SparseArrays.SparseMatrixCSC{Tv,Ti})  where {Tv,Ti<:Integer}
+    lnk=SparseMatrixLNK{Tv,Ti}(csc.m,csc.n)
+    for j=1:csc.n
+        for k=csc.colptr[j]:csc.colptr[j+1]-1
+            lnk[csc.rowval[k],j]=csc.nzval[k]
+        end
+    end
+    lnk
+end
+
 
 
 
@@ -103,6 +142,7 @@ function Base.getindex(lnk::SparseMatrixLNK{Tv,Ti},i::Integer, j::Integer) where
 
     return zero(Tv)
 end
+
 
 
 
@@ -175,10 +215,123 @@ SparseArrays.nnz(lnk::SparseMatrixLNK)=lnk.nnz
 """
 $(SIGNATURES)
 
-Dummy flush! method for Sparse matrix extension. Just
+Dummy flush! method for SparseMatrixLNK. Just
 used in test methods
 """
 function flush!(lnk::SparseMatrixLNK{Tv, Ti}) where{Tv, Ti}
     return lnk
 end
 
+
+
+
+
+
+# Struct holding pair of value and row
+# number, for sorting
+struct ColEntry{Tv,Ti<:Integer}
+    rowval::Ti
+    nzval::Tv
+end
+
+# Comparison method for sorting
+Base.isless(x::ColEntry{Tv, Ti},y::ColEntry{Tv, Ti}) where {Tv,Ti<:Integer} = (x.rowval<y.rowval)
+
+"""
+$(SIGNATURES)
+
+Add SparseMatrixCSC matrix and [`SparseMatrixLNK`](@ref)  lnk.
+"""
+function Base.:+(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
+    @assert(csc.m==lnk.m)
+    @assert(csc.n==lnk.n)
+
+    xnnz=nnz(csc)+nnz(lnk)
+    colptr=Vector{Ti}(undef,csc.n+1)
+    rowval=Vector{Ti}(undef,xnnz)
+    nzval=Vector{Tv}(undef,xnnz)
+
+    # Detect the maximum column length of lnk
+    lnk_maxcol=0
+    for j=1:csc.n
+        lcol=zero(Ti)
+        k=j
+        while k>0
+            lcol+=1
+            k=lnk.colptr[k]
+        end
+        lnk_maxcol=max(lcol,lnk_maxcol)
+    end
+    
+    # pre-allocate column  data
+    col=[ColEntry{Tv,Ti}(0,0) for i=1:lnk_maxcol]
+
+
+    
+    inz=1 # counts the nonzero entries in the new matrix
+
+    # loop over all columns
+    for j=1:csc.n
+
+        # Copy extension entries into col and sort them
+        k=j
+        l_lnk_col=zero(Ti)
+        while k>0
+            if lnk.rowval[k]>0
+                l_lnk_col+=1
+                col[l_lnk_col]=ColEntry(lnk.rowval[k],lnk.nzval[k])
+            end
+            k=lnk.colptr[k]
+        end
+        sort!(col,1,l_lnk_col, Base.QuickSort, Base.Forward)
+
+
+        # jointly sort lnk and csc entries  into new matrix data
+        colptr[j]=inz
+        jlnk=one(Ti) # counts the entries in col
+        jcsc=csc.colptr[j]  # counts entries in csc
+
+        in_csc_col(jcsc)=(nnz(csc)>zero(Ti)) && (jcsc<csc.colptr[j+1])
+        in_lnk_col(jlnk)=(jlnk<=l_lnk_col)
+
+        while true
+            if in_csc_col(jcsc) &&  (in_lnk_col(jlnk)  && csc.rowval[jcsc]<col[jlnk].rowval  ||  !in_lnk_col(jlnk))
+                # Insert entries from csc into new structure
+                rowval[inz]=csc.rowval[jcsc]
+                nzval[inz]=csc.nzval[jcsc]
+                jcsc+=1
+                inz+=1
+            elseif in_csc_col(jcsc) &&  (in_lnk_col(jlnk)  && csc.rowval[jcsc]==col[jlnk].rowval)
+                # Add up entries from csc and lnk
+                rowval[inz]=csc.rowval[jcsc]
+                nzval[inz]=csc.nzval[jcsc]+col[jlnk].nzval
+                jcsc+=1
+                inz+=1
+                jlnk+=1
+            elseif in_lnk_col(jlnk)
+                # Insert entries from lnk res. col into new structure
+                rowval[inz]=col[jlnk].rowval
+                nzval[inz]=col[jlnk].nzval
+                jlnk+=1
+                inz+=1
+            else 
+                break
+            end
+        end
+    end
+    colptr[csc.n+1]=inz
+    SparseMatrixCSC{Tv,Ti}(csc.m,csc.n,colptr,rowval,nzval)
+end
+
+Base.:+(csc::SparseMatrixCSC{Tv,Ti},lnk::SparseMatrixLNK{Tv,Ti}) where {Tv,Ti<:Integer}=lnk+csc
+
+"""
+$(SIGNATURES)
+    
+Constructor from SparseMatrixCSC.
+
+"""
+function SparseArrays.SparseMatrixCSC{Tv,Ti}(lnk::SparseMatrixLNK{Tv,Ti})  where {Tv,Ti<:Integer}
+    csc=spzeros(lnk.m,lnk.n)
+    lnk+csc
+end

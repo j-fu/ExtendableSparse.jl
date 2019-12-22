@@ -5,7 +5,9 @@ using Printf
 
 
 
-function randtest!(A::AbstractSparseMatrix{Tv,Ti},xnnz::Int,nsplice::Int) where {Tv,Ti}
+function test_assembly(;m=1000,n=1000,xnnz=5000,nsplice=1)
+    println("test_assembly( m=$(m), n=$(n), xnnz=$(xnnz), nsplice=$(nsplice))")
+    A=ExtendableSparseMatrix{Float64,Int64}(m,n)
     m,n=size(A)
     S=spzeros(m,n)
     for isplice=1:nsplice
@@ -15,7 +17,6 @@ function randtest!(A::AbstractSparseMatrix{Tv,Ti},xnnz::Int,nsplice::Int) where 
             a=1.0+rand(Float64)
             S[i,j]+=a
             A[i,j]+=a
-            @assert(nnz(S)==nnz(A))
         end
         flush!(A)
         for j=1:n
@@ -38,15 +39,26 @@ function randtest!(A::AbstractSparseMatrix{Tv,Ti},xnnz::Int,nsplice::Int) where 
 end
 
 
+function test_transient_construction(;m=10,n=10,d=0.1) where {Tv,Ti}
+    println("test_transient_construction( m=$(m), n=$(n), d=$(d))")
+    csc=sprand(m,n,d)
+    lnk=SparseMatrixLNK(csc)
+    csc2=SparseMatrixCSC(lnk)
+    return csc2==csc
+end
 
-function check(;m=1000,n=1000,nnz=5000,nsplice=1)
-    mat=ExtendableSparseMatrix{Float64,Int64}(m,n)
-    return randtest!(mat,nnz,nsplice)
+function test_addition(;m=10,n=10,d=0.1) where {Tv,Ti}
+    println("test_addition( m=$(m), n=$(n), d=$(d))")
+    csc=sprand(m,n,d)
+    lnk=SparseMatrixLNK(csc)
+    csc2=csc+lnk
+    csc2==2*csc
 end
 
 
 
-function benchmark(;n=10000,m=10000,nnz=50000)
+function test_timing(;n=10000,m=10000,nnz=50000)
+    println("test_timing( m=$(m), n=$(n), nnz=$(nnz))")
     
     println("SparseMatrixCSC:")
     mat=spzeros(Float64,Int64,m,n)
@@ -65,8 +77,8 @@ function benchmark(;n=10000,m=10000,nnz=50000)
     true
 end
 
-function constructors()
-    println("Constructors:")
+function test_constructors()
+    println("test_constructors()")
     m1=ExtendableSparseMatrix(10,10)
     m2=ExtendableSparseMatrix(Float16,10,10)
     m3=ExtendableSparseMatrix(Float32,Int16,10,10)
@@ -80,8 +92,8 @@ function constructors()
 end
 
 
-function optest(n)
-    println("optest:")
+function test_operations(n)
+    println("test_operations(n=$(n))")
     A=ExtendableSparseMatrix(n,n)
     sprand_sdd!(A)
     b=rand(n)

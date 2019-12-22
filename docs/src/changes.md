@@ -1,4 +1,10 @@
 # Changes
+
+## dev
+- What used to be `_splice`  is now `+` and allows now real addition (resulting in a CSC matrix)
+- Added constructors of LNK matrix from CSC matrix and vice versa
+- reorganized tests
+
 ## v0.2.1 Dec 22, 2019
 - Tried to track down the source from which I learned the linked list based struct in order
   to document this. Ended up with SPARSEKIT of Y.Saad, however I believe this 

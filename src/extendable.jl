@@ -138,132 +138,30 @@ Size of ExtendableSparseMatrix.
 Base.size(ext::ExtendableSparseMatrix) = (ext.cscmatrix.m, ext.cscmatrix.n)
 
 
-"""
-$(SIGNATURES)
-
-Number of nonzeros of ExtendableSparseMatrix.
-"""
-function SparseArrays.nnz(ext::ExtendableSparseMatrix)
-    ennz=0
-    if ext.lnkmatrix!=nothing
-        ennz=nnz(ext.lnkmatrix)
-    end
-    return nnz(ext.cscmatrix)+ennz
-end
-
-
-
-# Struct holding pair of value and row
-# number, for sorting
-struct ColEntry{Tv,Ti<:Integer}
-    rowval::Ti
-    nzval::Tv
-end
-
-# Comparison method for sorting
-Base.isless(x::ColEntry{Tv, Ti},y::ColEntry{Tv, Ti}) where {Tv,Ti<:Integer} = (x.rowval<y.rowval)
 
 """
 $(SIGNATURES)
 
-Create new CSC matrix with sorted entries from a SparseMatrixCSC  csc and 
-[`SparseMatrixLNK`](@ref)  lnk.
-
-This method assumes that there are no entries with the same
-indices in lnk and csc, therefore  it appears too dangerous for general use and
-so we don't export it.  A generalization appears to be possible, though.
-"""
-function _splice(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
-    @assert(csc.m==lnk.m)
-    @assert(csc.n==lnk.n)
-
-    xnnz=nnz(csc)+nnz(lnk)
-    colptr=Vector{Ti}(undef,csc.n+1)
-    rowval=Vector{Ti}(undef,xnnz)
-    nzval=Vector{Tv}(undef,xnnz)
-
-    # Detect the maximum column length of lnk
-    lnk_maxcol=0
-    for j=1:csc.n
-        lcol=0
-        k=j
-        while k>0
-            lcol+=1
-            k=lnk.colptr[k]
-        end
-        lnk_maxcol=max(lcol,lnk_maxcol)
-    end
-    
-    # pre-allocate column  data
-    col=[ColEntry{Tv,Ti}(0,0) for i=1:lnk_maxcol]
-
-
-    
-    inz=1 # counts the nonzero entries in the new matrix
-
-    # loop over all columns
-    for j=1:csc.n
-        # put extension entries into col and sort them
-        k=j
-        l_lnk_col=0
-        while k>0
-            if lnk.rowval[k]>0
-                l_lnk_col+=1
-                col[l_lnk_col]=ColEntry(lnk.rowval[k],lnk.nzval[k])
-            end
-            k=lnk.colptr[k]
-        end
-        sort!(col,1,l_lnk_col, Base.QuickSort, Base.Forward)
-
-
-        # jointly sort lnk and csc entries  into new matrix data
-        colptr[j]=inz
-        jcol=1 # counts the entries in col
-        jcsc=csc.colptr[j]  # counts entries in csc
-        while true
-            
-            # Insert entries from csc into new structure
-            # if the row number is before col[jcol]
-            if ( nnz(csc)>0 &&  (jcsc<csc.colptr[j+1]) ) && 
-                 (
-                     (jcol<=l_lnk_col && csc.rowval[jcsc]<col[jcol].rowval) || 
-                     (jcol>l_lnk_col)
-                 )
-                rowval[inz]=csc.rowval[jcsc]
-                nzval[inz]=csc.nzval[jcsc]
-                jcsc+=1
-                inz+=1
-
-            # Otherwise, insert next entry from col    
-            elseif jcol<=l_lnk_col
-                rowval[inz]=col[jcol].rowval
-                nzval[inz]=col[jcol].nzval
-                jcol+=1
-                inz+=1
-            else
-                break
-            end
-        end
-    end
-    colptr[csc.n+1]=inz
-    SparseMatrixCSC{Tv,Ti}(csc.m,csc.n,colptr,rowval,nzval)
-end
-
-
-"""
-$(SIGNATURES)
-
-If there are new entries in extension, create new CSC matrix using [`_splice`](@ref)
-and reset linked list based extension.
+If there are new entries in extension, create new CSC matrix by adding the
+cscmatrix and linked list matrix and reset the linked list based extension.
 """
 function flush!(ext::ExtendableSparseMatrix{Tv,Ti}) where {Tv, Ti<:Integer}
     if ext.lnkmatrix!=nothing && nnz(ext.lnkmatrix)>0
-        ext.cscmatrix=_splice(ext.lnkmatrix,ext.cscmatrix)
+        ext.cscmatrix=ext.lnkmatrix+ext.cscmatrix
         ext.lnkmatrix=nothing
     end
     return ext
 end
 
+"""
+$(SIGNATURES)
+
+[`flush!`](@ref) and return number of nonzeros in ext.cscmatrix.
+"""
+function SparseArrays.nnz(ext::ExtendableSparseMatrix)
+    @inbounds flush!(ext)
+    return nnz(ext.cscmatrix)
+end
 
 
 """
