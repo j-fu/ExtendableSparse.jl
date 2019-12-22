@@ -1,9 +1,9 @@
+
 """
 $(SIGNATURES)
 
 Fill empty sparse matrix A with random nonzero elements from interval [1,2]
 using incremental assembly.
-
 """
 function sprand!(A::AbstractSparseMatrix{Tv,Ti},xnnz::Int) where {Tv,Ti}
     m,n=size(A)
@@ -16,16 +16,17 @@ function sprand!(A::AbstractSparseMatrix{Tv,Ti},xnnz::Int) where {Tv,Ti}
     A
 end
 
+
 """
 $(SIGNATURES)
 
-Fill sparse matrix with random entries such that it becomes strictly diagonally
-dominant and thus invertible and has a fixed number of nonzeros in
-its rows. The matrix bandwidth is bounded by sqrt(n), therefore it 
-resembles a typical matrix of a 2D piecewise linear FEM discretization
-
+Fill sparse matrix  with random entries such that  it becomes strictly
+diagonally  dominant  and  thus  invertible and  has  a  fixed  number
+`nnzrow` (default: 4) of nonzeros in its rows. The matrix bandwidth is
+bounded by  sqrt(n) in order to resemble  a typical matrix of  a 2D
+piecewise linear FEM discretization.
 """
-function sprand_sdd!(A::AbstractSparseMatrix{Tv,Ti},nnzrow::Int; dim=2) where {Tv,Ti}
+function sprand_sdd!(A::AbstractSparseMatrix{Tv,Ti}; nnzrow=4) where {Tv,Ti}
     m,n=size(A)
     @assert m==n
     nnzrow=min(n,nnzrow)

@@ -3,7 +3,7 @@
 $(TYPEDEF)
 
 Extendable sparse matrix. A nonzero  entry of this matrix is contained
-either in cscmatrix, or in extmatrix, never in both.
+either in cscmatrix, or in lnkmatrix, never in both.
 
 $(TYPEDFIELDS)
 """
@@ -14,16 +14,16 @@ mutable struct ExtendableSparseMatrix{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv
     cscmatrix::SparseMatrixCSC{Tv,Ti}
 
     """
-    Intermediate structure holding data of extension
+    Linked list structure holding data of extension
     """
-    extmatrix::Union{SparseMatrixExtension{Tv,Ti},Nothing}
+    lnkmatrix::Union{SparseMatrixLNK{Tv,Ti},Nothing}
 end
 
 
 """
 $(SIGNATURES)
 
-Create empty ExtendablSparseMatrix.
+Create empty ExtendableSparseMatrix.
 """
 function ExtendableSparseMatrix{Tv,Ti}(m::Integer, n::Integer) where{Tv,Ti<:Integer}
     ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),nothing)
@@ -32,7 +32,7 @@ end
 """
 $(SIGNATURES)
 
-Create empty ExtendablSparseMatrix.
+Create empty ExtendableSparseMatrix.
 """
 function ExtendableSparseMatrix(::Type{Tv},::Type{Ti},m::Integer, n::Integer) where{Tv,Ti<:Integer}
     ExtendableSparseMatrix{Tv,Ti}(m,n)
@@ -50,7 +50,7 @@ ExtendableSparseMatrix(::Type{Tv},m::Integer, n::Integer) where{Tv}=ExtendableSp
 """
 $(SIGNATURES)
 
-Create empty ExtendablSparseMatrix.
+Create empty ExtendableSparseMatrix.
 This is a pendant to spzeros.
 """
 ExtendableSparseMatrix(m::Integer, n::Integer)=ExtendableSparseMatrix{Float64,Int}(m,n)
@@ -59,7 +59,7 @@ ExtendableSparseMatrix(m::Integer, n::Integer)=ExtendableSparseMatrix{Float64,In
 """
 $(SIGNATURES)
 
-  Create ExtendablSparseMatrix from sparse matrix
+  Create ExtendableSparseMatrix from sparse matrix
 """
 function ExtendableSparseMatrix(M::SparseMatrixCSC{Tv,Ti}) where{Tv,Ti<:Integer}
     return ExtendableSparseMatrix{Tv,Ti}(M, nothing)
@@ -67,11 +67,10 @@ end
 
 
 
-
 """
 $(SIGNATURES)
 
-Return index corresponding to entry (i,j) in the array of nonzeros,
+Return index corresponding to entry [i,j] in the array of nonzeros,
 if the entry exists, otherwise, return 0.
 """
 function findindex(S::SparseMatrixCSC{T}, i::Integer, j::Integer) where T
@@ -79,13 +78,13 @@ function findindex(S::SparseMatrixCSC{T}, i::Integer, j::Integer) where T
     r1 = Int(S.colptr[j])
     r2 = Int(S.colptr[j+1]-1)
     if r1>r2
-        return zero(T)
+        return 0
     end
 
     # See sparsematrix.jl
     r1 = searchsortedfirst(S.rowval, i, r1, r2, Base.Forward)
     if (r1>r2 ||S.rowval[r1] != i)
-        return zero(T)
+        return 0
     end
     return r1
 end
@@ -103,10 +102,10 @@ function Base.setindex!(M::ExtendableSparseMatrix{Tv,Ti}, v, i::Integer, j::Inte
     if k>0
         M.cscmatrix.nzval[k]=v
     else
-        if M.extmatrix==nothing
-            M.extmatrix=SparseMatrixExtension{Tv, Ti}(M.cscmatrix.m, M.cscmatrix.n)
+        if M.lnkmatrix==nothing
+            M.lnkmatrix=SparseMatrixLNK{Tv, Ti}(M.cscmatrix.m, M.cscmatrix.n)
         end
-        M.extmatrix[i,j]=v
+        M.lnkmatrix[i,j]=v
     end
 end
 
@@ -124,10 +123,10 @@ function Base.getindex(M::ExtendableSparseMatrix{Tv,Ti},i::Integer, j::Integer) 
     k=findindex(M.cscmatrix,i,j)
     if k>0
         return M.cscmatrix.nzval[k]
-    elseif M.extmatrix==nothing
+    elseif M.lnkmatrix==nothing
         return zero(Tv)
     else
-        return M.extmatrix[i,j]
+        return M.lnkmatrix[i,j]
     end
 end
 
@@ -146,8 +145,8 @@ Number of nonzeros of ExtendableSparseMatrix.
 """
 function SparseArrays.nnz(E::ExtendableSparseMatrix)
     ennz=0
-    if E.extmatrix!=nothing
-        ennz=nnz(E.extmatrix)
+    if E.lnkmatrix!=nothing
+        ennz=nnz(E.lnkmatrix)
     end
     return nnz(E.cscmatrix)+ennz
 end
@@ -157,83 +156,88 @@ end
 # Struct holding pair of value and row
 # number, for sorting
 struct ColEntry{Tv,Ti<:Integer}
-    i::Ti
-    v::Tv
+    rowval::Ti
+    nzval::Tv
 end
 
 # Comparison method for sorting
-Base.isless(x::ColEntry{Tv, Ti},y::ColEntry{Tv, Ti}) where {Tv,Ti<:Integer} = (x.i<y.i)
+Base.isless(x::ColEntry{Tv, Ti},y::ColEntry{Tv, Ti}) where {Tv,Ti<:Integer} = (x.rowval<y.rowval)
 
+"""
+$(SIGNATURES)
 
-# Create new CSC matrix with sorted entries from  CSC matrix S and matrix extension E.
-#
-# This method assumes that there are no entries with the same
-# indices in E and S, therefore  it appears too dangerous for general use and
-# so we don't export it. Generalizations appear to be possible, though.
-function _splice(E::SparseMatrixExtension{Tv,Ti},S::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
-    @assert(S.m==E.m)
-    @assert(S.n==E.n)
+Create new CSC matrix with sorted entries from a SparseMatrixCSC  csc and 
+[`SparseMatrixLNK`](@ref)  lnk.
 
-    xnnz=nnz(S)+nnz(E)
-    colptr=Vector{Ti}(undef,S.n+1)
+This method assumes that there are no entries with the same
+indices in lnk and csc, therefore  it appears too dangerous for general use and
+so we don't export it.  A generalization appears to be possible, though.
+"""
+function _splice(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
+    @assert(csc.m==lnk.m)
+    @assert(csc.n==lnk.n)
+
+    xnnz=nnz(csc)+nnz(lnk)
+    colptr=Vector{Ti}(undef,csc.n+1)
     rowval=Vector{Ti}(undef,xnnz)
     nzval=Vector{Tv}(undef,xnnz)
 
-    # Detect the maximum column length of E
-    E_maxcol=0
-    for j=1:S.n
+    # Detect the maximum column length of lnk
+    lnk_maxcol=0
+    for j=1:csc.n
         lcol=0
         k=j
         while k>0
             lcol+=1
-            k=E.colptr[k]
+            k=lnk.colptr[k]
         end
-        E_maxcol=max(lcol,E_maxcol)
+        lnk_maxcol=max(lcol,lnk_maxcol)
     end
     
     # pre-allocate column  data
-    col=[ColEntry{Tv,Ti}(0,0) for i=1:E_maxcol]
+    col=[ColEntry{Tv,Ti}(0,0) for i=1:lnk_maxcol]
 
 
     
     inz=1 # counts the nonzero entries in the new matrix
 
     # loop over all columns
-    for j=1:S.n
+    for j=1:csc.n
         # put extension entries into col and sort them
         k=j
-        lxcol=0
+        l_lnk_col=0
         while k>0
-            if E.rowval[k]>0
-                lxcol+=1
-                col[lxcol]=ColEntry(E.rowval[k],E.nzval[k])
+            if lnk.rowval[k]>0
+                l_lnk_col+=1
+                col[l_lnk_col]=ColEntry(lnk.rowval[k],lnk.nzval[k])
             end
-            k=E.colptr[k]
+            k=lnk.colptr[k]
         end
-        sort!(col,1,lxcol, Base.QuickSort, Base.Forward)
+        sort!(col,1,l_lnk_col, Base.QuickSort, Base.Forward)
 
 
-        # jointly sort E and S entries  into new matrix data
+        # jointly sort lnk and csc entries  into new matrix data
         colptr[j]=inz
         jcol=1 # counts the entries in col
-        k=S.colptr[j]  # counts entries in S
+        jcsc=csc.colptr[j]  # counts entries in csc
         while true
-
-            # Check if there are entries in S preceding col[jcol]
-            if ( nnz(S)>0 &&  (k<S.colptr[j+1]) ) && 
+            
+            # Insert entries from csc into new structure
+            # if the row number is before col[jcol]
+            if ( nnz(csc)>0 &&  (jcsc<csc.colptr[j+1]) ) && 
                  (
-                     (jcol<=lxcol && S.rowval[k]<col[jcol].i) || 
-                     (jcol>lxcol)
+                     (jcol<=l_lnk_col && csc.rowval[jcsc]<col[jcol].rowval) || 
+                     (jcol>l_lnk_col)
                  )
-                rowval[inz]=S.rowval[k]
-                nzval[inz]=S.nzval[k]
-                k+=1
+                rowval[inz]=csc.rowval[jcsc]
+                nzval[inz]=csc.nzval[jcsc]
+                jcsc+=1
                 inz+=1
 
             # Otherwise, insert next entry from col    
-            elseif jcol<=lxcol
-                rowval[inz]=col[jcol].i
-                nzval[inz]=col[jcol].v
+            elseif jcol<=l_lnk_col
+                rowval[inz]=col[jcol].rowval
+                nzval[inz]=col[jcol].nzval
                 jcol+=1
                 inz+=1
             else
@@ -241,22 +245,21 @@ function _splice(E::SparseMatrixExtension{Tv,Ti},S::SparseMatrixCSC{Tv,Ti}) wher
             end
         end
     end
-    colptr[S.n+1]=inz
-    S1=SparseMatrixCSC{Tv,Ti}(S.m,S.n,colptr,rowval,nzval)
-    return S1
+    colptr[csc.n+1]=inz
+    SparseMatrixCSC{Tv,Ti}(csc.m,csc.n,colptr,rowval,nzval)
 end
 
 
 """
 $(SIGNATURES)
 
-If there are new entries in extension, create new CSC matrix
+If there are new entries in extension, create new CSC matrix using [`_splice`](@ref)
 and reset extension.
 """
 function flush!(M::ExtendableSparseMatrix{Tv,Ti}) where {Tv, Ti<:Integer}
-    if M.extmatrix!=nothing && nnz(M.extmatrix)>0
-        M.cscmatrix=_splice(M.extmatrix,M.cscmatrix)
-        M.extmatrix=nothing
+    if M.lnkmatrix!=nothing && nnz(M.lnkmatrix)>0
+        M.cscmatrix=_splice(M.lnkmatrix,M.cscmatrix)
+        M.lnkmatrix=nothing
     end
     return M
 end
@@ -303,7 +306,7 @@ $(SIGNATURES)
 Flush and delegate to cscmatrix.
 """
 function SparseArrays.findnz(E::ExtendableSparseMatrix)
-    flush!(E)
+    @inbounds flush!(E)
     return findnz(E.cscmatrix)
 end
 

@@ -3,28 +3,29 @@
 An `ExtendableSparseMatrix` can serve as a drop-in replacement for
 `SparseMatrixCSC`, albeit with faster assembly.
 
-The code below provides a small benchmark example. 
+The code below provides a small benchmark example.
 ```julia
 using ExtendableSparse
 using SparseArrays
 
-function ext_create(n, row_nz)
+function ext_create(n)
     A=ExtendableSparseMatrix(n,n)
-    sprand_sdd!(A,row_nz);
+    sprand_sdd!(A);
 end
 
-function csc_create(n, row_nz)
+function csc_create(n)
     A=spzeros(n,n)
-    sprand_sdd!(A,row_nz);
+    sprand_sdd!(A);
 end
 
-csc_create(10,2);
-ext_create(10,2);
-n=65536
-row_nz=5
-@time Acsc=csc_create(n,row_nz);
+# Trigger JIT compilation before timing
+csc_create(10);
+ext_create(10);
+
+n=90000
+@time Acsc=csc_create(n);
 nnz(Acsc)
-@time Aext=ext_create(n,row_nz);
+@time Aext=ext_create(n);
 nnz(Aext)
 b=rand(n);
 @time Acsc*(Acsc\b)≈b
@@ -38,6 +39,8 @@ its rows. Its  bandwidth is bounded by 2*sqrt(n), therefore it
 resembles a typical matrix of a 2D piecewise linear FEM discretization.
 For filling a matrix a, the method  conveniently albeit naively
 uses just `a[i,j]=value`. This approach is considerably faster with 
-the [`ExtendableSparseMatrix`](@ref).
+the [`ExtendableSparseMatrix`](@ref) which uses a linked list based
+structure  [`SparseMatrixLNK`](@ref) to grab new entries.
+
 
 

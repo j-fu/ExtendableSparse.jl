@@ -52,8 +52,8 @@ function benchmark(;n=10000,m=10000,nnz=50000)
     mat=spzeros(Float64,Int64,m,n)
     @time sprand!(mat,nnz)
     
-    println("SparseMatrixExtension:")
-    extmat=SparseMatrixExtension{Float64,Int64}(m,n)
+    println("SparseMatrixLNK:")
+    extmat=SparseMatrixLNK{Float64,Int64}(m,n)
     @time sprand!(extmat,nnz)
     
     println("ExtendableSparseMatrix:")
@@ -83,7 +83,7 @@ end
 function optest(n)
     println("optest:")
     A=ExtendableSparseMatrix(n,n)
-    sprand_sdd!(A,5)
+    sprand_sdd!(A)
     b=rand(n)
     @time x=A\b
     Ax=A*x
