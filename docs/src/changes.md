@@ -1,6 +1,6 @@
 # Changes
 
-## dev
+## v0.2.2. Dec 23, 2019
 - What used to be `_splice`  is now `+` and allows now real addition (resulting in a CSC matrix)
 - Added constructors of LNK matrix from CSC matrix and vice versa
 - reorganized tests
