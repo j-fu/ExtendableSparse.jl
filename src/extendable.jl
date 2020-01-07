@@ -97,7 +97,8 @@ $(SIGNATURES)
 Find index in CSC matrix and set value if it exists. Otherwise,
 set index in extension.
 """
-function Base.setindex!(ext::ExtendableSparseMatrix{Tv,Ti}, v, i::Integer, j::Integer) where{Tv,Ti<:Integer}
+
+function Base.setindex!(ext::ExtendableSparseMatrix{Tv,Ti}, v, i,j) where{Tv,Ti<:Integer}
     k=findindex(ext.cscmatrix,i,j)
     if k>0
         ext.cscmatrix.nzval[k]=v
@@ -108,8 +109,6 @@ function Base.setindex!(ext::ExtendableSparseMatrix{Tv,Ti}, v, i::Integer, j::In
         ext.lnkmatrix[i,j]=v
     end
 end
-
-
 
 
 
@@ -259,4 +258,68 @@ $(SIGNATURES)
 function  LinearAlgebra.ldiv!(r::AbstractArray{T,2} where T, ext::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,2} where T)
     @inbounds flush!(ext)
     return LinearAlgebra.ldiv!(r,ext.cscmatrix,x)
+end
+
+
+
+"""
+$(SIGNATURES)
+
+[`flush!`](@ref) and calculate norm from cscmatrix
+"""
+function LinearAlgebra.norm(A::ExtendableSparseMatrix, p::Real=2)
+    @time @inbounds flush!(A)
+    return LinearAlgebra.norm(A.cscmatrix,p)
+end
+
+"""
+$(SIGNATURES)
+
+[`flush!`](@ref) and calculate opnorm from cscmatrix
+"""
+function LinearAlgebra.opnorm(A::ExtendableSparseMatrix, p::Real=2)
+    @inbounds flush!(A)
+    return LinearAlgebra.opnorm(A.cscmatrix,p)
+end
+
+"""
+$(SIGNATURES)
+
+[`flush!`](@ref) and calculate cond from cscmatrix
+"""
+function LinearAlgebra.cond(A::ExtendableSparseMatrix, p::Real=2)
+    @inbounds flush!(A)
+    return LinearAlgebra.cond(A.cscmatrix,p)
+end
+
+
+
+"""
+$(SIGNATURES)
+
+Add SparseMatrixCSC matrix and [`ExtendableSparseMatrix`](@ref)  ext.
+"""
+function Base.:+(ext::ExtendableSparseMatrix{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
+    @inbounds flush!(ext)
+    return ext.cscmatrix+csc
+end
+
+"""
+$(SIGNATURES)
+
+Subtract  SparseMatrixCSC matrix from  [`ExtendableSparseMatrix`](@ref)  ext.
+"""
+function Base.:-(ext::ExtendableSparseMatrix{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
+    @inbounds flush!(ext)
+    return ext.cscmatrix-csc
+end
+
+"""
+$(SIGNATURES)
+
+Subtract  [`ExtendableSparseMatrix`](@ref)  ext from  SparseMatrixCSC.
+"""
+function Base.:-(csc::SparseMatrixCSC{Tv,Ti},ext::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti<:Integer}
+    @inbounds flush!(ext)
+    return csc - ext.cscmatrix
 end
