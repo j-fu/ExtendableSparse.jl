@@ -40,6 +40,11 @@ mutable struct SparseMatrixLNK{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv,Ti}
     """
     nnz::Ti
 
+    """
+    Length of arrays
+    """
+    nentries::Ti
+
 
     """
     Linked list of column entries. Initial length is n,
@@ -77,7 +82,7 @@ $(SIGNATURES)
     
 Constructor of empty matrix.
 """
-SparseMatrixLNK{Tv,Ti}(m::Integer, n::Integer)  where {Tv,Ti<:Integer} =    SparseMatrixLNK{Tv,Ti}(m,n,0,zeros(Ti,n),zeros(Ti,n),zeros(Tv,n))
+SparseMatrixLNK{Tv,Ti}(m::Integer, n::Integer)  where {Tv,Ti<:Integer} =    SparseMatrixLNK{Tv,Ti}(m,n,0,n,zeros(Ti,n),zeros(Ti,n),zeros(Tv,n))
 
 """
 $(SIGNATURES)
@@ -182,13 +187,22 @@ function Base.setindex!(lnk::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Intege
         k=lnk.colptr[k]
     end
 
+    # increase number of entries
+    lnk.nentries+=1
+    if length(lnk.nzval)<lnk.nentries
+        newsize=Int64(ceil(5.0*lnk.nentries/4.0))
+        resize!(lnk.nzval,newsize)
+        resize!(lnk.rowval,newsize)
+        resize!(lnk.colptr,newsize)
+    end
+    
     # Append entry if not found
-    push!(lnk.nzval,v)
-    push!(lnk.rowval,i)
+    lnk.nzval[lnk.nentries]=v
+    lnk.rowval[lnk.nentries]=i
 
     # Shift the end of the list
-    push!(lnk.colptr,0)
-    lnk.colptr[k0]=length(lnk.nzval)
+    lnk.colptr[lnk.nentries]=0
+    lnk.colptr[k0]=lnk.nentries
 
     # Update number of nonzero entries
     lnk.nnz+=1
