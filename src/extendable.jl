@@ -17,6 +17,11 @@ mutable struct ExtendableSparseMatrix{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv
     Linked list structure holding data of extension
     """
     lnkmatrix::Union{SparseMatrixLNK{Tv,Ti},Nothing}
+
+    """
+    Time stamp of last pattern update
+    """
+    pattern_timestamp::Float64
 end
 
 
@@ -26,7 +31,7 @@ $(SIGNATURES)
 Create empty ExtendableSparseMatrix.
 """
 function ExtendableSparseMatrix{Tv,Ti}(m::Integer, n::Integer) where{Tv,Ti<:Integer}
-    ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),nothing)
+    ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),nothing,time())
 end
 
 """
@@ -62,7 +67,7 @@ $(SIGNATURES)
   Create ExtendableSparseMatrix from SparseMatrixCSC
 """
 function ExtendableSparseMatrix(csc::SparseMatrixCSC{Tv,Ti}) where{Tv,Ti<:Integer}
-    return ExtendableSparseMatrix{Tv,Ti}(csc, nothing)
+    return ExtendableSparseMatrix{Tv,Ti}(csc, nothing, time())
 end
 
 
@@ -148,6 +153,7 @@ function flush!(ext::ExtendableSparseMatrix{Tv,Ti}) where {Tv, Ti<:Integer}
     if ext.lnkmatrix!=nothing && nnz(ext.lnkmatrix)>0
         ext.cscmatrix=ext.lnkmatrix+ext.cscmatrix
         ext.lnkmatrix=nothing
+        ext.pattern_timestamp
     end
     return ext
 end
