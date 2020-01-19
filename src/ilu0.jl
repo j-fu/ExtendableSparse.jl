@@ -1,4 +1,4 @@
-mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
+mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractExtendablePreconditioner{Tv,Ti}
     extmatrix::ExtendableSparseMatrix{Tv,Ti}
     xdiag::Array{Tv,1}
     idiag::Array{Ti,1}
@@ -15,6 +15,9 @@ function ILU0Preconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) where {Tv,
     precon=ILU0Preconditioner{Tv, Ti}(extmatrix,xdiag,idiag,0.0)
     update!(precon)
 end
+
+ILU0Preconditioner(cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}=ILU0Preconditioner(ExtendableSparseMatrix(cscmatrix))
+
 
 function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
     cscmatrix=precon.extmatrix.cscmatrix

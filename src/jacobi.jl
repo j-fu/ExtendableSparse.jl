@@ -1,4 +1,4 @@
-struct JacobiPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
+struct JacobiPreconditioner{Tv, Ti} <: AbstractExtendablePreconditioner{Tv,Ti}
     extmatrix::ExtendableSparseMatrix{Tv,Ti}
     invdiag::Array{Tv,1}
 end
@@ -20,6 +20,8 @@ function JacobiPreconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) where {T
     precon=JacobiPreconditioner{Tv, Ti}(extmatrix,invdiag)
     update!(precon)
 end
+
+JacobiPreconditioner(cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}=JacobiPreconditioner(ExtendableSparseMatrix(cscmatrix))
 
 
 function  LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, precon::JacobiPreconditioner, v::AbstractArray{T,1} where T)
