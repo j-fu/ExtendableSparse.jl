@@ -124,6 +124,22 @@ end
 
 
 
+function findindex(lnk::SparseMatrixLNK{Tv,Ti},i::Integer, j::Integer) where {Tv,Ti<:Integer}
+    if !((1 <= i <= lnk.m) & (1 <= j <= lnk.n))
+        throw(BoundsError(lnk, (i,j)))
+    end
+    
+    k=j
+    k0=j
+    while k>0
+        if lnk.rowval[k]==i
+            return k,0
+        end
+        k0=k
+        k=lnk.colptr[k]
+    end
+    return 0,k0
+end
 
 
 """
@@ -133,23 +149,37 @@ Return value stored for entry or zero if not found
 """
 function Base.getindex(lnk::SparseMatrixLNK{Tv,Ti},i::Integer, j::Integer) where {Tv,Ti<:Integer}
 
-    if !((1 <= i <= lnk.m) & (1 <= j <= lnk.n))
-        throw(BoundsError(lnk, (i,j)))
+    k,k0=findindex(lnk,i,j)
+    if k==0
+        return zero(Tv)
+    else
+        return lnk.nzval[k]
     end
-    
-    k=j
-    while k>0
-        if lnk.rowval[k]==i
-            return lnk.nzval[k]
-        end
-        k=lnk.colptr[k]
-    end
-
-    return zero(Tv)
 end
 
 
+function addentry!(lnk::SparseMatrixLNK{Tv,Ti},i,j,k,k0)  where {Tv,Ti<:Integer}
+    # increase number of entries
+    lnk.nentries+=1
+    if length(lnk.nzval)<lnk.nentries
+        newsize=Int64(ceil(5.0*lnk.nentries/4.0))
+        resize!(lnk.nzval,newsize)
+        resize!(lnk.rowval,newsize)
+        resize!(lnk.colptr,newsize)
+    end
+    
+    # Append entry if not found
+#    lnk.nzval[lnk.nentries]=v
+    lnk.rowval[lnk.nentries]=i
 
+    # Shift the end of the list
+    lnk.colptr[lnk.nentries]=0
+    lnk.colptr[k0]=lnk.nentries
+
+    # Update number of nonzero entries
+    lnk.nnz+=1
+    return lnk.nentries
+end
 
 """
 $(SIGNATURES)
@@ -173,40 +203,38 @@ function Base.setindex!(lnk::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Intege
         return lnk
     end
 
-    # Traverse list for existing entry
-    k=j
-    k0=j
-    while k>0
-        # Update value and return if entry has been found
-        if lnk.rowval[k]==i
-            lnk.nzval[k]=v
-            return lnk
-        end
-        k0=k
-        # Next element in the list
-        k=lnk.colptr[k]
+    k,k0=findindex(lnk,i,j)
+    if k>0
+        lnk.nzval[k]=v
+        return lnk
     end
-
-    # increase number of entries
-    lnk.nentries+=1
-    if length(lnk.nzval)<lnk.nentries
-        newsize=Int64(ceil(5.0*lnk.nentries/4.0))
-        resize!(lnk.nzval,newsize)
-        resize!(lnk.rowval,newsize)
-        resize!(lnk.colptr,newsize)
-    end
-    
-    # Append entry if not found
-    lnk.nzval[lnk.nentries]=v
-    lnk.rowval[lnk.nentries]=i
-
-    # Shift the end of the list
-    lnk.colptr[lnk.nentries]=0
-    lnk.colptr[k0]=lnk.nentries
-
-    # Update number of nonzero entries
-    lnk.nnz+=1
+    k=addentry!(lnk,i,j,k,k0)
+    lnk.nzval[k]=v
     return lnk
+end
+
+
+function update!(lnk::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Integer,op) where {Tv,Ti<:Integer}
+    v = convert(Tv, _v)
+    i = convert(Ti, _i)
+    j = convert(Ti, _j)
+
+        
+    # Set the first  column entry if it was not yet set.
+    if lnk.rowval[j]==0
+        lnk.rowval[j]=i       
+        lnk.nzval[j]=op(zero(Tv),v)
+        lnk.nnz+=1
+        return lnk
+    end
+    k,k0=findindex(lnk,i,j)
+    if k>0
+        lnk.nzval[k]=op(lnk.nzval[k],v)
+        return lnk
+    end
+    k=addentry!(lnk,i,j,k,k0)
+    lnk.nzval[k]=op(lnk.nzval[k],v)
+    lnk
 end
 
 
@@ -254,17 +282,16 @@ Base.isless(x::ColEntry{Tv, Ti},y::ColEntry{Tv, Ti}) where {Tv,Ti<:Integer} = (x
 """
 $(SIGNATURES)
 
-Add SparseMatrixCSC matrix and [`SparseMatrixLNK`](@ref)  lnk.
+Add SparseMatrixCSC matrix and [`SparseMatrixLNK`](@ref)  lnk, returning a SparseMatrixCSC
 """
-function Base.:+(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
+function Base.:+(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti})::SparseMatrixCSC{Tv,Ti} where {Tv,Ti<:Integer}
     @assert(csc.m==lnk.m)
     @assert(csc.n==lnk.n)
-
+    
     xnnz=nnz(csc)+nnz(lnk)
     colptr=Vector{Ti}(undef,csc.n+1)
     rowval=Vector{Ti}(undef,xnnz)
     nzval=Vector{Tv}(undef,xnnz)
-
     # Detect the maximum column length of lnk
     lnk_maxcol=0
     for j=1:csc.n
@@ -284,9 +311,12 @@ function Base.:+(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti}) where 
     
     inz=1 # counts the nonzero entries in the new matrix
 
+    l_lnk_col=zero(Ti)
+    in_csc_col(jcsc)=(nnz(csc)>zero(Ti)) && (jcsc<csc.colptr[j+1])
+    in_lnk_col(jlnk)=(jlnk<=l_lnk_col)
+
     # loop over all columns
     for j=1:csc.n
-
         # Copy extension entries into col and sort them
         k=j
         l_lnk_col=zero(Ti)
@@ -305,8 +335,6 @@ function Base.:+(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti}) where 
         jlnk=one(Ti) # counts the entries in col
         jcsc=csc.colptr[j]  # counts entries in csc
 
-        in_csc_col(jcsc)=(nnz(csc)>zero(Ti)) && (jcsc<csc.colptr[j+1])
-        in_lnk_col(jlnk)=(jlnk<=l_lnk_col)
 
         while true
             if in_csc_col(jcsc) &&  (in_lnk_col(jlnk)  && csc.rowval[jcsc]<col[jlnk].rowval  ||  !in_lnk_col(jlnk))
