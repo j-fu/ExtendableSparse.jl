@@ -1,44 +1,80 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · ExtendableSparse.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>ExtendableSparse.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li class="current"><a class="toctext" href>Examples</a><ul class="internal"><li><a class="toctext" href="#Usage-idea-1">Usage idea</a></li><li><a class="toctext" href="#Benchmark-1">Benchmark</a></li></ul></li><li><a class="toctext" href="../changes/">Changes</a></li><li><a class="toctext" href="../api/">API</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Examples</a></li></ul><a class="edit-page" href="https://github.com/j-fu/ExtendableSparse.jl"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Examples</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Examples-1" href="#Examples-1">Examples</a></h1><h2><a class="nav-anchor" id="Usage-idea-1" href="#Usage-idea-1">Usage idea</a></h2><p>An <code>ExtendableSparseMatrix</code> can serve as a drop-in replacement for <code>SparseMatrixCSC</code>, albeit with faster assembly.</p><pre><code class="language-julia">using ExtendableSparse
-function example(n,bandwidth)
-    A=ExtendableSparseMatrix(n,n);
-    aii=0.0
-    for i=1:n
-        for j=max(1,i-bandwidth):5:min(n,i+bandwidth)
-            aij=-rand()
-            A[i,j]=aij
-            aii+=abs(aij)
-        end
-        A[i,i]=aii+0.1
-    end
-    b=rand(n)
-    x=A\b
-    A*x≈ b
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · ExtendableSparse.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>ExtendableSparse.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li class="current"><a class="toctext" href>Examples</a><ul class="internal"><li><a class="toctext" href="#Matrix-creation-1">Matrix creation</a></li><li><a class="toctext" href="#Matrix-update-1">Matrix update</a></li></ul></li><li><a class="toctext" href="../changes/">Changes</a></li><li><a class="toctext" href="../api/">API</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Examples</a></li></ul><a class="edit-page" href="https://github.com/j-fu/ExtendableSparse.jl"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Examples</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Examples-1" href="#Examples-1">Examples</a></h1><h2><a class="nav-anchor" id="Matrix-creation-1" href="#Matrix-creation-1">Matrix creation</a></h2><p>An <code>ExtendableSparseMatrix</code> can serve as a drop-in replacement for <code>SparseMatrixCSC</code>, albeit with faster assembly during the buildup phase when using index based access. That means that code similar to the following example should be fast enough to avoid the assembly steps using the coordinate format:</p><pre><code class="language-julia">n=3
+A=ExtendableSparseMatrix(n,n)
+for i=1:n-1
+    A[i,i+1]=i
 end
-example(1000,100)
-# output
-true</code></pre><h2><a class="nav-anchor" id="Benchmark-1" href="#Benchmark-1">Benchmark</a></h2><p>The code below provides a small benchmark example.</p><pre><code class="language-julia">using ExtendableSparse
-using SparseArrays
-
-function ext_create(n)
-    A=ExtendableSparseMatrix(n,n)
-    sprand_sdd!(A);
-end
-
-function csc_create(n)
-    A=spzeros(n,n)
-    sprand_sdd!(A);
-end
-
-# Trigger JIT compilation before timing
-csc_create(10);
-ext_create(10);
-
-n=90000
-@time Acsc=csc_create(n);
-nnz(Acsc)
-@time Aext=ext_create(n);
-nnz(Aext)
-b=rand(n);
-@time Acsc*(Acsc\b)≈b
-@time Aext*(Aext\b)≈b</code></pre><p>The function <a href="../api/#ExtendableSparse.sprand_sdd!-Union{Tuple{AbstractSparseArray{Tv,Ti,2}}, Tuple{Ti}, Tuple{Tv}} where Ti where Tv"><code>sprand_sdd!</code></a> fills a  sparse matrix with random entries such that it becomes strictly diagonally dominant and thus invertible and has a fixed number of nonzeros in its rows (similar to the method in the first example). Its  bandwidth is bounded by 2*sqrt(n), therefore it  resembles a typical matrix of a 2D piecewise linear FEM discretization. For filling a matrix a, the method  conveniently albeit naively uses just <code>a[i,j]=value</code>. This approach is considerably faster with  the <a href="../api/#ExtendableSparse.ExtendableSparseMatrix"><code>ExtendableSparseMatrix</code></a> which uses a linked list based structure  <a href="../api/#ExtendableSparse.SparseMatrixLNK"><code>SparseMatrixLNK</code></a> to grab new entries.</p><footer><hr/><a class="previous" href="../"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="../changes/"><span class="direction">Next</span><span class="title">Changes</span></a></footer></article></body></html>
+A</code></pre><pre><code class="language-none">3×3 ExtendableSparseMatrix{Float64,Int64}:
+ 0.0  1.0  0.0
+ 0.0  0.0  2.0
+ 0.0  0.0  0.0</code></pre><h3><a class="nav-anchor" id="Benchmark-1" href="#Benchmark-1">Benchmark</a></h3><p>The method <a href="../api/#ExtendableSparse.fdrand-Union{Tuple{Tv}, Tuple{Any,Any,Any}} where Tv"><code>fdrand</code></a>  creates a matrix similar to the discetization matrix of a Poisson equation on a d-dimensional cube. The code uses the index access API for the creation of the matrix. This approach is considerably faster with  the <a href="../api/#ExtendableSparse.ExtendableSparseMatrix"><code>ExtendableSparseMatrix</code></a> which uses a linked list based structure  <a href="../api/#ExtendableSparse.SparseMatrixLNK"><code>SparseMatrixLNK</code></a> to grab new entries.</p><pre><code class="language-julia">@benchmark fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);</code></pre><pre><code class="language-none">BenchmarkTools.Trial: 
+  memory estimate:  8.16 MiB
+  allocs estimate:  31
+  --------------
+  minimum time:     10.609 ms (0.00% GC)
+  median time:      11.015 ms (0.00% GC)
+  mean time:        11.337 ms (3.51% GC)
+  maximum time:     66.077 ms (82.75% GC)
+  --------------
+  samples:          441
+  evals/sample:     1</code></pre><pre><code class="language-julia">@benchmark fdrand(30,30,30, matrixtype=SparseMatrixCSC);</code></pre><pre><code class="language-none">BenchmarkTools.Trial: 
+  memory estimate:  6.21 MiB
+  allocs estimate:  40
+  --------------
+  minimum time:     472.645 ms (0.00% GC)
+  median time:      476.535 ms (0.00% GC)
+  mean time:        482.666 ms (1.25% GC)
+  maximum time:     530.206 ms (10.52% GC)
+  --------------
+  samples:          11
+  evals/sample:     1</code></pre><h2><a class="nav-anchor" id="Matrix-update-1" href="#Matrix-update-1">Matrix update</a></h2><p>For repeated calculations on the same sparsity structure (e.g. for time dependent problems or Newton iterations) it is convenient to skip all but the first creation steps and to just replace the values in the matrix after setting then elements of the <code>nzval</code>  vector to zero. Typically in finite element and finite volume methods this step updates matrix entries (most of them several times) by adding values. In this case, the current indexing interface of Julia requires to access the matrix twice:</p><pre><code class="language-julia">A=spzeros(3,3)
+Meta.@lower A[1,2]+=3</code></pre><pre><code class="language-none">:($(Expr(:thunk, CodeInfo(
+ 1 ─ %1 = (Base.getindex)(A, 1, 2)
+ │   %2 = %1 + 3
+ │        (Base.setindex!)(A, %2, 1, 2)
+ └──      return %2
+))))</code></pre><p>For sparse matrices this requires to the index search in the structure twice. The packages provides the method <a href="../api/#ExtendableSparse.updateindex!-Union{Tuple{Ti}, Tuple{Tv}, Tuple{SparseMatrixLNK{Tv,Ti},Any,Any,Integer,Integer}} where Ti&lt;:Integer where Tv"><code>updateindex!</code></a> for both <code>SparseMatrixCSC</code> and  for <code>ExtendableSparse</code> which allows to update a matrix element with one index search.</p><h3><a class="nav-anchor" id="Benchmark-for-SparseMatrixCSC-1" href="#Benchmark-for-SparseMatrixCSC-1">Benchmark for <code>SparseMatrixCSC</code></a></h3><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=SparseMatrixCSC);
+@benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; A[i,j]+=v);</code></pre><pre><code class="language-none">BenchmarkTools.Trial: 
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     5.031 ms (0.00% GC)
+  median time:      5.061 ms (0.00% GC)
+  mean time:        5.084 ms (0.00% GC)
+  maximum time:     6.916 ms (0.00% GC)
+  --------------
+  samples:          983
+  evals/sample:     1</code></pre><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=SparseMatrixCSC);
+@benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; updateindex!(A,+,v,i,j));</code></pre><pre><code class="language-none">BenchmarkTools.Trial: 
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     2.747 ms (0.00% GC)
+  median time:      2.785 ms (0.00% GC)
+  mean time:        2.795 ms (0.00% GC)
+  maximum time:     3.288 ms (0.00% GC)
+  --------------
+  samples:          1786
+  evals/sample:     1</code></pre><h3><a class="nav-anchor" id="Benchmark-for-ExtendableSparseMatrix-1" href="#Benchmark-for-ExtendableSparseMatrix-1">Benchmark for <code>ExtendableSparseMatrix</code></a></h3><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
+@benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; A[i,j]+=v);</code></pre><pre><code class="language-none">BenchmarkTools.Trial: 
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     5.337 ms (0.00% GC)
+  median time:      5.376 ms (0.00% GC)
+  mean time:        5.397 ms (0.00% GC)
+  maximum time:     6.102 ms (0.00% GC)
+  --------------
+  samples:          926
+  evals/sample:     1</code></pre><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
+@benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; updateindex!(A,+,v,i,j));</code></pre><pre><code class="language-none">BenchmarkTools.Trial: 
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     3.102 ms (0.00% GC)
+  median time:      3.138 ms (0.00% GC)
+  mean time:        3.147 ms (0.00% GC)
+  maximum time:     3.482 ms (0.00% GC)
+  --------------
+  samples:          1587
+  evals/sample:     1</code></pre><p>Note that the update process for <code>ExtendableSparse</code> is slightly slower than for <code>SparseMatrixCSC</code> due to the overhead which comes from checking the presence of new entries.</p><footer><hr/><a class="previous" href="../"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="../changes/"><span class="direction">Next</span><span class="title">Changes</span></a></footer></article></body></html>
