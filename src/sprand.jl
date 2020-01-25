@@ -1,4 +1,3 @@
-
 """
 $(SIGNATURES)
 
@@ -46,5 +45,135 @@ function sprand_sdd!(A::AbstractSparseMatrix{Tv,Ti}; nnzrow=4) where {Tv,Ti}
         A[i,i]=aii+rand() # make it strictly diagonally dominant
     end
     A
+end
+
+"""
+$(SIGNATURES)
+
+After setting  all nonzero entries  to zero, fill resp.  update matrix
+with finite  difference discretization data  on a unit  hypercube. See
+[`fdrand`](@ref) for documentation of the parameters.
+
+It is required that `size(A)==(N,N)` where `N=nx*ny*nz`
+"""
+function fdrand!(A::AbstractMatrix,
+                 nx,ny,nz;
+                 update= (A,v,i,j)-> A[i,j]+=v,
+                 rand=()-> rand())
+    
+    sz=size(A)
+    N=nx*ny*nz
+    if sz[1]!=N || sz[2]!=N
+        error("Matrix size mismatch")
+    end
+    
+    _flush!(m::ExtendableSparseMatrix)=flush!(m)
+    _flush!(m::SparseMatrixCSC)=m
+    _flush!(m::SparseMatrixLNK)=m
+    _flush!(m::Matrix)=m
+
+    _nonzeros(m::Matrix)=vec(m)
+    _nonzeros(m::ExtendableSparseMatrix)=nonzeros(m)
+    _nonzeros(m::SparseMatrixLNK)=m.nzval
+    _nonzeros(m::SparseMatrixCSC)=nonzeros(m)
+    
+    function update_pair(A,v,i,j)
+        update(A,-v,i,j)
+        update(A,-v,j,i)
+        update(A,v,i,i)
+        update(A,v,j,j)
+    end
+    
+    nzv=_nonzeros(A)
+    nzv.=0.0
+
+    
+    hx=1.0/nx
+    hy=1.0/ny
+    hz=1.0/nz
+
+    nxy=nx*ny
+    l=1
+    for k=1:nz
+        for j=1:ny
+            for i=1:nx
+                if i<nx
+                    update_pair(A,rand()*hy*hz/hx,l,l+1)
+                end
+                if i==1|| i==nx
+                    update(A,rand(),l,l)
+                end
+                if j<ny
+                    update_pair(A,rand()*hx*hz/hy,l,l+nx)
+                end
+                if ny>2&&(j==1|| j==ny)
+                    update(A,rand(),l,l)
+                end
+                if k<nz
+                    update_pair(A,rand()*hx*hy/hz,l,l+nxy)
+                end
+                if nz>2&&(k==1|| k==nz)
+                    update(A,rand(),l,l)
+                end
+                l=l+1
+            end
+        end
+    end
+    _flush!(A)
+end
+
+"""
+$(SIGNATURES)
+
+Create matrix  for a mock  finite difference operator for  a diffusion
+problem with random coefficients on a unit hypercube ``\\Omega\\subset\\mathbb R^d``.
+with ``d=1`` if  `nx>1 && ny==1 && nz==1`, ``d=2`` if  `nx>1 && ny>1 && nz==1` and
+``d=3`` if  `nx>1 && ny>1 && nz>1` .
+
+```math
+    \\begin{align*}
+             -\\nabla a \\nabla u &= f&&  \\text{in}\\;  \\Omega  \\\\
+    a\\nabla u\\cdot \\vec n + bu &=g && \\text{on}\\;  \\partial\\Omega
+    \\end{align*}
+```
+
+The matrix is irreducibly diagonally dominant, has positive main diagonal entries 
+and nonpositive off-diagonal entries, hence it has the M-Property.
+Therefore, its inverse will be a dense matrix with positive entries. 
+Moreover it is symmmetric, and  positive definite.
+
+Parameters+ default values:
+
+|   Parameter + default vale        | Description                        |
+| ---------------------------------:|:---------------------------------- |
+|                              `nx` | Number of unknowns in x direction  |
+|                              `ny` | Number of unknowns in y direction  |
+|                              `nz` | Number of unknowns in z direction  |   
+|    `matrixtype = SparseMatrixCSC` | Matrix type                        |
+|  `update = (A,v,i,j)-> A[i,j]+=v` | Element update function            |
+|    `rand =()-> rand()`            | Random number generator            |
+                                                                             
+The sparsity structure is fixed to an orthogonal grid, resulting in a 3, 5 or 7
+diagonal matrix depending on dimension. The entries
+are random unless e.g.  `rand=()->1` is passed as random number generator.
+Tested for Matrix, SparseMatrixCSC and ExtendableSparseMatrix.
+
+"""
+function fdrand(nx,ny,nz;
+                matrixtype::Type{Tv}=SparseMatrixCSC,
+                update = (A,v,i,j)-> A[i,j]+=v,
+                rand=()-> rand()) where Tv
+    N=nx*ny*nz
+    if matrixtype==ExtendableSparseMatrix
+        A=ExtendableSparseMatrix(N,N)
+    elseif matrixtype==SparseMatrixLNK
+        A=SparseMatrixLNK(N,N)
+    elseif matrixtype==SparseMatrixCSC
+        A=spzeros(N,N)
+    elseif matrixtype==Matrix
+        A=zeros(N,N)
+    end
+        
+    fdrand!(A,nx,ny,nz,update = update, rand=rand)
 end
 

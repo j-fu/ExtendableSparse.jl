@@ -1,4 +1,20 @@
 # Changes
+## v0.2.5, Jan 26, 2020
+- fixed allocations in  Base.+
+- added updateindex! method 
+- provide fdrand and fdrand! matrix constructors
+- automatic benchmarks in examples
+
+## v0.2.4, Jan 19, 2020
+- Allow preconditioner creation directly from CSC Matrix
+- Rename AbstractPreconditioner to AbstractExtendablePreconditioner
+
+## v0.2.3, Jan 15, 2020
+- Started to introduce preconditioners (undocumented)
+
+## v0.2.3, Jan 8, 2020
+- added norm, cond, opnorm methods
+- resize! instead of push! when adding entries should trigger less allocation operations
 
 ## v0.2.2. Dec 23, 2019
 - What used to be `_splice`  is now `+` and allows now real addition (resulting in a CSC matrix)

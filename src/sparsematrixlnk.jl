@@ -214,7 +214,14 @@ function Base.setindex!(lnk::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Intege
 end
 
 
-function update!(lnk::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Integer,op) where {Tv,Ti<:Integer}
+"""
+$(SIGNATURES)
+
+Update element of the matrix  with operation `op`. 
+This can replace the following code and save one index
+search during acces:
+"""
+function updateindex!(lnk::SparseMatrixLNK{Tv,Ti},op, _v, _i::Integer, _j::Integer) where {Tv,Ti<:Integer}
     v = convert(Tv, _v)
     i = convert(Ti, _i)
     j = convert(Ti, _j)
@@ -223,7 +230,7 @@ function update!(lnk::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Integer,op) w
     # Set the first  column entry if it was not yet set.
     if lnk.rowval[j]==0
         lnk.rowval[j]=i       
-        lnk.nzval[j]=op(zero(Tv),v)
+        lnk.nzval[j]=op(lnk.nzval[j],v)
         lnk.nnz+=1
         return lnk
     end
@@ -233,7 +240,7 @@ function update!(lnk::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Integer,op) w
         return lnk
     end
     k=addentry!(lnk,i,j,k,k0)
-    lnk.nzval[k]=op(lnk.nzval[k],v)
+    lnk.nzval[k]=op(zero(Tv),v)
     lnk
 end
 
@@ -311,9 +318,9 @@ function Base.:+(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti})::Spars
     
     inz=1 # counts the nonzero entries in the new matrix
 
-    l_lnk_col=zero(Ti)
-    in_csc_col(jcsc)=(nnz(csc)>zero(Ti)) && (jcsc<csc.colptr[j+1])
-    in_lnk_col(jlnk)=(jlnk<=l_lnk_col)
+    
+    in_csc_col(jcsc,j)=(nnz(csc)>zero(Ti)) && (jcsc<csc.colptr[j+1])
+    in_lnk_col(jlnk,l_lnk_col)=(jlnk<=l_lnk_col)
 
     # loop over all columns
     for j=1:csc.n
@@ -337,20 +344,20 @@ function Base.:+(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti})::Spars
 
 
         while true
-            if in_csc_col(jcsc) &&  (in_lnk_col(jlnk)  && csc.rowval[jcsc]<col[jlnk].rowval  ||  !in_lnk_col(jlnk))
+            if in_csc_col(jcsc,j) &&  (in_lnk_col(jlnk,l_lnk_col)  && csc.rowval[jcsc]<col[jlnk].rowval  ||  !in_lnk_col(jlnk,l_lnk_col))
                 # Insert entries from csc into new structure
                 rowval[inz]=csc.rowval[jcsc]
                 nzval[inz]=csc.nzval[jcsc]
                 jcsc+=1
                 inz+=1
-            elseif in_csc_col(jcsc) &&  (in_lnk_col(jlnk)  && csc.rowval[jcsc]==col[jlnk].rowval)
+            elseif in_csc_col(jcsc,j) &&  (in_lnk_col(jlnk,l_lnk_col)  && csc.rowval[jcsc]==col[jlnk].rowval)
                 # Add up entries from csc and lnk
                 rowval[inz]=csc.rowval[jcsc]
                 nzval[inz]=csc.nzval[jcsc]+col[jlnk].nzval
                 jcsc+=1
                 inz+=1
                 jlnk+=1
-            elseif in_lnk_col(jlnk)
+            elseif in_lnk_col(jlnk,l_lnk_col)
                 # Insert entries from lnk res. col into new structure
                 rowval[inz]=col[jlnk].rowval
                 nzval[inz]=col[jlnk].nzval
