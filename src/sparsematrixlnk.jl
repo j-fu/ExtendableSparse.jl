@@ -326,7 +326,7 @@ function Base.:+(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti})::Spars
     for j=1:csc.n
         # Copy extension entries into col and sort them
         k=j
-        l_lnk_col=zero(Ti)
+        l_lnk_col=0
         while k>0
             if lnk.rowval[k]>0
                 l_lnk_col+=1

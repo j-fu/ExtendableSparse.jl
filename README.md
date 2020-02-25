@@ -16,7 +16,7 @@ Any linear algebra method on `ExtendableSparseMatrix` starts with a `flush!` met
 
 `ExtendableSparseMatrix` is aimed to work as a drop-in replacement to `SparseMatrixCSC` in finite element and finite volume codes especally in those cases where the sparsity structure is hard to detect a priori and where working with an intermediadte COO representation appears to be not convenient.
 
-In addition, the packages provides a method `updateindex!(A,op,v,i,j)` for both `SparseMatrixCSC` and for `ExtendableSparse` which allows to update a matrix element with one index search instead of two. It allows to replace e.g. `A[i,j]+=v` by `updateindex!(A,+,i,j,v)`. The former operation is lowered to 
+In addition, the package provides a method `updateindex!(A,op,v,i,j)` for both `SparseMatrixCSC` and for `ExtendableSparse` which allows to update a matrix element with one index search instead of two. It allows to replace e.g. `A[i,j]+=v` by `updateindex!(A,+,i,j,v)`. The former operation is lowered to 
 ````
 %1 = Base.getindex(A, 1, 2)
 %2 = %1 + 3
