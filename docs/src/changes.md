@@ -1,4 +1,8 @@
 # Changes
+## v0.3.0, April 10, 2020
+- Don't create new entry if the value to be assigned is zero, making things consistent with SparseMatrixCSC and ForwardDiff 
+  as suggested by @MaximilianJHuber
+
 ## v0.2.5, Jan 26, 2020
 - fixed allocations in  Base.+
 - added updateindex! method 
