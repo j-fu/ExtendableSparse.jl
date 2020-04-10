@@ -184,7 +184,7 @@ end
 """
 $(SIGNATURES)
     
-Update value of existing entry, otherwise extend matrix.
+Update value of existing entry, otherwise extend matrix if _v is nonzero.
 """
 function Base.setindex!(lnk::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Integer) where {Tv,Ti<:Integer}
     v = convert(Tv, _v)
@@ -196,7 +196,7 @@ function Base.setindex!(lnk::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Intege
     end
     
     # Set the first  column entry if it was not yet set.
-    if lnk.rowval[j]==0
+    if lnk.rowval[j]==0 && !iszero(v)
         lnk.rowval[j]=i       
         lnk.nzval[j]=v
         lnk.nnz+=1
@@ -208,8 +208,10 @@ function Base.setindex!(lnk::SparseMatrixLNK{Tv,Ti}, _v, _i::Integer, _j::Intege
         lnk.nzval[k]=v
         return lnk
     end
-    k=addentry!(lnk,i,j,k,k0)
-    lnk.nzval[k]=v
+    if !iszero(v)
+        k=addentry!(lnk,i,j,k,k0)
+        lnk.nzval[k]=v
+    end
     return lnk
 end
 
@@ -218,8 +220,7 @@ end
 $(SIGNATURES)
 
 Update element of the matrix  with operation `op`. 
-This can replace the following code and save one index
-search during acces:
+It assumes that `op(0,0)==0` 
 """
 function updateindex!(lnk::SparseMatrixLNK{Tv,Ti},op, _v, _i::Integer, _j::Integer) where {Tv,Ti<:Integer}
     v = convert(Tv, _v)
@@ -228,7 +229,7 @@ function updateindex!(lnk::SparseMatrixLNK{Tv,Ti},op, _v, _i::Integer, _j::Integ
 
         
     # Set the first  column entry if it was not yet set.
-    if lnk.rowval[j]==0
+    if lnk.rowval[j]==0 && !iszero(v)
         lnk.rowval[j]=i       
         lnk.nzval[j]=op(lnk.nzval[j],v)
         lnk.nnz+=1
@@ -239,8 +240,10 @@ function updateindex!(lnk::SparseMatrixLNK{Tv,Ti},op, _v, _i::Integer, _j::Integ
         lnk.nzval[k]=op(lnk.nzval[k],v)
         return lnk
     end
-    k=addentry!(lnk,i,j,k,k0)
-    lnk.nzval[k]=op(zero(Tv),v)
+    if !iszero(v)
+        k=addentry!(lnk,i,j,k,k0)
+        lnk.nzval[k]=op(zero(Tv),v)
+    end
     lnk
 end
 
