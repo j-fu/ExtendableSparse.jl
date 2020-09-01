@@ -248,6 +248,18 @@ function  LinearAlgebra.mul!(r::AbstractArray{T,1} where T, ext::ExtendableSpars
 end
 
 
+
+"""
+$(SIGNATURES)
+
+[`\\`](@ref) for extmatrix
+"""
+function LinearAlgebra.:\(ext::ExtendableSparseMatrix,X::Union{AbstractArray{T,1}, AbstractArray{T,2}} where T)
+    flush!(ext)
+    ext.cscmatrix\X
+end
+
+
 """
 $(SIGNATURES)
 
