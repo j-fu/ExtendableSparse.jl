@@ -11,20 +11,20 @@ A</code></pre><pre><code class="language-none">3×3 ExtendableSparseMatrix{Float
   memory estimate:  8.16 MiB
   allocs estimate:  31
   --------------
-  minimum time:     11.142 ms (0.00% GC)
-  median time:      12.002 ms (0.00% GC)
-  mean time:        12.543 ms (4.18% GC)
-  maximum time:     68.779 ms (83.03% GC)
+  minimum time:     11.399 ms (0.00% GC)
+  median time:      11.821 ms (0.00% GC)
+  mean time:        12.295 ms (4.26% GC)
+  maximum time:     74.123 ms (83.77% GC)
   --------------
-  samples:          399
+  samples:          406
   evals/sample:     1</code></pre><pre><code class="language-julia">@benchmark fdrand(30,30,30, matrixtype=SparseMatrixCSC);</code></pre><pre><code class="language-none">BenchmarkTools.Trial: 
   memory estimate:  6.21 MiB
   allocs estimate:  40
   --------------
-  minimum time:     474.843 ms (0.00% GC)
-  median time:      477.357 ms (0.00% GC)
-  mean time:        483.245 ms (1.28% GC)
-  maximum time:     535.492 ms (10.94% GC)
+  minimum time:     474.661 ms (0.00% GC)
+  median time:      476.263 ms (0.00% GC)
+  mean time:        482.374 ms (1.34% GC)
+  maximum time:     538.323 ms (11.45% GC)
   --------------
   samples:          11
   evals/sample:     1</code></pre><h2><a class="nav-anchor" id="Matrix-update-1" href="#Matrix-update-1">Matrix update</a></h2><p>For repeated calculations on the same sparsity structure (e.g. for time dependent problems or Newton iterations) it is convenient to skip all but the first creation steps and to just replace the values in the matrix after setting then elements of the <code>nzval</code>  vector to zero. Typically in finite element and finite volume methods this step updates matrix entries (most of them several times) by adding values. In this case, the current indexing interface of Julia requires to access the matrix twice:</p><pre><code class="language-julia">A=spzeros(3,3)
@@ -38,43 +38,43 @@ Meta.@lower A[1,2]+=3</code></pre><pre><code class="language-none">:($(Expr(:thu
   memory estimate:  0 bytes
   allocs estimate:  0
   --------------
-  minimum time:     5.042 ms (0.00% GC)
-  median time:      5.087 ms (0.00% GC)
-  mean time:        5.110 ms (0.00% GC)
-  maximum time:     5.459 ms (0.00% GC)
+  minimum time:     5.121 ms (0.00% GC)
+  median time:      5.218 ms (0.00% GC)
+  mean time:        5.233 ms (0.00% GC)
+  maximum time:     5.669 ms (0.00% GC)
   --------------
-  samples:          978
+  samples:          953
   evals/sample:     1</code></pre><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=SparseMatrixCSC);
 @benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; updateindex!(A,+,v,i,j));</code></pre><pre><code class="language-none">BenchmarkTools.Trial: 
   memory estimate:  0 bytes
   allocs estimate:  0
   --------------
-  minimum time:     2.759 ms (0.00% GC)
-  median time:      2.805 ms (0.00% GC)
-  mean time:        2.819 ms (0.00% GC)
-  maximum time:     3.420 ms (0.00% GC)
+  minimum time:     2.785 ms (0.00% GC)
+  median time:      2.850 ms (0.00% GC)
+  mean time:        2.858 ms (0.00% GC)
+  maximum time:     3.480 ms (0.00% GC)
   --------------
-  samples:          1771
+  samples:          1744
   evals/sample:     1</code></pre><h3><a class="nav-anchor" id="Benchmark-for-ExtendableSparseMatrix-1" href="#Benchmark-for-ExtendableSparseMatrix-1">Benchmark for <code>ExtendableSparseMatrix</code></a></h3><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
 @benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; A[i,j]+=v);</code></pre><pre><code class="language-none">BenchmarkTools.Trial: 
   memory estimate:  0 bytes
   allocs estimate:  0
   --------------
-  minimum time:     5.246 ms (0.00% GC)
-  median time:      5.308 ms (0.00% GC)
-  mean time:        5.329 ms (0.00% GC)
-  maximum time:     5.717 ms (0.00% GC)
+  minimum time:     5.323 ms (0.00% GC)
+  median time:      5.414 ms (0.00% GC)
+  mean time:        5.429 ms (0.00% GC)
+  maximum time:     6.028 ms (0.00% GC)
   --------------
-  samples:          937
+  samples:          919
   evals/sample:     1</code></pre><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
 @benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; updateindex!(A,+,v,i,j));</code></pre><pre><code class="language-none">BenchmarkTools.Trial: 
   memory estimate:  0 bytes
   allocs estimate:  0
   --------------
-  minimum time:     3.104 ms (0.00% GC)
-  median time:      3.158 ms (0.00% GC)
-  mean time:        3.194 ms (0.00% GC)
-  maximum time:     6.357 ms (0.00% GC)
+  minimum time:     3.179 ms (0.00% GC)
+  median time:      3.248 ms (0.00% GC)
+  mean time:        3.257 ms (0.00% GC)
+  maximum time:     3.651 ms (0.00% GC)
   --------------
-  samples:          1563
+  samples:          1530
   evals/sample:     1</code></pre><p>Note that the update process for <code>ExtendableSparse</code> is slightly slower than for <code>SparseMatrixCSC</code> due to the overhead which comes from checking the presence of new entries.</p><footer><hr/><a class="previous" href="../"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="../changes/"><span class="direction">Next</span><span class="title">Changes</span></a></footer></article></body></html>
