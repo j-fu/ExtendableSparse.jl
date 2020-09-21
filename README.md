@@ -1,6 +1,6 @@
 # ExtendableSparse.jl
 
-[![Build Status](https://img.shields.io/travis/j-fu/ExtendableSparse.jl/master.svg?label=Linux+MacOSX+Windows)](https://travis-ci.org/j-fu/ExtendableSparse.jl)
+[![Build Status](https://img.shields.io/travis/j-fu/ExtendableSparse.jl/master.svg?label=Linux+MacOSX+Windows)](https://travis-ci.com/j-fu/ExtendableSparse.jl)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://j-fu.github.io/ExtendableSparse.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://j-fu.github.io/ExtendableSparse.jl/dev)
 
