@@ -70,6 +70,11 @@ function ExtendableSparseMatrix(csc::SparseMatrixCSC{Tv,Ti}) where{Tv,Ti<:Intege
     return ExtendableSparseMatrix{Tv,Ti}(csc, nothing, time())
 end
 
+"""
+$(SIGNATURES)
+  Create similar extendableSparseMatrix
+"""
+Base.similar(m::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}=ExtendableSparseMatrix{Tv,Ti}(size(m)...)
 
 
 """
@@ -153,6 +158,24 @@ Size of ExtendableSparseMatrix.
 """
 Base.size(ext::ExtendableSparseMatrix) = (ext.cscmatrix.m, ext.cscmatrix.n)
 
+
+
+"""
+$(SIGNATURES)
+
+Show matrix
+"""
+function Base.show(io::IO,::MIME"text/plain",ext::ExtendableSparseMatrix)
+    flush!(ext)
+    xnnz = nnz(ext)
+    m, n = size(ext)
+    print(io, m, "×", n, " ", typeof(ext), " with ", xnnz, " stored ",
+          xnnz == 1 ? "entry" : "entries")
+    if !(m == 0 || n == 0 || xnnz==0)
+        print(io, ":")
+        show(IOContext(io), ext.cscmatrix)
+    end
+end
 
 
 """
