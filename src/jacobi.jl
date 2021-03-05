@@ -31,3 +31,7 @@ function  LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, precon::JacobiPreco
         u[i]=invdiag[i]*v[i]
     end
 end
+
+function LinearAlgebra.ldiv!(precon::JacobiPreconditioner, v::AbstractArray{T,1} where T)
+    ldiv!(v, precon, v)
+end

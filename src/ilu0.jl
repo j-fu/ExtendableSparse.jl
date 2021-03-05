@@ -85,4 +85,8 @@ function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ILU0Preconditioner,
     end
 end
 
+function LinearAlgebra.ldiv!(precon::ILU0Preconditioner, v::AbstractArray{T,1} where T)
+    ldiv!(v, precon, v)
+end
+
 
