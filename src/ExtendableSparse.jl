@@ -10,7 +10,7 @@ include("preconditioners.jl")
 include("sprand.jl")
 
 export SparseMatrixLNK,ExtendableSparseMatrix,flush!,nnz, sprand!,sprand_sdd!, fdrand,fdrand!
-export JacobiPreconditioner, ILU0Preconditioner, updateindex!
+export JacobiPreconditioner, ILU0Preconditioner, ParallelJacobiPreconditioner, updateindex!
 
 export colptrs
 end # module
