@@ -73,6 +73,7 @@ using BenchmarkTools   # hide
 A=fdrand(30,30,30, matrixtype=SparseMatrixCSC);
 @benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-> A[i,j]+=v);
 ```
+
 ```@example
 using ExtendableSparse # hide
 using SparseArrays     # hide
@@ -90,6 +91,7 @@ using BenchmarkTools   # hide
 A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
 @benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-> A[i,j]+=v);
 ```
+
 ```@example
 using ExtendableSparse # hide
 using BenchmarkTools   # hide

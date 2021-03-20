@@ -6,7 +6,7 @@ simple!(u,A,b;
                  log=false,
                  maxiter=100,
                  P=nothing
-                 ) -> soution, [history]
+                 ) -> solution, [history]
 ````
 
 Simple iteration scheme ``u_{i+1}= u_i - P^{-1} (A u_i -b)`` with similar API as the methods in IterativeSolvers.jl.
@@ -26,7 +26,7 @@ function simple!(u,A,b;
     for i=1:maxiter
         ldiv!(upd,Pl,res)
 	u.-=upd # solve preconditioning system and update solution
-	mul!(res,A,u)         # calculate residual
+	mul!(res,A,u)    # calculate residual
         res.-=b
 	r=norm(res)       # residual norm
 	push!(history,r)  # record in history 

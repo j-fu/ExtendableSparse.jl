@@ -1,4 +1,12 @@
 # Changes
+
+## v0.3.7, March 20, 2021
+- Added parallel jacobi preconditioner (thanks, @jkr)
+- Fixes ldiv
+- Added simple iterative solver
+- Documentation update
+- Tests for precondioners, fdrand
+
 ## v0.3.0, April 10, 2020
 - Don't create new entry if the value to be assigned is zero, making things consistent with SparseMatrixCSC and ForwardDiff 
   as suggested by @MaximilianJHuber

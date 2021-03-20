@@ -1,3 +1,8 @@
+"""
+$(TYPEDEF)
+
+ILU(0) Preconditioner
+"""
 mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractExtendablePreconditioner{Tv,Ti}
     extmatrix::ExtendableSparseMatrix{Tv,Ti}
     xdiag::Array{Tv,1}
@@ -5,7 +10,11 @@ mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractExtendablePreconditioner{Tv
     pattern_timestamp::Float64
 end
 
+"""
+$(SIGNATURES)
 
+Constructor for ILU(0) preconditioner
+"""
 function ILU0Preconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
     @assert size(extmatrix,1)==size(extmatrix,2)
     flush!(extmatrix)
@@ -16,9 +25,19 @@ function ILU0Preconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) where {Tv,
     update!(precon)
 end
 
+"""
+$(SIGNATURES)
+
+Constructor for ILU(0) preconditioner
+"""
 ILU0Preconditioner(cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}=ILU0Preconditioner(ExtendableSparseMatrix(cscmatrix))
 
 
+"""
+$(SIGNATURES)
+
+Update ILU(0) preconditioner
+"""
 function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
     cscmatrix=precon.extmatrix.cscmatrix
     colptr=cscmatrix.colptr
@@ -59,6 +78,11 @@ function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
 end
 
 
+"""
+$(SIGNATURES)
+
+Solve preconditioning system for ILU(0)
+"""
 function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ILU0Preconditioner, v::AbstractArray{T,1}) where T
     cscmatrix=precon.extmatrix.cscmatrix
     colptr=cscmatrix.colptr
@@ -85,6 +109,11 @@ function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ILU0Preconditioner,
     end
 end
 
+"""
+$(SIGNATURES)
+
+Inplace solve of preconditioning system for ILU(0)
+"""
 function LinearAlgebra.ldiv!(precon::ILU0Preconditioner, v::AbstractArray{T,1} where T)
     ldiv!(v, precon, v)
 end

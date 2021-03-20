@@ -4,14 +4,15 @@ using Documenter, ExtendableSparse
 makedocs(sitename="ExtendableSparse.jl",
          modules = [ExtendableSparse],
          doctest = true,
-         clean = true,
+         clean = false,
          authors = "J. Fuhrmann",
          repo="https://github.com/j-fu/ExtendableSparse.jl",
          pages=[
              "Home"=>"index.md",
              "example.md",
+             "extsparse.md",
+             "iter.md",
              "changes.md",
-             "api.md"
          ])
 
 deploydocs(repo = "github.com/j-fu/ExtendableSparse.jl.git")

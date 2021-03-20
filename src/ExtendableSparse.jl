@@ -6,7 +6,7 @@ using LinearAlgebra
 include("sparsematrixcsc.jl")
 include("sparsematrixlnk.jl")
 include("extendable.jl")
-export SparseMatrixLNK,ExtendableSparseMatrix,flush!,nnz, updateindex, colptrs
+export SparseMatrixLNK,ExtendableSparseMatrix,flush!,nnz, updateindex!, colptrs
 
 include("preconditioners.jl")
 export JacobiPreconditioner, ILU0Preconditioner, ParallelJacobiPreconditioner
