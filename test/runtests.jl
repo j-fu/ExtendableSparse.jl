@@ -2,7 +2,6 @@ using Test
 using LinearAlgebra
 using SparseArrays
 using ExtendableSparse
-using IterativeSolvers
 using Printf
 
 ##############################################################
