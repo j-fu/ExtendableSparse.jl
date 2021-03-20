@@ -10,22 +10,22 @@ A</code></pre><pre class="documenter-example-output">3×3 ExtendableSparseMatrix
   memory estimate:  8.16 MiB
   allocs estimate:  28
   --------------
-  minimum time:     10.894 ms (0.00% GC)
-  median time:      11.649 ms (0.00% GC)
-  mean time:        11.954 ms (1.57% GC)
-  maximum time:     20.020 ms (0.00% GC)
+  minimum time:     13.684 ms (0.00% GC)
+  median time:      15.619 ms (0.00% GC)
+  mean time:        15.782 ms (1.17% GC)
+  maximum time:     22.606 ms (0.00% GC)
   --------------
-  samples:          419
+  samples:          317
   evals/sample:     1</pre><pre><code class="language-julia">@benchmark fdrand(30,30,30, matrixtype=SparseMatrixCSC);</code></pre><pre class="documenter-example-output">BenchmarkTools.Trial: 
   memory estimate:  6.21 MiB
   allocs estimate:  38
   --------------
-  minimum time:     712.742 ms (0.00% GC)
-  median time:      754.835 ms (0.00% GC)
-  mean time:        775.387 ms (0.00% GC)
-  maximum time:     865.674 ms (0.00% GC)
+  minimum time:     911.764 ms (0.00% GC)
+  median time:      940.735 ms (0.00% GC)
+  mean time:        960.988 ms (0.00% GC)
+  maximum time:     1.111 s (0.00% GC)
   --------------
-  samples:          7
+  samples:          6
   evals/sample:     1</pre><h2 id="Matrix-update"><a class="docs-heading-anchor" href="#Matrix-update">Matrix update</a><a id="Matrix-update-1"></a><a class="docs-heading-anchor-permalink" href="#Matrix-update" title="Permalink"></a></h2><p>For repeated calculations on the same sparsity structure (e.g. for time dependent problems or Newton iterations) it is convenient to skip all but the first creation steps and to just replace the values in the matrix after setting then elements of the <code>nzval</code>  vector to zero. Typically in finite element and finite volume methods this step updates matrix entries (most of them several times) by adding values. In this case, the current indexing interface of Julia requires to access the matrix twice:</p><pre><code class="language-julia">A=spzeros(3,3)
 Meta.@lower A[1,2]+=3</code></pre><pre class="documenter-example-output">:($(Expr(:thunk, CodeInfo(
     @ none within `top-level scope&#39;
@@ -38,12 +38,12 @@ Meta.@lower A[1,2]+=3</code></pre><pre class="documenter-example-output">:($(Exp
   memory estimate:  48 bytes
   allocs estimate:  1
   --------------
-  minimum time:     5.890 ms (0.00% GC)
-  median time:      6.065 ms (0.00% GC)
-  mean time:        6.155 ms (0.00% GC)
-  maximum time:     10.206 ms (0.00% GC)
+  minimum time:     6.884 ms (0.00% GC)
+  median time:      7.968 ms (0.00% GC)
+  mean time:        8.046 ms (0.00% GC)
+  maximum time:     14.105 ms (0.00% GC)
   --------------
-  samples:          813
+  samples:          622
   evals/sample:     1</pre><pre><code class="language-">using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
@@ -54,14 +54,14 @@ A=fdrand(30,30,30, matrixtype=SparseMatrixCSC);
   memory estimate:  0 bytes
   allocs estimate:  0
   --------------
-  minimum time:     5.951 ms (0.00% GC)
-  median time:      6.132 ms (0.00% GC)
-  mean time:        6.220 ms (0.00% GC)
-  maximum time:     8.335 ms (0.00% GC)
+  minimum time:     7.459 ms (0.00% GC)
+  median time:      8.518 ms (0.00% GC)
+  mean time:        8.620 ms (0.00% GC)
+  maximum time:     14.251 ms (0.00% GC)
   --------------
-  samples:          804
+  samples:          580
   evals/sample:     1</pre><pre><code class="language-">using ExtendableSparse # hide
 using BenchmarkTools   # hide
 
 A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
-@benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; updateindex!(A,+,v,i,j));</code></pre><p>Note that the update process for <code>ExtendableSparse</code> is slightly slower than for <code>SparseMatrixCSC</code> due to the overhead which comes from checking the presence of new entries.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../changes/">Changes »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Saturday 20 March 2021 19:55">Saturday 20 March 2021</span>. Using Julia version 1.5.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+@benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; updateindex!(A,+,v,i,j));</code></pre><p>Note that the update process for <code>ExtendableSparse</code> is slightly slower than for <code>SparseMatrixCSC</code> due to the overhead which comes from checking the presence of new entries.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../changes/">Changes »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Saturday 20 March 2021 20:04">Saturday 20 March 2021</span>. Using Julia version 1.5.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
