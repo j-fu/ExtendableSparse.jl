@@ -12,11 +12,8 @@ by Y. Saad. He writes "This is one of the oldest data structures used for sparse
 The relevant source [formats.f](https://salsa.debian.org/science-team/sparskit/blob/master/FORMATS/formats.f)
 is also available in the debian/science gitlab.
 
-Probably this format was around already in SPARSPAK by E.Chu, A.George and J.Liu, however this is 
-hard to verify, as it indeed appears that the source code of SPARSPAK [vanished from the internet](http://www.netlib.org/sparspak/readme).
-
 The advantage of the linked list structure is the fact that upon insertion
-of a new entry, the arrays describing the structure grow at their respective ends and
+of a new entry, the arrays describing the structure can grow at their respective ends and
 can be conveniently updated via `push!`.  No copying of existing data is necessary.
 
 $(TYPEDFIELDS)
