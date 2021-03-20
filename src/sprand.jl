@@ -101,19 +101,19 @@ function fdrand!(A::AbstractMatrix,
                     update_pair(A,rand()*hy*hz/hx,l,l+1)
                 end
                 if i==1|| i==nx
-                    update(A,rand(),l,l)
+                    update(A,rand()*hy*hz,l,l)
                 end
                 if j<ny
                     update_pair(A,rand()*hx*hz/hy,l,l+nx)
                 end
                 if ny>2&&(j==1|| j==ny)
-                    update(A,rand(),l,l)
+                    update(A,rand()*hx*hz,l,l)
                 end
                 if k<nz
                     update_pair(A,rand()*hx*hy/hz,l,l+nxy)
                 end
                 if nz>2&&(k==1|| k==nz)
-                    update(A,rand(),l,l)
+                    update(A,rand()*hx*hy,l,l)
                 end
                 l=l+1
             end
@@ -162,7 +162,7 @@ Tested for Matrix, SparseMatrixCSC and ExtendableSparseMatrix.
 function fdrand(nx,ny,nz;
                 matrixtype::Type{Tv}=SparseMatrixCSC,
                 update = (A,v,i,j)-> A[i,j]+=v,
-                rand=()-> rand()) where Tv
+                rand= ()-> 0.1+rand()) where Tv
     N=nx*ny*nz
     if matrixtype==ExtendableSparseMatrix
         A=ExtendableSparseMatrix(N,N)
