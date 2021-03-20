@@ -170,11 +170,10 @@ function test_precon(Precon,k,l,m;maxiter=10000)
     all(x-> x<1,r[end-100:end]./r[end-101:end-1]),norm(it-exact)
 end
 
-Base.isapprox(a::Tuple, b::Tuple) = all( a.≈ b )
 
 @testset "preconditioners" begin
-    @test   test_precon(ILU0Preconditioner,20,20,20) ≈ (true,1.3535160424212675e-5)
-    @test   test_precon(JacobiPreconditioner,20,20,20) ≈ (true, 2.0406032775945658e-5)
-    @test   test_precon(ParallelJacobiPreconditioner,20,20,20) ≈ (true, 2.0406032775945658e-5)
+    @test   all(isapprox.(test_precon(ILU0Preconditioner,20,20,20),           (true, 1.3535160424212675e-5), rtol=1.0e-5))
+    @test   all(isapprox.(test_precon(JacobiPreconditioner,20,20,20),         (true, 2.0406032775945658e-5), rtol=1.0e-5))
+    @test   all(isapprox.(test_precon(ParallelJacobiPreconditioner,20,20,20), (true, 2.0406032775945658e-5), rtol=1.0e-5))
 end
 
