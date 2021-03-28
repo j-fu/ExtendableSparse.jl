@@ -177,3 +177,47 @@ end
     @test   all(isapprox.(test_precon(ParallelJacobiPreconditioner,20,20,20), (true, 2.0406032775945658e-5), rtol=1.0e-5))
 end
 
+
+
+function test_symmetric(n,uplo)
+    A=ExtendableSparseMatrix(n,n)
+    sprand_sdd!(A)
+    b=rand(n)
+    flush!(A)
+    SA=Symmetric(A,uplo)
+    Scsc=Symmetric(A.cscmatrix,uplo)
+    SA\b≈ Scsc\b
+end
+
+
+
+@testset "symmetric" begin
+    @test test_symmetric(3,:U)
+    @test test_symmetric(3,:L)
+    @test test_symmetric(30,:U)
+    @test test_symmetric(30,:L)
+    @test test_symmetric(300,:U)
+    @test test_symmetric(300,:L)
+end
+
+
+
+function test_hermitian(n,uplo)
+    A=ExtendableSparseMatrix{ComplexF64,Int64}(n,n)
+    sprand_sdd!(A)
+    flush!(A)
+    A.cscmatrix.nzval.=(1.0+0.01im)*A.cscmatrix.nzval
+    b=rand(n)
+    HA=Hermitian(A,uplo)
+    Hcsc=Hermitian(A.cscmatrix,uplo)
+    HA\b≈ Hcsc\b
+end
+
+@testset "hermitian" begin
+    @test test_hermitian(3,:U)
+    @test test_hermitian(3,:L)
+    @test test_hermitian(30,:U)
+    @test test_hermitian(30,:L)
+    @test test_hermitian(300,:U)
+    @test test_hermitian(300,:L)
+end

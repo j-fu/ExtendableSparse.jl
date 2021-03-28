@@ -178,6 +178,7 @@ function Base.show(io::IO,::MIME"text/plain",ext::ExtendableSparseMatrix)
 end
 
 
+
 """
 $(SIGNATURES)
 
@@ -281,6 +282,32 @@ function LinearAlgebra.:\(ext::ExtendableSparseMatrix,X::Union{AbstractArray{T,1
     flush!(ext)
     ext.cscmatrix\X
 end
+
+
+"""
+$(SIGNATURES)
+
+[`\\`](@ref) for Symmetric{ExtenableSparse}
+"""
+function LinearAlgebra.:\(symm_ext::Symmetric{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::Union{AbstractArray{T,1}, AbstractArray{T,2}} where T) where{Tm,Ti}
+    flush!(symm_ext.data)
+    symm_csc=Symmetric(symm_ext.data.cscmatrix,Symbol(symm_ext.uplo))
+    symm_csc\B
+end
+
+
+"""
+$(SIGNATURES)
+
+[`\\`](@ref) for Hermitian{ExtenableSparse}
+"""
+function LinearAlgebra.:\(symm_ext::Hermitian{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::Union{AbstractArray{T,1}, AbstractArray{T,2}} where T) where{Tm,Ti}
+    flush!(symm_ext.data)
+    symm_csc=Hermitian(symm_ext.data.cscmatrix,Symbol(symm_ext.uplo))
+    symm_csc\B
+end
+
+
 
 
 """
