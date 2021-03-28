@@ -4,28 +4,29 @@ A=ExtendableSparseMatrix(n,n)
 for i=1:n-1
     A[i,i+1]=i
 end
-A</code></pre><pre class="documenter-example-output">3×3 ExtendableSparseMatrix{Float64,Int64} with 2 stored entries:
-  [1, 2]  =  1.0
-  [2, 3]  =  2.0</pre><h3 id="Benchmark"><a class="docs-heading-anchor" href="#Benchmark">Benchmark</a><a id="Benchmark-1"></a><a class="docs-heading-anchor-permalink" href="#Benchmark" title="Permalink"></a></h3><p>The method <a href="../extsparse/#ExtendableSparse.fdrand-Union{Tuple{Tv}, Tuple{Any,Any,Any}} where Tv"><code>fdrand</code></a>  creates a matrix similar to the discetization matrix of a Poisson equation on a d-dimensional cube. The code uses the index access API for the creation of the matrix. This approach is considerably faster with  the <a href="../extsparse/#ExtendableSparse.ExtendableSparseMatrix"><code>ExtendableSparseMatrix</code></a> which uses a linked list based structure  <a href="../extsparse/#ExtendableSparse.SparseMatrixLNK"><code>SparseMatrixLNK</code></a> to grab new entries.</p><pre><code class="language-julia">@benchmark fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);</code></pre><pre class="documenter-example-output">BenchmarkTools.Trial: 
+A</code></pre><pre class="documenter-example-output">3×3 ExtendableSparseMatrix{Float64, Int64} with 2 stored entries:
+  ⋅   1.0   ⋅ 
+  ⋅    ⋅   2.0
+  ⋅    ⋅    ⋅ </pre><h3 id="Benchmark"><a class="docs-heading-anchor" href="#Benchmark">Benchmark</a><a id="Benchmark-1"></a><a class="docs-heading-anchor-permalink" href="#Benchmark" title="Permalink"></a></h3><p>The method <a href="../extsparse/#ExtendableSparse.fdrand-Union{Tuple{Tv}, Tuple{Any, Any, Any}} where Tv"><code>fdrand</code></a>  creates a matrix similar to the discetization matrix of a Poisson equation on a d-dimensional cube. The code uses the index access API for the creation of the matrix. This approach is considerably faster with  the <a href="../extsparse/#ExtendableSparse.ExtendableSparseMatrix"><code>ExtendableSparseMatrix</code></a> which uses a linked list based structure  <a href="../extsparse/#ExtendableSparse.SparseMatrixLNK"><code>SparseMatrixLNK</code></a> to grab new entries.</p><pre><code class="language-julia">@benchmark fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);</code></pre><pre class="documenter-example-output">BenchmarkTools.Trial: 
   memory estimate:  8.16 MiB
   allocs estimate:  28
   --------------
-  minimum time:     15.437 ms (0.00% GC)
-  median time:      15.629 ms (0.00% GC)
-  mean time:        15.860 ms (0.86% GC)
-  maximum time:     16.525 ms (0.00% GC)
+  minimum time:     12.506 ms (0.00% GC)
+  median time:      14.525 ms (0.00% GC)
+  mean time:        14.586 ms (0.92% GC)
+  maximum time:     21.002 ms (0.00% GC)
   --------------
-  samples:          316
+  samples:          343
   evals/sample:     1</pre><pre><code class="language-julia">@benchmark fdrand(30,30,30, matrixtype=SparseMatrixCSC);</code></pre><pre class="documenter-example-output">BenchmarkTools.Trial: 
   memory estimate:  6.21 MiB
   allocs estimate:  38
   --------------
-  minimum time:     548.601 ms (0.00% GC)
-  median time:      549.811 ms (0.00% GC)
-  mean time:        549.741 ms (0.01% GC)
-  maximum time:     551.281 ms (0.00% GC)
+  minimum time:     577.782 ms (0.00% GC)
+  median time:      595.593 ms (0.00% GC)
+  mean time:        595.038 ms (0.01% GC)
+  maximum time:     617.080 ms (0.00% GC)
   --------------
-  samples:          10
+  samples:          9
   evals/sample:     1</pre><h2 id="Matrix-update"><a class="docs-heading-anchor" href="#Matrix-update">Matrix update</a><a id="Matrix-update-1"></a><a class="docs-heading-anchor-permalink" href="#Matrix-update" title="Permalink"></a></h2><p>For repeated calculations on the same sparsity structure (e.g. for time dependent problems or Newton iterations) it is convenient to skip all but the first creation steps and to just replace the values in the matrix after setting then elements of the <code>nzval</code>  vector to zero. Typically in finite element and finite volume methods this step updates matrix entries (most of them several times) by adding values. In this case, the current indexing interface of Julia requires to access the matrix twice:</p><pre><code class="language-julia">A=spzeros(3,3)
 Meta.@lower A[1,2]+=3</code></pre><pre class="documenter-example-output">:($(Expr(:thunk, CodeInfo(
     @ none within `top-level scope&#39;
@@ -33,48 +34,48 @@ Meta.@lower A[1,2]+=3</code></pre><pre class="documenter-example-output">:($(Exp
 │   %2 = %1 + 3
 │        Base.setindex!(A, %2, 1, 2)
 └──      return %2
-))))</pre><p>For sparse matrices this requires to the index search in the structure twice. The packages provides the method <a href="../extsparse/#ExtendableSparse.updateindex!-Union{Tuple{Ti}, Tuple{Tv}, Tuple{SparseMatrixLNK{Tv,Ti},Any,Any,Integer,Integer}} where Ti&lt;:Integer where Tv"><code>updateindex!</code></a> for both <code>SparseMatrixCSC</code> and  for <code>ExtendableSparse</code> which allows to update a matrix element with one index search.</p><h3 id="Benchmark-for-SparseMatrixCSC"><a class="docs-heading-anchor" href="#Benchmark-for-SparseMatrixCSC">Benchmark for <code>SparseMatrixCSC</code></a><a id="Benchmark-for-SparseMatrixCSC-1"></a><a class="docs-heading-anchor-permalink" href="#Benchmark-for-SparseMatrixCSC" title="Permalink"></a></h3><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=SparseMatrixCSC);
+))))</pre><p>For sparse matrices this requires to the index search in the structure twice. The packages provides the method <a href="../extsparse/#ExtendableSparse.updateindex!-Union{Tuple{Ti}, Tuple{Tv}, Tuple{SparseMatrixLNK{Tv, Ti}, Any, Any, Integer, Integer}} where {Tv, Ti&lt;:Integer}"><code>updateindex!</code></a> for both <code>SparseMatrixCSC</code> and  for <code>ExtendableSparse</code> which allows to update a matrix element with one index search.</p><h3 id="Benchmark-for-SparseMatrixCSC"><a class="docs-heading-anchor" href="#Benchmark-for-SparseMatrixCSC">Benchmark for <code>SparseMatrixCSC</code></a><a id="Benchmark-for-SparseMatrixCSC-1"></a><a class="docs-heading-anchor-permalink" href="#Benchmark-for-SparseMatrixCSC" title="Permalink"></a></h3><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=SparseMatrixCSC);
 @benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; A[i,j]+=v);</code></pre><pre class="documenter-example-output">BenchmarkTools.Trial: 
   memory estimate:  48 bytes
   allocs estimate:  1
   --------------
-  minimum time:     7.506 ms (0.00% GC)
-  median time:      7.609 ms (0.00% GC)
-  mean time:        7.613 ms (0.00% GC)
-  maximum time:     7.954 ms (0.00% GC)
+  minimum time:     9.298 ms (0.00% GC)
+  median time:      10.720 ms (0.00% GC)
+  mean time:        10.726 ms (0.00% GC)
+  maximum time:     19.089 ms (0.00% GC)
   --------------
-  samples:          657
+  samples:          466
   evals/sample:     1</pre><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=SparseMatrixCSC);
 @benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; updateindex!(A,+,v,i,j));</code></pre><pre class="documenter-example-output">BenchmarkTools.Trial: 
   memory estimate:  48 bytes
   allocs estimate:  1
   --------------
-  minimum time:     4.876 ms (0.00% GC)
-  median time:      4.893 ms (0.00% GC)
-  mean time:        4.896 ms (0.00% GC)
-  maximum time:     5.141 ms (0.00% GC)
+  minimum time:     3.507 ms (0.00% GC)
+  median time:      4.801 ms (0.00% GC)
+  mean time:        4.788 ms (0.00% GC)
+  maximum time:     8.964 ms (0.00% GC)
   --------------
-  samples:          1021
+  samples:          1044
   evals/sample:     1</pre><h3 id="Benchmark-for-ExtendableSparseMatrix"><a class="docs-heading-anchor" href="#Benchmark-for-ExtendableSparseMatrix">Benchmark for <code>ExtendableSparseMatrix</code></a><a id="Benchmark-for-ExtendableSparseMatrix-1"></a><a class="docs-heading-anchor-permalink" href="#Benchmark-for-ExtendableSparseMatrix" title="Permalink"></a></h3><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
 @benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; A[i,j]+=v);</code></pre><pre class="documenter-example-output">BenchmarkTools.Trial: 
   memory estimate:  0 bytes
   allocs estimate:  0
   --------------
-  minimum time:     8.493 ms (0.00% GC)
-  median time:      8.550 ms (0.00% GC)
-  mean time:        8.553 ms (0.00% GC)
-  maximum time:     8.741 ms (0.00% GC)
+  minimum time:     7.909 ms (0.00% GC)
+  median time:      9.413 ms (0.00% GC)
+  mean time:        9.407 ms (0.00% GC)
+  maximum time:     18.368 ms (0.00% GC)
   --------------
-  samples:          585
+  samples:          532
   evals/sample:     1</pre><pre><code class="language-julia">A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
 @benchmark fdrand!(A,30,30,30, update=(A,v,i,j)-&gt; updateindex!(A,+,v,i,j));</code></pre><pre class="documenter-example-output">BenchmarkTools.Trial: 
   memory estimate:  0 bytes
   allocs estimate:  0
   --------------
-  minimum time:     4.593 ms (0.00% GC)
-  median time:      4.610 ms (0.00% GC)
-  mean time:        4.612 ms (0.00% GC)
-  maximum time:     4.824 ms (0.00% GC)
+  minimum time:     3.325 ms (0.00% GC)
+  median time:      4.522 ms (0.00% GC)
+  mean time:        4.497 ms (0.00% GC)
+  maximum time:     11.436 ms (0.00% GC)
   --------------
-  samples:          1084
-  evals/sample:     1</pre><p>Note that the update process for <code>ExtendableSparse</code> is slightly slower than for <code>SparseMatrixCSC</code> due to the overhead which comes from checking the presence of new entries.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../extsparse/">Sparse matrix handling »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Saturday 20 March 2021 21:40">Saturday 20 March 2021</span>. Using Julia version 1.5.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  samples:          1112
+  evals/sample:     1</pre><p>Note that the update process for <code>ExtendableSparse</code> is slightly slower than for <code>SparseMatrixCSC</code> due to the overhead which comes from checking the presence of new entries.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../extsparse/">Sparse matrix handling »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 28 March 2021 20:07">Sunday 28 March 2021</span>. Using Julia version 1.6.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
