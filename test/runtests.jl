@@ -26,7 +26,7 @@ function test_timing(k,l,m)
     t2=@elapsed fdrand(k,l,m,matrixtype=ExtendableSparseMatrix)
     t3=@elapsed fdrand(k,l,m,matrixtype=SparseMatrixLNK)
     @printf("CSC: %.4f EXT: %.4f LNK: %.4f\n",t1,t2,t3)
-    t3<t2<t1
+    t2<t1
 end
 
 @testset "Timing" begin
