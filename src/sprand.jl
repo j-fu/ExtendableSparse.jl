@@ -221,9 +221,9 @@ Tested for Matrix, SparseMatrixCSC,  ExtendableSparseMatrix, SparseMatrixLNK and
 
 """
 function fdrand(nx,ny,nz;
-                matrixtype::Union{Type{Tv},Symbol}=SparseMatrixCSC,
+                matrixtype::Union{Type,Symbol}=SparseMatrixCSC,
                 update = (A,v,i,j)-> A[i,j]+=v,
-                rand= ()-> 0.1+rand()) where Tv
+                rand= ()-> 0.1+rand())
     N=nx*ny*nz
     if matrixtype==:COO
         return fdrand_coo(nx,ny,nz, rand=rand)
@@ -236,6 +236,6 @@ function fdrand(nx,ny,nz;
     elseif matrixtype==Matrix
         A=zeros(N,N)
     end
-@time    fdrand!(A,nx,ny,nz,update = update, rand=rand)
+    fdrand!(A,nx,ny,nz,update = update, rand=rand)
 end
 

@@ -30,7 +30,7 @@ $(SIGNATURES)
 
 Create empty ExtendableSparseMatrix.
 """
-function ExtendableSparseMatrix{Tv,Ti}(m::Integer, n::Integer) where{Tv,Ti<:Integer}
+function ExtendableSparseMatrix{Tv,Ti}(m, n) where{Tv,Ti<:Integer}
     ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),nothing,time())
 end
 
@@ -39,7 +39,7 @@ $(SIGNATURES)
 
 Create empty ExtendableSparseMatrix.
 """
-function ExtendableSparseMatrix(valuetype::Type{Tv},indextype::Type{Ti},m::Integer, n::Integer) where{Tv,Ti<:Integer}
+function ExtendableSparseMatrix(valuetype::Type{Tv},indextype::Type{Ti},m, n) where{Tv,Ti<:Integer}
     ExtendableSparseMatrix{Tv,Ti}(m,n)
 end
 
@@ -49,7 +49,7 @@ $(SIGNATURES)
 Create empty ExtendablSparseMatrix.
 This is a pendant to spzeros.
 """
-ExtendableSparseMatrix(valuetype::Type{Tv},m::Integer, n::Integer) where{Tv}=ExtendableSparseMatrix{Tv,Int}(m,n)
+ExtendableSparseMatrix(valuetype::Type{Tv},m, n) where{Tv}=ExtendableSparseMatrix{Tv,Int}(m,n)
 
 
 """
@@ -58,7 +58,7 @@ $(SIGNATURES)
 Create empty ExtendableSparseMatrix.
 This is a pendant to spzeros.
 """
-ExtendableSparseMatrix(m::Integer, n::Integer)=ExtendableSparseMatrix{Float64,Int}(m,n)
+ExtendableSparseMatrix(m, n)=ExtendableSparseMatrix{Float64,Int}(m,n)
 
 
 """
@@ -99,7 +99,7 @@ updateindex!(A,+,0.1,1,2)
 A
 ```
 """
-function updateindex!(ext::ExtendableSparseMatrix{Tv,Ti}, op,v, i,j) where{Tv,Ti<:Integer}
+function updateindex!(ext::ExtendableSparseMatrix{Tv,Ti}, op,v, i,j) where {Tv,Ti<:Integer}
     k=findindex(ext.cscmatrix,i,j)
     if k>0
         ext.cscmatrix.nzval[k]=op(ext.cscmatrix.nzval[k],v)
@@ -120,7 +120,7 @@ Find index in CSC matrix and set value if it exists. Otherwise,
 set index in extension.
 """
 
-function Base.setindex!(ext::ExtendableSparseMatrix{Tv,Ti}, v, i,j) where{Tv,Ti<:Integer}
+function Base.setindex!(ext::ExtendableSparseMatrix{Tv,Ti}, v, i,j) where {Tv,Ti}
     k=findindex(ext.cscmatrix,i,j)
     if k>0
         ext.cscmatrix.nzval[k]=v
@@ -140,7 +140,7 @@ $(SIGNATURES)
 Find index in CSC matrix and return value, if it exists.
 Otherwise, return value from extension.
 """
-function Base.getindex(ext::ExtendableSparseMatrix{Tv,Ti},i::Integer, j::Integer) where{Tv,Ti<:Integer}
+function Base.getindex(ext::ExtendableSparseMatrix{Tv,Ti},i, j)  where{Tv,Ti<:Integer}
     k=findindex(ext.cscmatrix,i,j)
     if k>0
         return ext.cscmatrix.nzval[k]
@@ -185,7 +185,7 @@ $(SIGNATURES)
 If there are new entries in extension, create new CSC matrix by adding the
 cscmatrix and linked list matrix and reset the linked list based extension.
 """
-function flush!(ext::ExtendableSparseMatrix{Tv,Ti}) where {Tv, Ti<:Integer}
+function flush!(ext::ExtendableSparseMatrix)
     if ext.lnkmatrix!=nothing && nnz(ext.lnkmatrix)>0
         ext.cscmatrix=ext.lnkmatrix+ext.cscmatrix
         ext.lnkmatrix=nothing
@@ -261,16 +261,6 @@ function LinearAlgebra.lu(ext::ExtendableSparseMatrix)
     return LinearAlgebra.lu(ext.cscmatrix)
 end
 
-"""
-$(SIGNATURES)
-
-[`flush!`](@ref) and multiply with ext.cscmatrix
-"""
-function  LinearAlgebra.mul!(r::AbstractArray{T,1} where T, ext::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,1} where T)
-    @inbounds flush!(ext)
-    return LinearAlgebra.mul!(r,ext.cscmatrix,x)
-end
-
 
 
 """
@@ -278,18 +268,18 @@ $(SIGNATURES)
 
 [`\\`](@ref) for extmatrix
 """
-function LinearAlgebra.:\(ext::ExtendableSparseMatrix,X::Union{AbstractArray{T,1}, AbstractArray{T,2}} where T)
+function LinearAlgebra.:\(ext::ExtendableSparseMatrix,B::AbstractVecOrMat{T} where T)
     flush!(ext)
-    ext.cscmatrix\X
+    ext.cscmatrix\B
 end
 
 
 """
 $(SIGNATURES)
 
-[`\\`](@ref) for Symmetric{ExtenableSparse}
+[`\\`](@ref) for Symmetric{ExtendableSparse}
 """
-function LinearAlgebra.:\(symm_ext::Symmetric{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::Union{AbstractArray{T,1}, AbstractArray{T,2}} where T) where{Tm,Ti}
+function LinearAlgebra.:\(symm_ext::Symmetric{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::AbstractVecOrMat{T} where T) where{Tm,Ti}
     flush!(symm_ext.data)
     symm_csc=Symmetric(symm_ext.data.cscmatrix,Symbol(symm_ext.uplo))
     symm_csc\B
@@ -299,15 +289,13 @@ end
 """
 $(SIGNATURES)
 
-[`\\`](@ref) for Hermitian{ExtenableSparse}
+[`\\`](@ref) for Hermitian{ExtendableSparse}
 """
-function LinearAlgebra.:\(symm_ext::Hermitian{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::Union{AbstractArray{T,1}, AbstractArray{T,2}} where T) where{Tm,Ti}
+function LinearAlgebra.:\(symm_ext::Hermitian{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::AbstractVecOrMat{T} where T) where{Tm,Ti}
     flush!(symm_ext.data)
     symm_csc=Hermitian(symm_ext.data.cscmatrix,Symbol(symm_ext.uplo))
     symm_csc\B
 end
-
-
 
 
 """
@@ -315,7 +303,7 @@ $(SIGNATURES)
 
 [`flush!`](@ref) and ldiv with ext.cscmatrix
 """
-function  LinearAlgebra.ldiv!(r::AbstractArray{T,1} where T, ext::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,1} where T)
+function  LinearAlgebra.ldiv!(r, ext::ExtendableSparse.ExtendableSparseMatrix, x)
     @inbounds flush!(ext)
     return LinearAlgebra.ldiv!(r,ext.cscmatrix,x)
 end
@@ -325,22 +313,10 @@ $(SIGNATURES)
 
 [`flush!`](@ref) and multiply with ext.cscmatrix
 """
-function  LinearAlgebra.mul!(r::AbstractArray{T,2} where T, ext::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,2} where T)
+function  LinearAlgebra.mul!(r,ext::ExtendableSparse.ExtendableSparseMatrix, x)
     @inbounds flush!(ext)
     return LinearAlgebra.mul!(r,ext.cscmatrix,x)
 end
-
-
-"""
-$(SIGNATURES)
-
-[`flush!`](@ref) and ldiv with ext.cscmatrix
-"""
-function  LinearAlgebra.ldiv!(r::AbstractArray{T,2} where T, ext::ExtendableSparse.ExtendableSparseMatrix, x::AbstractArray{T,2} where T)
-    @inbounds flush!(ext)
-    return LinearAlgebra.ldiv!(r,ext.cscmatrix,x)
-end
-
 
 
 """
@@ -380,7 +356,7 @@ $(SIGNATURES)
 
 Add SparseMatrixCSC matrix and [`ExtendableSparseMatrix`](@ref)  ext.
 """
-function Base.:+(ext::ExtendableSparseMatrix{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
+function Base.:+(ext::ExtendableSparseMatrix,csc::SparseMatrixCSC)
     @inbounds flush!(ext)
     return ext.cscmatrix+csc
 end
@@ -390,7 +366,7 @@ $(SIGNATURES)
 
 Subtract  SparseMatrixCSC matrix from  [`ExtendableSparseMatrix`](@ref)  ext.
 """
-function Base.:-(ext::ExtendableSparseMatrix{Tv,Ti},csc::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
+function Base.:-(ext::ExtendableSparseMatrix,csc::SparseMatrixCSC)
     @inbounds flush!(ext)
     return ext.cscmatrix-csc
 end
@@ -400,7 +376,7 @@ $(SIGNATURES)
 
 Subtract  [`ExtendableSparseMatrix`](@ref)  ext from  SparseMatrixCSC.
 """
-function Base.:-(csc::SparseMatrixCSC{Tv,Ti},ext::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti<:Integer}
+function Base.:-(csc::SparseMatrixCSC,ext::ExtendableSparseMatrix)
     @inbounds flush!(ext)
     return csc - ext.cscmatrix
 end

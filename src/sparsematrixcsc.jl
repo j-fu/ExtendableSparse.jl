@@ -4,7 +4,7 @@ $(SIGNATURES)
 Return index corresponding to entry [i,j] in the array of nonzeros,
 if the entry exists, otherwise, return 0.
 """
-function findindex(csc::SparseMatrixCSC{T}, i::Integer, j::Integer) where T
+function findindex(csc::SparseMatrixCSC{T}, i, j) where T
     if !(1 <= i <= csc.m && 1 <= j <= csc.n); throw(BoundsError()); end
     r1 = Int(csc.colptr[j])
     r2 = Int(csc.colptr[j+1]-1)
@@ -43,7 +43,7 @@ updateindex!(A,+,0.1,1,2)
 A
 ```
 """
-function updateindex!(csc::SparseMatrixCSC{Tv,Ti}, op, v,i::Integer, j::Integer) where{Tv,Ti<:Integer}
+function updateindex!(csc::SparseMatrixCSC{Tv,Ti}, op, v,i, j) where{Tv,Ti<:Integer}
     k=findindex(csc,i,j)
     if k>0 # update existing value
         csc.nzval[k]=op(csc.nzval[k],v)
