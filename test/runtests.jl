@@ -145,10 +145,10 @@ end
 ##############################################
 function test_fdrand(k,l,m)
     A=fdrand(k,l,m,matrixtype=ExtendableSparseMatrix)
-    ItMat=I-inv(Diagonal(A))*A
-    @show ext=extrema(real(eigvals(Matrix(ItMat))))
-    @show mininv=minimum(inv(Matrix(A)))
-    abs(ext[1])<1 &&  abs(ext[2])<2 && mininv>0
+    jacobi_iteration_matrix=I-inv(Diagonal(A))*A
+    ext=extrema(real(eigvals(Matrix(jacobi_iteration_matrix))))
+    mininv=minimum(inv(Matrix(A)))
+    abs(ext[1])<1 &&  abs(ext[2])<1 && mininv>0
 end
 
 
@@ -157,7 +157,20 @@ end
   @test  test_fdrand(20,20,1)
   @test  test_fdrand(10,10,10)
 end
-    
+
+##############################################
+function test_fdrand_coo(k,l,m)
+    Acsc=fdrand(k,l,m,rand=()->1,matrixtype=SparseMatrixCSC)
+    Acoo=fdrand(k,l,m,rand=()->1,matrixtype=:COO)
+    Acsc≈Acoo
+end
+
+@testset "fdrand_coo" begin
+  @test  test_fdrand_coo(1000,1,1)
+  @test  test_fdrand_coo(20,20,1)
+  @test  test_fdrand_coo(10,10,10)
+end
+
 ##############################################
 
 function test_precon(Precon,k,l,m;maxiter=10000)
@@ -179,6 +192,7 @@ end
 
 
 
+##############################################
 function test_symmetric(n,uplo)
     A=ExtendableSparseMatrix(n,n)
     sprand_sdd!(A)
@@ -202,6 +216,7 @@ end
 
 
 
+##############################################
 function test_hermitian(n,uplo)
     A=ExtendableSparseMatrix{ComplexF64,Int64}(n,n)
     sprand_sdd!(A)

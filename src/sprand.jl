@@ -76,6 +76,7 @@ function fdrand!(A::AbstractMatrix,
     _nonzeros(m::ExtendableSparseMatrix)=nonzeros(m)
     _nonzeros(m::SparseMatrixLNK)=m.nzval
     _nonzeros(m::SparseMatrixCSC)=nonzeros(m)
+
     
     function update_pair(A,v,i,j)
         update(A,-v,i,j)
@@ -125,6 +126,65 @@ end
 """
 $(SIGNATURES)
 
+Create SparseMatrixCSC via COO intermedite arrrays
+"""
+
+function fdrand_coo(nx,ny,nz;
+                    rand=()-> rand())
+    N=nx*ny*nz
+    I=zeros(Int64,0)
+    J=zeros(Int64,0)
+    V=zeros(Float64,0)
+    
+    function update(v,i,j)
+        push!(I,i)
+        push!(J,j)
+        push!(V,v)
+    end
+
+    function update_pair(v,i,j)
+        update(-v,i,j)
+        update(-v,j,i)
+        update(v,i,i)
+        update(v,j,j)
+    end
+    
+    hx=1.0/nx
+    hy=1.0/ny
+    hz=1.0/nz
+
+    nxy=nx*ny
+    l=1
+    for k=1:nz
+        for j=1:ny
+            for i=1:nx
+                if i<nx
+                    update_pair(rand()*hy*hz/hx,l,l+1)
+                end
+                if i==1|| i==nx
+                    update(rand()*hy*hz,l,l)
+                end
+                if j<ny
+                    update_pair(rand()*hx*hz/hy,l,l+nx)
+                end
+                if ny>2&&(j==1|| j==ny)
+                    update(rand()*hx*hz,l,l)
+                end
+                if k<nz
+                    update_pair(rand()*hx*hy/hz,l,l+nxy)
+                end
+                if nz>2&&(k==1|| k==nz)
+                    update(rand()*hx*hy,l,l)
+                end
+                l=l+1
+            end
+        end
+    end
+    sparse(I,J,V)
+end
+"""
+$(SIGNATURES)
+
 Create matrix  for a mock  finite difference operator for  a diffusion
 problem with random coefficients on a unit hypercube ``\\Omega\\subset\\mathbb R^d``.
 with ``d=1`` if  `nx>1 && ny==1 && nz==1`, ``d=2`` if  `nx>1 && ny>1 && nz==1` and
@@ -140,7 +200,8 @@ with ``d=1`` if  `nx>1 && ny==1 && nz==1`, ``d=2`` if  `nx>1 && ny>1 && nz==1` a
 The matrix is irreducibly diagonally dominant, has positive main diagonal entries 
 and nonpositive off-diagonal entries, hence it has the M-Property.
 Therefore, its inverse will be a dense matrix with positive entries. 
-Moreover it is symmmetric, and  positive definite.
+Moreover it is symmmetric, and  positive definite, and the spectral radius
+of the  Jacobi iteration matrix ``\rho(I-D(A)^{-1}A)<1`` .
 
 Parameters+ default values:
 
@@ -156,15 +217,17 @@ Parameters+ default values:
 The sparsity structure is fixed to an orthogonal grid, resulting in a 3, 5 or 7
 diagonal matrix depending on dimension. The entries
 are random unless e.g.  `rand=()->1` is passed as random number generator.
-Tested for Matrix, SparseMatrixCSC and ExtendableSparseMatrix.
+Tested for Matrix, SparseMatrixCSC,  ExtendableSparseMatrix, SparseMatrixLNK and `:COO`
 
 """
 function fdrand(nx,ny,nz;
-                matrixtype::Type{Tv}=SparseMatrixCSC,
+                matrixtype::Union{Type{Tv},Symbol}=SparseMatrixCSC,
                 update = (A,v,i,j)-> A[i,j]+=v,
                 rand= ()-> 0.1+rand()) where Tv
     N=nx*ny*nz
-    if matrixtype==ExtendableSparseMatrix
+    if matrixtype==:COO
+        return fdrand_coo(nx,ny,nz, rand=rand)
+    elseif matrixtype==ExtendableSparseMatrix
         A=ExtendableSparseMatrix(N,N)
     elseif matrixtype==SparseMatrixLNK
         A=SparseMatrixLNK(N,N)
@@ -173,7 +236,6 @@ function fdrand(nx,ny,nz;
     elseif matrixtype==Matrix
         A=zeros(N,N)
     end
-        
     fdrand!(A,nx,ny,nz,update = update, rand=rand)
 end
 

@@ -15,5 +15,5 @@ include("simple_iteration.jl")
 export simple,simple!
 
 include("sprand.jl")
-export sprand!,sprand_sdd!, fdrand,fdrand!
+export sprand!,sprand_sdd!, fdrand,fdrand!,fdrand_coo
 end # module
