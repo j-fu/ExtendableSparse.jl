@@ -1,6 +1,7 @@
 push!(LOAD_PATH,"../src/")
 using Documenter, ExtendableSparse
 
+
 makedocs(sitename="ExtendableSparse.jl",
          modules = [ExtendableSparse],
          doctest = true,

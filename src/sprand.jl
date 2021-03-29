@@ -56,10 +56,10 @@ with finite  difference discretization data  on a unit  hypercube. See
 
 It is required that `size(A)==(N,N)` where `N=nx*ny*nz`
 """
-function fdrand!(A::AbstractMatrix,
+function fdrand!(A::T,
                  nx,ny,nz;
                  update= (A,v,i,j)-> A[i,j]+=v,
-                 rand=()-> rand())
+                 rand=()-> rand()) where T<:AbstractMatrix
     
     sz=size(A)
     N=nx*ny*nz
@@ -236,6 +236,6 @@ function fdrand(nx,ny,nz;
     elseif matrixtype==Matrix
         A=zeros(N,N)
     end
-    fdrand!(A,nx,ny,nz,update = update, rand=rand)
+@time    fdrand!(A,nx,ny,nz,update = update, rand=rand)
 end
 

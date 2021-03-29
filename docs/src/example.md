@@ -4,20 +4,95 @@
 ## Matrix creation example
 An `ExtendableSparseMatrix` can serve as a drop-in replacement for
 `SparseMatrixCSC`, albeit with faster assembly during the buildup
-phase when using index based access. That means that code similar
-to the following example should be fast enough to avoid the assembly
-steps using the coordinate format:
-    
-```@example
+phase when using index based access.
+
+Let us define a simple assembly loop
+```@example 1
 using ExtendableSparse # hide
-n=3
-A=ExtendableSparseMatrix(n,n)
-for i=1:n-1
-    A[i,i+1]=i
-end
-A
+using SparseArrays     # hide
+using BenchmarkTools   # hide
+BenchmarkTools.DEFAULT_PARAMETERS.seconds = 1 # hide
+function assemble(A)
+    n=size(A,1)
+    for i=1:n-1
+        A[i+1,i]+=-1
+        A[i,i+1]+=-1
+        A[i,i]+=1
+        A[i+1,i+1]+=1
+    end
+end;
 ```
 
+Measure the time (in seconds) for assembling a SparseMatrixCSC:
+```@example 1
+t_csc= @belapsed begin
+                   A=spzeros(10_000,10_000)
+                   assemble(A)
+                 end
+```
+
+An `ExtendableSparseMatrix` can be used as a drop-in replacement.
+However, before any other use, this needs an internal
+structure rebuild which is invoked by the flush! method.
+```@example 1
+t_ext=@belapsed  begin 
+                   A=ExtendableSparseMatrix(10_000,10_000)
+                   assemble(A)
+                   flush!(A)
+                 end
+```
+All  specialized methods of linear algebra functions (e.g. `\`)
+for `ExtendableSparseMatrix`  call `flush!` before proceeding.
+
+The overall time gain from using `ExtendableSparse` is:
+```@example 1
+t_ext/t_csc
+```
+
+
+The reason for this situation is that the `SparseMatrixCSC` struct
+just contains the data for storing the matrix in the compressed
+column format. Inserting a new entry in this storage scheme is
+connected with serious bookkeeping and shifts of large portions
+of array content.  
+
+Julia provides the
+[`sparse`](https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sparse)
+method which  uses an intermediate  storage of  the data in  two index
+arrays and a value array, the so called coordinate (or COO) format:
+
+```@example 1
+function assemble_coo(n)
+    I=zeros(Int64,0)
+    J=zeros(Int64,0)
+    V=zeros(0)
+    function update(i,j,v)
+        push!(I,i)
+        push!(J,j)
+        push!(V,v)
+    end
+    for i=1:n-1
+        update(i+1,i,-1)
+        update(i,i+1,-1)
+        update(i,i,1)
+        update(i+1,i+1,1)
+    end
+    sparse(I,J,V)
+end;
+
+t_coo=@belapsed assemble_coo(10_000)
+```
+
+While more convenient to use, the assembly based on `ExtendableSparseMatrix` is only slightly
+slower:
+
+```@example 1
+t_ext/t_coo
+```
+
+
+
+Below one finds a more elaborate discussion for a quasi-3D problem.
 
 ## Matrix creation benchmark
 
@@ -35,12 +110,8 @@ inserting elements via `A[i,j]+=v`,
 using an intermediate linked list structure which upon return
 ist flushed into a SparseMatrixCSC structure.
 
-```@example
-using ExtendableSparse # hide
-using SparseArrays     # hide
-using BenchmarkTools   # hide
-
-t=@belapsed fdrand(30,30,30, matrixtype=ExtendableSparseMatrix)
+```@example 1
+@belapsed fdrand(30,30,30, matrixtype=ExtendableSparseMatrix)
 ```
 
 ### Benchmark for  SparseMatrixCSC
@@ -51,8 +122,8 @@ entries via `A[i,j]+=v`.
 using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
-
-t=@belapsed fdrand(30,30,30, matrixtype=SparseMatrixCSC)
+BenchmarkTools.DEFAULT_PARAMETERS.seconds = 1 # hide
+@belapsed fdrand(30,30,30, matrixtype=SparseMatrixCSC)
 ```
 
 ### Benchmark for  intermediate coordinate format
@@ -63,8 +134,8 @@ calling `sparse(I,J,A)`
 using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
-
-t=@belapsed fdrand(30,30,30, matrixtype=:COO)
+BenchmarkTools.DEFAULT_PARAMETERS.seconds = 1 # hide
+@belapsed fdrand(30,30,30, matrixtype=:COO)
 ```
 
 This is nearly on par with matrix creation via `ExtendableSparseMatrix`, but the
@@ -79,8 +150,8 @@ entries via `updateindex(A,+,v,i,j)`, see the discussion below.
 using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
-
-t=@belapsed fdrand(30,30,30, 
+BenchmarkTools.DEFAULT_PARAMETERS.seconds = 1 # hide
+@belapsed fdrand(30,30,30, 
     matrixtype=ExtendableSparseMatrix,
     update=(A,v,i,j)-> updateindex!(A,+,v,i,j))
 ```
@@ -90,7 +161,7 @@ t=@belapsed fdrand(30,30,30,
 ## Matrix update benchmark
 For repeated calculations on the same sparsity structure (e.g. for time dependent
 problems or Newton iterations) it is convenient to skip all but the first creation steps
-and to just replace the values in the matrix after setting then elements of the `nzval` 
+and to just replace the values in the matrix after setting the elements of the `nzval` 
 vector to zero. Typically in finite element and finite volume methods this step updates
 matrix entries (most of them several times) by adding values. In this case, the current indexing
 interface of Julia requires to access the matrix twice:
@@ -110,9 +181,9 @@ for `ExtendableSparse` which allows to update a matrix element with just one ind
 using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
-
+BenchmarkTools.DEFAULT_PARAMETERS.seconds = 1 # hide
 A=fdrand(30,30,30, matrixtype=SparseMatrixCSC)
-t=@belapsed fdrand!(A,30,30,30, 
+@belapsed fdrand!(A,30,30,30, 
                    update=(A,v,i,j)-> A[i,j]+=v)
 ```
 
@@ -120,9 +191,9 @@ t=@belapsed fdrand!(A,30,30,30,
 using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
-
+BenchmarkTools.DEFAULT_PARAMETERS.seconds = 1 # hide
 A=fdrand(30,30,30, matrixtype=SparseMatrixCSC)
-t=@belapsed fdrand!(A,30,30,30, 
+@belapsed fdrand!(A,30,30,30, 
                    update=(A,v,i,j)-> updateindex!(A,+,v,i,j))
 ```
 
@@ -130,18 +201,18 @@ t=@belapsed fdrand!(A,30,30,30,
 ```@example
 using ExtendableSparse # hide
 using BenchmarkTools   # hide
-
+BenchmarkTools.DEFAULT_PARAMETERS.seconds = 1 # hide
 A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix)
-t=@belapsed fdrand!(A,30,30,30, 
+@belapsed fdrand!(A,30,30,30, 
                    update=(A,v,i,j)-> A[i,j]+=v)
 ```
 
 ```@example
 using ExtendableSparse # hide
 using BenchmarkTools   # hide
-
+BenchmarkTools.DEFAULT_PARAMETERS.seconds = 1 # hide
 A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix)
-t=@belapsed fdrand!(A,30,30,30, 
+@belapsed fdrand!(A,30,30,30, 
                    update=(A,v,i,j)-> updateindex!(A,+,v,i,j))
 ```
 
