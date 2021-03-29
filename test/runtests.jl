@@ -3,6 +3,7 @@ using LinearAlgebra
 using SparseArrays
 using ExtendableSparse
 using Printf
+using BenchmarkTools
 
 ##############################################################
 @testset "Constructors" begin
@@ -22,15 +23,14 @@ end
 
 #################################################################
 function test_timing(k,l,m)
-    t1=@elapsed fdrand(k,l,m,matrixtype=SparseMatrixCSC)
-    t2=@elapsed fdrand(k,l,m,matrixtype=ExtendableSparseMatrix)
-    t3=@elapsed fdrand(k,l,m,matrixtype=SparseMatrixLNK)
-    @printf("CSC: %.4f EXT: %.4f LNK: %.4f\n",t1,t2,t3)
-    t2<t1
+    t1=@belapsed fdrand($k,$l,$m,matrixtype=$SparseMatrixCSC)
+    t2=@belapsed fdrand($k,$l,$m,matrixtype=$ExtendableSparseMatrix)
+    t3=@belapsed fdrand($k,$l,$m,matrixtype=$SparseMatrixLNK)
+    @printf("CSC: %.4f EXT: %.4f LNK: %.4f\n",t1*1000,t2*1000,t3*1000 )
+    t3<t2<t1
 end
 
 @testset "Timing" begin
-    test_timing(3,3,3)
     @test test_timing(1000,1,1)
     @test test_timing(100,100,1)
     @test test_timing(20,20,20)

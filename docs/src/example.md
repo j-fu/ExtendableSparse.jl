@@ -40,7 +40,7 @@ using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
 
-@benchmark fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
+t=@belapsed fdrand(30,30,30, matrixtype=ExtendableSparseMatrix)
 ```
 
 ### Benchmark for  SparseMatrixCSC
@@ -52,7 +52,7 @@ using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
 
-@benchmark fdrand(30,30,30, matrixtype=SparseMatrixCSC);
+t=@belapsed fdrand(30,30,30, matrixtype=SparseMatrixCSC)
 ```
 
 ### Benchmark for  intermediate coordinate format
@@ -64,7 +64,7 @@ using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
 
-@benchmark fdrand(30,30,30, matrixtype=:COO)
+t=@belapsed fdrand(30,30,30, matrixtype=:COO)
 ```
 
 This is nearly on par with matrix creation via `ExtendableSparseMatrix`, but the
@@ -80,7 +80,7 @@ using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
 
-@benchmark fdrand(30,30,30, 
+t=@belapsed fdrand(30,30,30, 
     matrixtype=ExtendableSparseMatrix,
     update=(A,v,i,j)-> updateindex!(A,+,v,i,j))
 ```
@@ -111,8 +111,8 @@ using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
 
-A=fdrand(30,30,30, matrixtype=SparseMatrixCSC);
-@benchmark fdrand!(A,30,30,30, 
+A=fdrand(30,30,30, matrixtype=SparseMatrixCSC)
+t=@belapsed fdrand!(A,30,30,30, 
                    update=(A,v,i,j)-> A[i,j]+=v)
 ```
 
@@ -121,8 +121,8 @@ using ExtendableSparse # hide
 using SparseArrays     # hide
 using BenchmarkTools   # hide
 
-A=fdrand(30,30,30, matrixtype=SparseMatrixCSC);
-@benchmark fdrand!(A,30,30,30, 
+A=fdrand(30,30,30, matrixtype=SparseMatrixCSC)
+t=@belapsed fdrand!(A,30,30,30, 
                    update=(A,v,i,j)-> updateindex!(A,+,v,i,j))
 ```
 
@@ -131,8 +131,8 @@ A=fdrand(30,30,30, matrixtype=SparseMatrixCSC);
 using ExtendableSparse # hide
 using BenchmarkTools   # hide
 
-A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
-@benchmark fdrand!(A,30,30,30, 
+A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix)
+t=@belapsed fdrand!(A,30,30,30, 
                    update=(A,v,i,j)-> A[i,j]+=v)
 ```
 
@@ -140,8 +140,8 @@ A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
 using ExtendableSparse # hide
 using BenchmarkTools   # hide
 
-A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix);
-@benchmark fdrand!(A,30,30,30, 
+A=fdrand(30,30,30, matrixtype=ExtendableSparseMatrix)
+t=@belapsed fdrand!(A,30,30,30, 
                    update=(A,v,i,j)-> updateindex!(A,+,v,i,j))
 ```
 
