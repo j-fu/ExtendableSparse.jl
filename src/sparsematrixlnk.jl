@@ -328,7 +328,9 @@ function Base.:+(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC)::SparseMatrix
 
 
         # jointly sort lnk and csc entries  into new matrix data
-        # this could be replaced in a more transparent manner by joint sorting
+        # this could be replaced in a more transparent manner by joint sorting:
+        # make a joint array for csc and lnk col, sort them.
+        # Will this be faster? 
         
         colptr[j]=inz
         jlnk=one(Ti) # counts the entries in col
