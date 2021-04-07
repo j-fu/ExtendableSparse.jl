@@ -23,7 +23,9 @@ end
 """
 $(SIGNATURES)
 
-Update element of the matrix  with operation `op`. 
+Update element of the matrix  with operation `op` whithout
+introducing new nonzero elements.
+
 This can replace the following code and save one index
 search during acces:
 
@@ -42,16 +44,18 @@ A=spzeros(3,3)
 updateindex!(A,+,0.1,1,2)
 A
 ```
+
 """
 function updateindex!(csc::SparseMatrixCSC{Tv,Ti}, op, v,i, j) where{Tv,Ti<:Integer}
     k=findindex(csc,i,j)
     if k>0 # update existing value
         csc.nzval[k]=op(csc.nzval[k],v)
     else # insert new value
-        csc[i,j]= op(zero(Tv),v)
+        csc[i,j]=op(zero(Tv),v)
     end
     csc
 end
+
 
 """
 $(SIGNATURES)

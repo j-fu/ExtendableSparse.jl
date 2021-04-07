@@ -22,6 +22,24 @@ using BenchmarkTools
 end
 
 #################################################################
+
+@testset "Updates" begin
+    A=ExtendableSparseMatrix(10,10)
+    @test nnz(A)==0
+    A[1,3]=5
+    updateindex!(A,+,6.0,4,5)
+    updateindex!(A,+,0.0,2,3)
+    @test nnz(A)==2
+    rawupdateindex!(A,+,0.0,2,3)
+    @test nnz(A)==3
+    dropzeros!(A)
+    @test nnz(A)==2
+    rawupdateindex!(A,+,0.1,2,3)
+    @test nnz(A)==3
+    dropzeros!(A)
+    @test nnz(A)==3
+end
+#################################################################
 function test_timing(k,l,m)
     t1=@belapsed fdrand($k,$l,$m,matrixtype=$SparseMatrixCSC) seconds=1
     t2=@belapsed fdrand($k,$l,$m,matrixtype=$ExtendableSparseMatrix)  seconds=1
@@ -171,6 +189,26 @@ end
   @test  test_fdrand_coo(10,10,10)
 end
 
+
+
+##############################################
+function test_fdrand_update(k,l,m)
+    A1=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix,update = (A,v,i,j)-> A[i,j]+=v)
+    A2=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix,update = (A,v,i,j)-> rawupdateindex!(A,+,v,i,j))
+    A3=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix,update = (A,v,i,j)-> updateindex!(A,+,v,i,j))
+
+    A1≈A2 && A1 ≈ A3
+end
+
+@testset "fdrand_update" begin
+  @test  test_fdrand_update(1000,1,1)
+  @test  test_fdrand_update(20,20,1)
+  @test  test_fdrand_update(10,10,10)
+end
+
+
+
+
 ##############################################
 
 function test_precon(Precon,k,l,m;maxiter=10000)
@@ -236,3 +274,6 @@ end
     @test test_hermitian(300,:U)
     @test test_hermitian(300,:L)
 end
+
+
+

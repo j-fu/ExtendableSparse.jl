@@ -80,7 +80,7 @@ Base.similar(m::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}=ExtendableSparseMat
 """
 $(SIGNATURES)
 
-Update element of the matrix  with operation `op`. 
+Update element of the matrix  with operation `op`.
 This can replace the following code and save one index
 search during acces:
 
@@ -98,6 +98,8 @@ A=ExtendableSparseMatrix(3,3)
 updateindex!(A,+,0.1,1,2)
 A
 ```
+
+If `v` is zero, no new entry is created.
 """
 function updateindex!(ext::ExtendableSparseMatrix{Tv,Ti}, op,v, i,j) where {Tv,Ti<:Integer}
     k=findindex(ext.cscmatrix,i,j)
@@ -115,9 +117,29 @@ end
 
 """
 $(SIGNATURES)
+Like [`updateindex!`](@ref) but without 
+checking if v is zero.
+
+"""
+function rawupdateindex!(ext::ExtendableSparseMatrix{Tv,Ti}, op,v, i,j) where {Tv,Ti<:Integer}
+    k=findindex(ext.cscmatrix,i,j)
+    if k>0
+        ext.cscmatrix.nzval[k]=op(ext.cscmatrix.nzval[k],v)
+    else
+        if ext.lnkmatrix==nothing
+            ext.lnkmatrix=SparseMatrixLNK{Tv, Ti}(ext.cscmatrix.m, ext.cscmatrix.n)
+        end
+        rawupdateindex!(ext.lnkmatrix,op,v,i,j)
+    end
+    ext
+end
+
+
+"""
+$(SIGNATURES)
 
 Find index in CSC matrix and set value if it exists. Otherwise,
-set index in extension.
+set index in extension if `v` is nonzero.
 """
 
 function Base.setindex!(ext::ExtendableSparseMatrix{Tv,Ti}, v, i,j) where {Tv,Ti}
@@ -189,7 +211,7 @@ function flush!(ext::ExtendableSparseMatrix)
     if ext.lnkmatrix!=nothing && nnz(ext.lnkmatrix)>0
         ext.cscmatrix=ext.lnkmatrix+ext.cscmatrix
         ext.lnkmatrix=nothing
-        ext.pattern_timestamp
+        ext.pattern_timestamp=time()
     end
     return ext
 end
@@ -379,4 +401,13 @@ Subtract  [`ExtendableSparseMatrix`](@ref)  ext from  SparseMatrixCSC.
 function Base.:-(csc::SparseMatrixCSC,ext::ExtendableSparseMatrix)
     @inbounds flush!(ext)
     return csc - ext.cscmatrix
+end
+
+
+"""
+$(SIGNATURES)
+"""
+function SparseArrays.dropzeros!(ext::ExtendableSparseMatrix)
+    @inbounds flush!(ext)
+    dropzeros!(ext.cscmatrix)
 end

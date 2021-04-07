@@ -211,7 +211,8 @@ end
 $(SIGNATURES)
 
 Update element of the matrix  with operation `op`. 
-It assumes that `op(0,0)==0` 
+It assumes that `op(0,0)==0`. If `v` is zero, no new 
+entry is created.
 """
 function updateindex!(lnk::SparseMatrixLNK{Tv,Ti},op, v, i,j) where {Tv,Ti}
     # Set the first  column entry if it was not yet set.
@@ -227,6 +228,31 @@ function updateindex!(lnk::SparseMatrixLNK{Tv,Ti},op, v, i,j) where {Tv,Ti}
         return lnk
     end
     if !iszero(v)
+        k=addentry!(lnk,i,j,k,k0)
+        lnk.nzval[k]=op(zero(Tv),v)
+    end
+    lnk
+end
+
+"""
+$(SIGNATURES)
+
+Update element of the matrix  with operation `op`. 
+It assumes that `op(0,0)==0`. If `v` is zero a new entry
+is created nevertheless.
+"""
+function rawupdateindex!(lnk::SparseMatrixLNK{Tv,Ti},op, v, i,j) where {Tv,Ti}
+    # Set the first  column entry if it was not yet set.
+    if lnk.rowval[j]==0
+        lnk.rowval[j]=i       
+        lnk.nzval[j]=op(lnk.nzval[j],v)
+        lnk.nnz+=1
+        return lnk
+    end
+    k,k0=findindex(lnk,i,j)
+    if k>0
+        lnk.nzval[k]=op(lnk.nzval[k],v)
+    else
         k=addentry!(lnk,i,j,k,k0)
         lnk.nzval[k]=op(zero(Tv),v)
     end
