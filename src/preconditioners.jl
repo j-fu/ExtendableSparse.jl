@@ -6,7 +6,7 @@
   Any such preconditioner should have the following fields
 ````
   extmatrix
-  pattern_timestamp
+  phash
 ````
 and  methods
 ````
@@ -20,10 +20,10 @@ and  methods
 """
 abstract type AbstractExtendablePreconditioner{Tv,Ti} end
 
-need_symbolic_update(precon::AbstractExtendablePreconditioner)=precon.extmatrix.pattern_timestamp>precon.pattern_timestamp
-timestamp!(precon::AbstractExtendablePreconditioner)= precon.pattern_timestamp=time()
+need_symbolic_update(precon::AbstractExtendablePreconditioner)=precon.extmatrix.phash!=precon.phash
 
 include("jacobi.jl")
 include("ilu0.jl")
 include("parallel_jacobi.jl")
-    
+include("default_lu.jl")
+

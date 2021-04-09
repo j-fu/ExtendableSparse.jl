@@ -277,3 +277,64 @@ end
 
 
 
+function test_lu(k,l,m)
+    Acsc=fdrand(k,l,m,rand=()->1,matrixtype=SparseMatrixCSC)
+    b=rand(k*l*m)
+    LUcsc=lu(Acsc)
+    x1csc=LUcsc\b
+    for i=1:k*l*m
+        Acsc[i,i]+=1.0
+    end
+    LUcsc=lu!(LUcsc,Acsc)
+    x2csc=LUcsc\b
+
+    Aext=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
+    LUext=lu(Aext)
+    x1ext=LUext\b
+    for i=1:k*l*m
+        Aext[i,i]+=1.0
+    end
+    update!(LUext)
+    x2ext=LUext\b
+    x1csc≈x1ext && x2csc ≈ x2ext
+end
+
+function test_lupattern1(k,l,m)
+    Aext=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
+    b=rand(k*l*m)
+    LUext=lu(Aext)
+    x1ext=LUext\b
+    for i=1:k*l*m-3
+        Aext[i,i+3]-=1.0e-4
+    end
+    LUext=lu!(LUext,Aext)
+    x2ext=LUext\b
+    all(x1ext.< x2ext)
+end
+
+function test_lupattern2(k,l,m)
+    Aext=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
+    b=rand(k*l*m)
+    LUext=lu(Aext)
+    x1ext=LUext\b
+    for i=1:k*l*m-3
+        Aext[i,i+3]-=1.0e-4
+    end
+    update!(LUext)
+    x2ext=LUext\b
+    all(x1ext.< x2ext)
+end
+
+@testset "lu!+update!" begin
+    @test test_lu(10,10,10)
+    @test test_lu(25,40,1)
+    @test test_lu(1000,1,1)
+
+    @test test_lupattern1(10,10,10)
+    @test test_lupattern1(25,40,1)
+    @test test_lupattern1(1000,1,1)
+
+    @test test_lupattern2(10,10,10)
+    @test test_lupattern2(25,40,1)
+    @test test_lupattern2(1000,1,1)
+end

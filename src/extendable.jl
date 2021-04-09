@@ -19,9 +19,9 @@ mutable struct ExtendableSparseMatrix{Tv,Ti<:Integer} <: AbstractSparseMatrix{Tv
     lnkmatrix::Union{SparseMatrixLNK{Tv,Ti},Nothing}
 
     """
-    Time stamp of last pattern update
+    Pattern hash
     """
-    pattern_timestamp::Float64
+    phash::UInt64
 end
 
 
@@ -31,7 +31,7 @@ $(SIGNATURES)
 Create empty ExtendableSparseMatrix.
 """
 function ExtendableSparseMatrix{Tv,Ti}(m, n) where{Tv,Ti<:Integer}
-    ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),nothing,time())
+    ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),nothing,0)
 end
 
 """
@@ -67,7 +67,7 @@ $(SIGNATURES)
   Create ExtendableSparseMatrix from SparseMatrixCSC
 """
 function ExtendableSparseMatrix(csc::SparseMatrixCSC{Tv,Ti}) where{Tv,Ti<:Integer}
-    return ExtendableSparseMatrix{Tv,Ti}(csc, nothing, time())
+    return ExtendableSparseMatrix{Tv,Ti}(csc, nothing, phash(csc))
 end
 
 """
@@ -201,6 +201,7 @@ end
 
 
 
+
 """
 $(SIGNATURES)
 
@@ -211,7 +212,7 @@ function flush!(ext::ExtendableSparseMatrix)
     if ext.lnkmatrix!=nothing && nnz(ext.lnkmatrix)>0
         ext.cscmatrix=ext.lnkmatrix+ext.cscmatrix
         ext.lnkmatrix=nothing
-        ext.pattern_timestamp=time()
+        ext.phash=phash(ext.cscmatrix)
     end
     return ext
 end
@@ -270,17 +271,6 @@ $(SIGNATURES)
 function SparseArrays.findnz(ext::ExtendableSparseMatrix)
     @inbounds flush!(ext)
     return findnz(ext.cscmatrix)
-end
-
-
-"""
-$(SIGNATURES)
-
-[`flush!`](@ref) and return LU factorization of ext.cscmatrix
-"""
-function LinearAlgebra.lu(ext::ExtendableSparseMatrix)
-    @inbounds flush!(ext)
-    return LinearAlgebra.lu(ext.cscmatrix)
 end
 
 

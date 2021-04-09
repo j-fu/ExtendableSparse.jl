@@ -7,7 +7,7 @@ mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractExtendablePreconditioner{Tv
     extmatrix::ExtendableSparseMatrix{Tv,Ti}
     xdiag::Array{Tv,1}
     idiag::Array{Ti,1}
-    pattern_timestamp::Float64
+    phash::UInt64
 end
 
 """
@@ -59,7 +59,7 @@ function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
                 end
             end
         end
-        timestamp!(precon)
+        precon.phash=precon.extmatrix.phash
     end
     
     @inbounds for j=1:n

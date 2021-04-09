@@ -64,3 +64,14 @@ Trival flush! method for allowing to run the code with both `ExtendableSparseMat
 `SparseMatrixCSC`.
 """
 flush!(csc::SparseMatrixCSC)=csc
+
+
+
+"""
+$(SIGNATURES)
+
+Hash of csc matrix pattern. 
+"""
+phash(csc::SparseMatrixCSC)=hash((hash(csc.colptr),hash(csc.rowval)))
+# probably no good idea to add two hashes, so we hash them together.
+

@@ -10,6 +10,8 @@ export SparseMatrixLNK,ExtendableSparseMatrix,flush!,nnz, updateindex!, rawupdat
 
 include("preconditioners.jl")
 export JacobiPreconditioner, ILU0Preconditioner, ParallelJacobiPreconditioner
+export ExtendablesSparseLU
+export update!
 
 include("simple_iteration.jl")
 export simple,simple!
