@@ -1,7 +1,9 @@
 [deps]
+AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DocumenterTools = "35a29f4d-8980-5a13-9543-d66fff28ecb8"
 ExtendableSparse = "95c220a8-a1cf-11e9-0c77-dbfce5f500b3"
-
+IncompleteLU = "40713840-3770-5561-ab4c-a76e7d0d7895"
+Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"

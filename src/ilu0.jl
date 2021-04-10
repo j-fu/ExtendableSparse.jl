@@ -3,17 +3,19 @@ $(TYPEDEF)
 
 ILU(0) Preconditioner
 """
-mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractExtendablePreconditioner{Tv,Ti}
+mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
     extmatrix::ExtendableSparseMatrix{Tv,Ti}
     xdiag::Array{Tv,1}
     idiag::Array{Ti,1}
-    pattern_timestamp::Float64
+    phash::UInt64
 end
 
-"""
-$(SIGNATURES)
 
-Constructor for ILU(0) preconditioner
+"""
+```
+ILU0Preconditioner(extsparse)
+ILU0Preconditioner(cscmatrix)
+```
 """
 function ILU0Preconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
     @assert size(extmatrix,1)==size(extmatrix,2)
@@ -25,19 +27,8 @@ function ILU0Preconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) where {Tv,
     update!(precon)
 end
 
-"""
-$(SIGNATURES)
-
-Constructor for ILU(0) preconditioner
-"""
 ILU0Preconditioner(cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}=ILU0Preconditioner(ExtendableSparseMatrix(cscmatrix))
 
-
-"""
-$(SIGNATURES)
-
-Update ILU(0) preconditioner
-"""
 function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
     cscmatrix=precon.extmatrix.cscmatrix
     colptr=cscmatrix.colptr
@@ -49,7 +40,7 @@ function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
 
     # Find main diagonal index and
     # copy main diagonal values
-    if need_symbolic_update(precon)
+    if precon.phash != precon.extmatrix.phash
         @inbounds for j=1:n
             @inbounds for k=colptr[j]:colptr[j+1]-1
                 i=rowval[k]
@@ -59,7 +50,7 @@ function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
                 end
             end
         end
-        timestamp!(precon)
+        precon.phash=precon.extmatrix.phash
     end
     
     @inbounds for j=1:n
@@ -77,12 +68,14 @@ function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
     precon
 end
 
+function factorize!(precon::ILU0Preconditioner, A::ExtendableSparseMatrix; kwargs...)
+    flush!(A)
+    precon.extmatrix=A
+    update!(precon)
+    precon
+end
 
-"""
-$(SIGNATURES)
 
-Solve preconditioning system for ILU(0)
-"""
 function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ILU0Preconditioner, v::AbstractArray{T,1}) where T
     cscmatrix=precon.extmatrix.cscmatrix
     colptr=cscmatrix.colptr
@@ -109,11 +102,7 @@ function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ILU0Preconditioner,
     end
 end
 
-"""
-$(SIGNATURES)
 
-Inplace solve of preconditioning system for ILU(0)
-"""
 function LinearAlgebra.ldiv!(precon::ILU0Preconditioner, v::AbstractArray{T,1} where T)
     ldiv!(v, precon, v)
 end

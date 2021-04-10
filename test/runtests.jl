@@ -5,6 +5,10 @@ using ExtendableSparse
 using Printf
 using BenchmarkTools
 
+using Pardiso
+using AlgebraicMultigrid
+using IncompleteLU
+
 ##############################################################
 @testset "Constructors" begin
     function test_constructors()
@@ -41,9 +45,9 @@ end
 end
 #################################################################
 function test_timing(k,l,m)
-    t1=@belapsed fdrand($k,$l,$m,matrixtype=$SparseMatrixCSC) seconds=1
-    t2=@belapsed fdrand($k,$l,$m,matrixtype=$ExtendableSparseMatrix)  seconds=1
-    t3=@belapsed fdrand($k,$l,$m,matrixtype=$SparseMatrixLNK)  seconds=1
+    t1=@belapsed fdrand($k,$l,$m,matrixtype=$SparseMatrixCSC) seconds=0.1
+    t2=@belapsed fdrand($k,$l,$m,matrixtype=$ExtendableSparseMatrix)  seconds=0.1
+    t3=@belapsed fdrand($k,$l,$m,matrixtype=$SparseMatrixLNK)  seconds=0.1
     @printf("CSC: %.4f EXT: %.4f LNK: %.4f\n",t1*1000,t2*1000,t3*1000 )
     t3<t2<t1
 end
@@ -218,7 +222,9 @@ function test_precon(Precon,k,l,m;maxiter=10000)
     Pl=Precon(A)
     it,hist=simple(A,b,Pl=Pl,maxiter=maxiter,reltol=1.0e-10,log=true)
     r=hist[:resnorm]
-    all(x-> x<1,r[end-100:end]./r[end-101:end-1]),norm(it-exact)
+    nr=length(r)
+    tail=min(100,length(r)÷2)
+    all(x-> x<1,r[end-tail:end]./r[end-tail-1:end-1]),norm(it-exact)
 end
 
 
@@ -226,6 +232,8 @@ end
     @test   all(isapprox.(test_precon(ILU0Preconditioner,20,20,20),           (true, 1.3535160424212675e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon(JacobiPreconditioner,20,20,20),         (true, 2.0406032775945658e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon(ParallelJacobiPreconditioner,20,20,20), (true, 2.0406032775945658e-5), rtol=1.0e-5))
+    @test   all(isapprox.(test_precon(ILUTPreconditioner,20,20,20),           (true, 1.2719511868322086e-5), rtol=1.0e-5))
+    @test   all(isapprox.(test_precon(AMGPreconditioner,20,20,20),            (true, 6.863753664354144e-7), rtol=1.0e-2))
 end
 
 
@@ -277,3 +285,74 @@ end
 
 
 
+function test_lu(k,l,m; kind=:umfpacklu)
+    Acsc=fdrand(k,l,m,rand=()->1,matrixtype=SparseMatrixCSC)
+    b=rand(k*l*m)
+    LUcsc=lu(Acsc)
+    x1csc=LUcsc\b
+    for i=1:k*l*m
+        Acsc[i,i]+=1.0
+    end
+    LUcsc=lu!(LUcsc,Acsc)
+    x2csc=LUcsc\b
+
+    Aext=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
+    LUext=lu(Aext,kind=kind)
+    x1ext=LUext\b
+    for i=1:k*l*m
+        Aext[i,i]+=1.0
+    end
+    update!(LUext)
+    x2ext=LUext\b
+    x1csc≈x1ext && x2csc ≈ x2ext
+end
+
+function test_lupattern1(k,l,m; kind=:umfpacklu)
+    Aext=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
+    b=rand(k*l*m)
+    LUext=lu(Aext,kind=kind)
+    x1ext=LUext\b
+    for i=1:k*l*m-3
+        Aext[i,i+3]-=1.0e-4
+    end
+    LUext=lu!(LUext,Aext)
+    x2ext=LUext\b
+    all(x1ext.< x2ext)
+end
+
+function test_lupattern2(k,l,m)
+    Aext=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
+    b=rand(k*l*m)
+    LUext=lu(Aext)
+    x1ext=LUext\b
+    for i=1:k*l*m-3
+        Aext[i,i+3]-=1.0e-4
+    end
+    update!(LUext)
+    x2ext=LUext\b
+    all(x1ext.< x2ext)
+end
+
+@testset "lu!+update!" begin
+    @test test_lu(10,10,10)
+    @test test_lu(25,40,1)
+    @test test_lu(1000,1,1)
+
+    @test test_lupattern1(10,10,10)
+    @test test_lupattern1(25,40,1)
+    @test test_lupattern1(1000,1,1)
+
+    @test test_lupattern2(10,10,10)
+    @test test_lupattern2(25,40,1)
+    @test test_lupattern2(1000,1,1)
+end
+
+@testset "pardiso" begin
+    @test test_lu(10,10,10,kind=:mklpardiso)
+    @test test_lu(25,40,1,kind=:mklpardiso)
+    @test test_lu(1000,1,1,kind=:mklpardiso)
+
+    @test test_lupattern1(10,10,10,kind=:mklpardiso)
+    @test test_lupattern1(25,40,1,kind=:mklpardiso)
+    @test test_lupattern1(1000,1,1,kind=:mklpardiso)
+end

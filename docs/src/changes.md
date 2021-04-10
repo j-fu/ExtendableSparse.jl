@@ -1,5 +1,12 @@
 # Changes
-
+## v0.5, April 10, 2021
+- Introduce lu/lu! , factorize/factorize!, unifying LU factorizations and preconditioners
+- Interface packages: Pardiso, AlgebraicMultigrid, IncompleteLU via Requires.jl
+## v0.4, March 2021
+- Fix handling of Symmetrix matrices
+- `rawupdateindex` does not check for entering zeros
+- Compare with `COO` method
+- Benchmarks in documentation
 ## v0.3.7, March 20, 2021
 - Added parallel jacobi preconditioner (thanks, @jkr)
 - Fixes ldiv
