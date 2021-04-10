@@ -3,7 +3,7 @@ $(TYPEDEF)
 
 ILU(0) Preconditioner
 """
-mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractExtendablePreconditioner{Tv,Ti}
+mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
     extmatrix::ExtendableSparseMatrix{Tv,Ti}
     xdiag::Array{Tv,1}
     idiag::Array{Ti,1}
@@ -49,7 +49,7 @@ function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
 
     # Find main diagonal index and
     # copy main diagonal values
-    if need_symbolic_update(precon)
+    if precon.phash != precon.extmatrix.phash
         @inbounds for j=1:n
             @inbounds for k=colptr[j]:colptr[j+1]-1
                 i=rowval[k]
@@ -76,6 +76,14 @@ function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
     end
     precon
 end
+
+function factorize!(precon::ILU0Preconditioner, A::ExtendableSparseMatrix; kwargs...)
+    flush!(A)
+    precon.extmatrix=A
+    update!(precon)
+    precon
+end
+
 
 
 """

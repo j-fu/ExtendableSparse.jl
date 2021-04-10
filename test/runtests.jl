@@ -41,9 +41,9 @@ end
 end
 #################################################################
 function test_timing(k,l,m)
-    t1=@belapsed fdrand($k,$l,$m,matrixtype=$SparseMatrixCSC) seconds=1
-    t2=@belapsed fdrand($k,$l,$m,matrixtype=$ExtendableSparseMatrix)  seconds=1
-    t3=@belapsed fdrand($k,$l,$m,matrixtype=$SparseMatrixLNK)  seconds=1
+    t1=@belapsed fdrand($k,$l,$m,matrixtype=$SparseMatrixCSC) seconds=0.1
+    t2=@belapsed fdrand($k,$l,$m,matrixtype=$ExtendableSparseMatrix)  seconds=0.1
+    t3=@belapsed fdrand($k,$l,$m,matrixtype=$SparseMatrixLNK)  seconds=0.1
     @printf("CSC: %.4f EXT: %.4f LNK: %.4f\n",t1*1000,t2*1000,t3*1000 )
     t3<t2<t1
 end

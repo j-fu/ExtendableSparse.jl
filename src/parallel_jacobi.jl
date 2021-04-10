@@ -3,7 +3,7 @@ $(TYPEDEF)
 
 Parallel Jacobi preconditioner
 """
-struct ParallelJacobiPreconditioner{Tv, Ti} <: AbstractExtendablePreconditioner{Tv,Ti}
+struct ParallelJacobiPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
     extmatrix::ExtendableSparseMatrix{Tv,Ti}
     invdiag::Array{Tv,1}
 end
