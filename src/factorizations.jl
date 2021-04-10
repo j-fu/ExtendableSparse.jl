@@ -48,7 +48,7 @@ end
 
 function factorize(A::ExtendableSparseMatrix; kwargs...)
     opt=options(;kwargs...)
-    opt[:kind]==:umfpacklu && return  ExtendableSparseLU(A)
+    opt[:kind]==:umfpacklu && return  ExtendableSparseUmfpackLU(A)
     opt[:kind]==:pardiso && return  PardisoLU(A,ps=Pardiso.PardisoSolver())
     opt[:kind]==:mklpardiso && return  PardisoLU(A,ps=Pardiso.MKLPardisoSolver())
     if opt[:ensurelu]
