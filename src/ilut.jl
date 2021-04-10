@@ -1,7 +1,7 @@
 """
 $(TYPEDEF)
 
-LU Factorization
+ILU(T) preconditioner
 """
 mutable struct ILUTPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
     ilu::IncompleteLU.ILUFactorization{Tv,Ti}
@@ -9,6 +9,9 @@ mutable struct ILUTPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditio
     phash::UInt64
 end
 
+"""
+$(SIGNATURES)
+"""
 function ILUTPreconditioner(A::ExtendableSparseMatrix; droptol=1.0e-3)
     @inbounds flush!(A)
     ILUTPreconditioner(IncompleteLU.ilu(A.cscmatrix,τ=droptol),droptol,A.phash)

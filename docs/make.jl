@@ -1,6 +1,5 @@
 push!(LOAD_PATH,"../src/")
-using Documenter, ExtendableSparse
-
+using Documenter, ExtendableSparse,Pardiso,AlgebraicMultigrid,IncompleteLU
 
 makedocs(sitename="ExtendableSparse.jl",
          modules = [ExtendableSparse],
@@ -13,6 +12,7 @@ makedocs(sitename="ExtendableSparse.jl",
              "example.md",
              "extsparse.md",
              "iter.md",
+             "internal.md",
              "changes.md",
          ])
 

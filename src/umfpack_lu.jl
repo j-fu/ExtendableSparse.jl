@@ -1,7 +1,7 @@
 """
 $(TYPEDEF)
 
-LU Factorization
+Default Julia LU Factorization based on umfpack.
 """
 mutable struct ExtendableSparseUmfpackLU{Tv, Ti} <: AbstractExtendableSparseLU{Tv,Ti}
     A::ExtendableSparseMatrix{Tv,Ti}
@@ -9,8 +9,9 @@ mutable struct ExtendableSparseUmfpackLU{Tv, Ti} <: AbstractExtendableSparseLU{T
     phash::UInt64
 end
 
-
-
+"""
+$(SIGNATURES)
+"""
 function ExtendableSparseUmfpackLU(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
     flush!(A)
     ExtendableSparseUmfpackLU(A,lu(A.cscmatrix),A.phash)
@@ -20,14 +21,6 @@ end
 update!(lufact::ExtendableSparseUmfpackLU)=factorize!(lufact,lufact.A)
 
 
-"""
-$(SIGNATURES)
-
-Calculate lu factorization, possibly reusing existing symbolic factorization.
-In difference to the method for `SparseMatrixCSC` it 
-- automatically recalculates the factorization when the matrix pattern has changed
-- allows to pass `nothing` as first argument, in this case the LU factoriza
-"""
 function factorize!(lufact::ExtendableSparseUmfpackLU, A::ExtendableSparseMatrix; kwargs...)
     flush!(A)
     if A.phash!=lufact.phash
@@ -38,7 +31,6 @@ function factorize!(lufact::ExtendableSparseUmfpackLU, A::ExtendableSparseMatrix
     end
     lufact
 end
-
 
 
 

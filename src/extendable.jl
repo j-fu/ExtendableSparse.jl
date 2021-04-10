@@ -26,45 +26,30 @@ end
 
 
 """
-$(SIGNATURES)
+```
+ExtendableSparseMatrix(Tv,Ti,m,n)
+ExtendableSparseMatrix(Tv,m,n)
+ExtendableSparseMatrix(m,n)
+```
+Create empty ExtendableSparseMatrix. This is equivalent to `spzeros(m,n)` for
+`SparseMartrixCSC`.
 
-Create empty ExtendableSparseMatrix.
 """
 function ExtendableSparseMatrix{Tv,Ti}(m, n) where{Tv,Ti<:Integer}
     ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv,Ti,m,n),nothing,0)
 end
 
-"""
-$(SIGNATURES)
-
-Create empty ExtendableSparseMatrix.
-"""
 function ExtendableSparseMatrix(valuetype::Type{Tv},indextype::Type{Ti},m, n) where{Tv,Ti<:Integer}
     ExtendableSparseMatrix{Tv,Ti}(m,n)
 end
 
-"""
-$(SIGNATURES)
-
-Create empty ExtendablSparseMatrix.
-This is a pendant to spzeros.
-"""
 ExtendableSparseMatrix(valuetype::Type{Tv},m, n) where{Tv}=ExtendableSparseMatrix{Tv,Int}(m,n)
-
-
-"""
-$(SIGNATURES)
-
-Create empty ExtendableSparseMatrix.
-This is a pendant to spzeros.
-"""
 ExtendableSparseMatrix(m, n)=ExtendableSparseMatrix{Float64,Int}(m,n)
 
-
 """
 $(SIGNATURES)
 
-  Create ExtendableSparseMatrix from SparseMatrixCSC
+ Create ExtendableSparseMatrix from SparseMatrixCSC
 """
 function ExtendableSparseMatrix(csc::SparseMatrixCSC{Tv,Ti}) where{Tv,Ti<:Integer}
     return ExtendableSparseMatrix{Tv,Ti}(csc, nothing, phash(csc))
@@ -72,7 +57,8 @@ end
 
 """
 $(SIGNATURES)
-  Create similar extendableSparseMatrix
+
+Create similar but emtpy extendableSparseMatrix
 """
 Base.similar(m::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}=ExtendableSparseMatrix{Tv,Ti}(size(m)...)
 
@@ -119,7 +105,6 @@ end
 $(SIGNATURES)
 Like [`updateindex!`](@ref) but without 
 checking if v is zero.
-
 """
 function rawupdateindex!(ext::ExtendableSparseMatrix{Tv,Ti}, op,v, i,j) where {Tv,Ti<:Integer}
     k=findindex(ext.cscmatrix,i,j)
@@ -141,7 +126,6 @@ $(SIGNATURES)
 Find index in CSC matrix and set value if it exists. Otherwise,
 set index in extension if `v` is nonzero.
 """
-
 function Base.setindex!(ext::ExtendableSparseMatrix{Tv,Ti}, v, i,j) where {Tv,Ti}
     k=findindex(ext.cscmatrix,i,j)
     if k>0
@@ -198,9 +182,6 @@ function Base.show(io::IO,::MIME"text/plain",ext::ExtendableSparseMatrix)
         show(IOContext(io), ext.cscmatrix)
     end
 end
-
-
-
 
 """
 $(SIGNATURES)
