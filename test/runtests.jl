@@ -233,7 +233,7 @@ end
     @test   all(isapprox.(test_precon(JacobiPreconditioner,20,20,20),         (true, 2.0406032775945658e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon(ParallelJacobiPreconditioner,20,20,20), (true, 2.0406032775945658e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon(ILUTPreconditioner,20,20,20),           (true, 1.2719511868322086e-5), rtol=1.0e-5))
-    @test   all(isapprox.(test_precon(AMGPreconditioner,20,20,20),            (true, 6.863753664354144e-7), rtol=1.0e-5))
+    @test   all(isapprox.(test_precon(AMGPreconditioner,20,20,20),            (true, 6.863753664354144e-7), rtol=1.0e-2))
 end
 
 
