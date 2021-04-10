@@ -337,7 +337,7 @@ $(SIGNATURES)
 [`flush!`](@ref) and calculate norm from cscmatrix
 """
 function LinearAlgebra.norm(A::ExtendableSparseMatrix, p::Real=2)
-    @time @inbounds flush!(A)
+    @inbounds flush!(A)
     return LinearAlgebra.norm(A.cscmatrix,p)
 end
 

@@ -48,4 +48,3 @@ end
 
 LinearAlgebra.ldiv!(lufact::ExtendableSparseUmfpackLU, v::AbstractArray{T,1} where T)=ldiv!(v,lufact, copy(v))
 
-LinearAlgebra.:\(lufact::ExtendableSparseUmfpackLU, v::AbstractVecOrMat{T} where T)=lufact.umfpacklu\v

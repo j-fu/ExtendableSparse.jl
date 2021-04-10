@@ -1,6 +1,14 @@
 [deps]
+AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+IncompleteLU = "40713840-3770-5561-ab4c-a76e7d0d7895"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+Pardiso = "^0.4"
+IncompleteLU = "^0.2"
+AlgebraicMultigrid = "^0.4"

@@ -62,6 +62,7 @@ end
 
 factorize!(::Nothing, A::ExtendableSparseMatrix; kwargs...) = factorize(A; kwargs...)
 
+Base.:\(lufact::AbstractExtendableSparseLU, v::AbstractArray{T,1} where T)=ldiv!(similar(v), lufact,v)
 
 LinearAlgebra.lu(A::ExtendableSparseMatrix; kwargs...)= factorize(A; ensurelu=true, kwargs...)
 LinearAlgebra.lu!(::Nothing, A::ExtendableSparseMatrix; kwargs...)= factorize(A; kwargs...)
