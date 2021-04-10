@@ -5,7 +5,7 @@
   Any such preconditioner should have the following fields
 ````
   A
-  precondata
+  fact
   phash
 ````
 and  methods
@@ -169,6 +169,11 @@ This method is aware of pattern changes.
 If `nothing` is passed as first parameter, [`factorize`](@ref) is called.
 """
 factorize!(::Nothing, A::ExtendableSparseMatrix; kwargs...) = factorize(A; kwargs...)
+function factorize!(p::AbstractExtendableSparseFactorization, A::ExtendableSparseMatrix; kwargs...)
+    p.A=A
+    update!(p)
+    p
+end
 
 
 """
@@ -205,7 +210,6 @@ Solve  LU factorization problem.
 Base.:\(lufact::AbstractExtendableSparseLU, v::AbstractArray{T,1} where T)=ldiv!(similar(v), lufact,v)
 
 
-
 """
 ```
 update!(factorization)
@@ -213,6 +217,7 @@ update!(factorization)
 Update factorization after matrix update.
 """
 update!(::AbstractExtendableSparseFactorization)
+
 
 """
 ```
@@ -222,7 +227,8 @@ ldiv!(factorization,v)
 
 Solve factorization.
 """
-LinearAlgebra.ldiv!
+LinearAlgebra.ldiv!(u,fact::AbstractExtendableSparseFactorization, v)=ldiv!(u, fact.fact, v)
+LinearAlgebra.ldiv!(fact::AbstractExtendableSparseFactorization, v)=ldiv!(fact.fact,v)
 
 
 

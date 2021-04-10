@@ -19,7 +19,10 @@ function update!(precon::ParallelJacobiPreconditioner)
 end
 
 """
-$(SIGNATURES)
+```
+ParallelJacobiPreconditioner(extmatrix)
+ParallelJacobiPreconditioner(cscmatrix)
+```
 """
 function ParallelJacobiPreconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
     @assert size(extmatrix,1)==size(extmatrix,2)
@@ -29,9 +32,7 @@ function ParallelJacobiPreconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) 
     update!(precon)
 end
 
-
 ParallelJacobiPreconditioner(cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}=ParallelJacobiPreconditioner(ExtendableSparseMatrix(cscmatrix))
-
 
 function  LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, precon::ParallelJacobiPreconditioner, v::AbstractArray{T,1} where T)
     invdiag=precon.invdiag

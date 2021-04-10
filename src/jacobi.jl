@@ -19,7 +19,10 @@ function update!(precon::JacobiPreconditioner)
 end
 
 """
-$(SIGNATURES)
+```
+JacobiPreconditioner(extmatrix)
+JacobiPreconditioner(cscmatrix)
+```
 """
 function JacobiPreconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
     @assert size(extmatrix,1)==size(extmatrix,2)

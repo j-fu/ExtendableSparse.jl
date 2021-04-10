@@ -4,24 +4,24 @@ $(TYPEDEF)
 ILU(T) preconditioner
 """
 mutable struct ILUTPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
-    ilu::IncompleteLU.ILUFactorization{Tv,Ti}
+    A::ExtendableSparseMatrix
+    fact::IncompleteLU.ILUFactorization{Tv,Ti}
     droptol::Float64
-    phash::UInt64
 end
 
 """
-$(SIGNATURES)
+```
+ILUTPreconditioner(matrix; droptol=1.0e-3)
+```
 """
 function ILUTPreconditioner(A::ExtendableSparseMatrix; droptol=1.0e-3)
     @inbounds flush!(A)
-    ILUTPreconditioner(IncompleteLU.ilu(A.cscmatrix,τ=droptol),droptol,A.phash)
+    ILUTPreconditioner(A,IncompleteLU.ilu(A.cscmatrix,τ=droptol),droptol)
 end
 
-function factorize!(precon::ILUTPreconditioner, A::ExtendableSparseMatrix; kwargs...)
+function update!(precon::ILUTPreconditioner, A::ExtendableSparseMatrix)
+    A=precon.A
     @inbounds flush!(A)
-    ILUTPreconditioner(IncompleteLU.ilu(A.cscmatrix,τ=precon.droptol),precon.droptol,A.phash)
+    precon.fact=IncompleteLU.ilu(A.cscmatrix,τ=precon.droptol)
 end
 
-LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, precon::ILUTPreconditioner, v::AbstractArray{T,1} where T) = ldiv!(u,precon.ilu,v)
-
-LinearAlgebra.ldiv!(precon::ILUTPreconditioner, v::AbstractArray{T,1} where T)=ldiv!(precon.ilu,v)

@@ -9,7 +9,11 @@ mutable struct PardisoLU{Tv, Ti} <: AbstractExtendableSparseLU{Tv,Ti}
     phash::UInt64
 end
 
-
+"""
+```
+PardisoLU(A; ps=Pardiso.MKLPardisoSolver)
+```
+"""
 function PardisoLU(A::ExtendableSparseMatrix{Tv,Ti};ps::Pardiso.AbstractPardisoSolver=Pardiso.MKLPardisoSolver()) where {Tv,Ti}
     @inbounds flush!(A)
     Acsc=A.cscmatrix
@@ -21,32 +25,21 @@ function PardisoLU(A::ExtendableSparseMatrix{Tv,Ti};ps::Pardiso.AbstractPardisoS
     PardisoLU(A,ps,A.phash)
 end
 
-
-"""
-$(SIGNATURES)
-
-[`flush!`](@ref) and update LU factorization for matrix stored within LU factorization.
-If necessary, update pattern.
-"""
-function factorize!(lufact::PardisoLU, A::ExtendableSparseMatrix; kwargs...)
+function update!(lufact::PardisoLU{Tv,Ti}) where {Tv, Ti}
     ps=lufact.ps
-    Tv=Float64
-    flush!(A)
-    lufact.A=A
+    flush!(lufact.A)
     Acsc=lufact.A.cscmatrix
-    if lufact.phash!=A.phash
+    if lufact.phash!=lufact.A.phash
         Pardiso.set_phase!(ps, Pardiso.RELEASE_ALL)
         Pardiso.pardiso(ps, Tv[], Acsc, Tv[])
         Pardiso.set_phase!(ps, Pardiso.ANALYSIS_NUM_FACT)
+        lufact.phash=lufact.A.phash
     else
         Pardiso.set_phase!(ps, Pardiso.NUM_FACT)
     end
     Pardiso.pardiso(ps, Tv[], Acsc, Tv[])
     lufact
 end
-
-update!(lufact::PardisoLU)=factorize!(lufact,lufact.A)
-
 
 function LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, lufact::PardisoLU, v::AbstractArray{T,1} where T)
     ps=lufact.ps
@@ -56,7 +49,4 @@ function LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, lufact::PardisoLU, v
     u
 end
 
-
-LinearAlgebra.ldiv!(lufact::PardisoLU, v::AbstractArray{T,1} where T)=ldiv!(v, lufact, copy(v))
-
-
+LinearAlgebra.ldiv!(fact::PardisoLU, v::AbstractArray{T,1} where T)=ldiv!(v,fact,copy(v))

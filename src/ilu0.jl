@@ -12,7 +12,10 @@ end
 
 
 """
-$(SIGNATURES)
+```
+ILU0Preconditioner(extsparse)
+ILU0Preconditioner(cscmatrix)
+```
 """
 function ILU0Preconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
     @assert size(extmatrix,1)==size(extmatrix,2)
