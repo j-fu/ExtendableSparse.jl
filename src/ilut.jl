@@ -19,7 +19,7 @@ function ILUTPreconditioner(A::ExtendableSparseMatrix; droptol=1.0e-3)
     ILUTPreconditioner(A,IncompleteLU.ilu(A.cscmatrix,τ=droptol),droptol)
 end
 
-function update!(precon::ILUTPreconditioner, A::ExtendableSparseMatrix)
+function update!(precon::ILUTPreconditioner)
     A=precon.A
     @inbounds flush!(A)
     precon.fact=IncompleteLU.ilu(A.cscmatrix,τ=precon.droptol)

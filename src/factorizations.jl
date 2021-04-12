@@ -74,7 +74,7 @@ $(_myprint(default_options))
 
 """
 const default_options=Dict{Symbol,Any}(
-    :kind         => :umfpacklu,
+    :kind         => :umfpack,
     :droptol      => 1.0e-3,
     :ensurelu     => false,
 )
@@ -101,7 +101,7 @@ end
 """
 ```
 factorize(matrix)
-factorize(matrix; kind=:umfpacklu)
+factorize(matrix; kind=:umfpack)
 ```
 Default Julia LU factorization based on UMFPACK.
 
@@ -144,7 +144,7 @@ Create the  [`AMGPreconditioner`](@ref) wrapping the Ruge-Stüben AMG preconditi
 """
 function factorize(A::ExtendableSparseMatrix; kwargs...)
     opt=options(;kwargs...)
-    opt[:kind]==:umfpacklu && return  ExtendableSparseUmfpackLU(A)
+    opt[:kind]==:umfpack && return  ExtendableSparseUmfpackLU(A)
     opt[:kind]==:pardiso && return  PardisoLU(A,ps=Pardiso.PardisoSolver())
     opt[:kind]==:mklpardiso && return  PardisoLU(A,ps=Pardiso.MKLPardisoSolver())
     if opt[:ensurelu]

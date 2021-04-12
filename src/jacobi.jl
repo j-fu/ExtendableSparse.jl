@@ -3,13 +3,13 @@ $(TYPEDEF)
 
 Jacobi preconditoner
 """
-struct JacobiPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
-    extmatrix::ExtendableSparseMatrix{Tv,Ti}
+mutable struct JacobiPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
+    A::ExtendableSparseMatrix{Tv,Ti}
     invdiag::Array{Tv,1}
 end
 
 function update!(precon::JacobiPreconditioner)
-    cscmatrix=precon.extmatrix.cscmatrix
+    cscmatrix=precon.A.cscmatrix
     invdiag=precon.invdiag
     n=cscmatrix.n
     @inbounds for i=1:n
@@ -20,15 +20,15 @@ end
 
 """
 ```
-JacobiPreconditioner(extmatrix)
+JacobiPreconditioner(A)
 JacobiPreconditioner(cscmatrix)
 ```
 """
-function JacobiPreconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
-    @assert size(extmatrix,1)==size(extmatrix,2)
-    flush!(extmatrix)
-    invdiag=Array{Tv,1}(undef,extmatrix.cscmatrix.n)
-    precon=JacobiPreconditioner{Tv, Ti}(extmatrix,invdiag)
+function JacobiPreconditioner(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
+    @assert size(A,1)==size(A,2)
+    flush!(A)
+    invdiag=Array{Tv,1}(undef,A.cscmatrix.n)
+    precon=JacobiPreconditioner{Tv, Ti}(A,invdiag)
     update!(precon)
 end
 

@@ -285,7 +285,7 @@ end
 
 
 
-function test_lu(k,l,m; kind=:umfpacklu)
+function test_lu(k,l,m; kind=:umfpack)
     Acsc=fdrand(k,l,m,rand=()->1,matrixtype=SparseMatrixCSC)
     b=rand(k*l*m)
     LUcsc=lu(Acsc)
@@ -307,7 +307,7 @@ function test_lu(k,l,m; kind=:umfpacklu)
     x1csc≈x1ext && x2csc ≈ x2ext
 end
 
-function test_lupattern1(k,l,m; kind=:umfpacklu)
+function test_lupattern1(k,l,m; kind=:umfpack)
     Aext=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
     b=rand(k*l*m)
     LUext=lu(Aext,kind=kind)
