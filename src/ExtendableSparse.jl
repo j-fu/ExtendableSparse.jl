@@ -19,6 +19,7 @@ export JacobiPreconditioner, ILU0Preconditioner, ParallelJacobiPreconditioner
 export issolver
 export factorize,factorize!, update!
 export ILUTPreconditioner, AMGPreconditioner
+export LUFactorization, CholeskyFactorization, PardisoLU, MKLPardisoLU
 
 include("simple_iteration.jl")
 export simple,simple!
