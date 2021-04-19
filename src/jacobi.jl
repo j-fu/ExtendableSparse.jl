@@ -3,7 +3,7 @@ $(TYPEDEF)
 
 Jacobi preconditoner
 """
-mutable struct JacobiPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
+mutable struct JacobiPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     A::ExtendableSparseMatrix{Tv,Ti}
     invdiag::Array{Tv,1}
     function JacobiPreconditioner{Tv,Ti}() where {Tv,Ti}
@@ -16,6 +16,7 @@ end
 JacobiPreconditioner()=JacobiPreconditioner{Float64,Int64}()
 
 function update!(precon::JacobiPreconditioner{Tv,Ti}) where {Tv,Ti}
+    flush!(precon.A)
     cscmatrix=precon.A.cscmatrix
     if length(precon.invdiag)==0
         precon.invdiag=Array{Tv,1}(undef,cscmatrix.n)

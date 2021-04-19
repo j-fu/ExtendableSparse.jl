@@ -1,4 +1,4 @@
-abstract type AbstractPardisoLU{Tv,Ti} <: AbstractExtendableSparseLU{Tv,Ti} end
+abstract type AbstractPardisoLU{Tv,Ti} <: AbstractLUFactorization{Tv,Ti} end
 
 
 mutable struct PardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
@@ -34,8 +34,6 @@ This version  uses the early 2000's fork in Intel's MKL library.
 MKLPardisoLU()=MKLPardisoLU{Float64,Int64}(nothing,Pardiso.MKLPardisoSolver(),0)
 MKLPardisoLU(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}=factorize!(MKLPardisoLU(),A)
 MKLPardisoLU{Tv,Ti}() where {Tv,Ti} =PardisoLU{Tv,Ti}(nothing,Pardiso.MKLPardisoSolver(),0)
-
-
 
 
 function Pardiso.set_matrixtype!(ps, A::ExtendableSparseMatrix)

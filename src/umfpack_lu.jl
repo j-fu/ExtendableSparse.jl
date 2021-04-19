@@ -1,4 +1,4 @@
-mutable struct LUFactorization{Tv,Ti} <: AbstractExtendableSparseLU{Tv,Ti}
+mutable struct LUFactorization{Tv,Ti} <: AbstractLUFactorization{Tv,Ti}
     A::Union{Nothing,ExtendableSparseMatrix{Tv,Ti}}
     fact::Union{Nothing,SuiteSparse.UMFPACK.UmfpackLU{Tv,Ti}}
     phash::UInt64

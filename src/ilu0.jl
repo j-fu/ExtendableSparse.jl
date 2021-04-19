@@ -3,7 +3,7 @@ $(TYPEDEF)
 
 ILU(0) Preconditioner
 """
-mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
+mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     A::ExtendableSparseMatrix{Tv,Ti}
     xdiag::Array{Tv,1}
     idiag::Array{Ti,1}
@@ -26,6 +26,7 @@ ILU0Preconditioner(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}=factorize!(IL
 ILU0Preconditioner(cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}=ILU0Preconditioner(ExtendableSparseMatrix(cscmatrix))
 
 function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
+    flush!(precon.A)
     cscmatrix=precon.A.cscmatrix
     colptr=cscmatrix.colptr
     rowval=cscmatrix.rowval
@@ -57,7 +58,7 @@ function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
         end
         precon.phash=precon.A.phash
     end
-    
+
     @inbounds for j=1:n
         xdiag[j]=one(Tv)/nzval[idiag[j]]
         @inbounds for k=idiag[j]+1:colptr[j+1]-1

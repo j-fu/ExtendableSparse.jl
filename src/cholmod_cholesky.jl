@@ -1,4 +1,4 @@
-mutable struct CholeskyFactorization{Tv, Ti} <: AbstractExtendableSparseLU{Tv,Ti}
+mutable struct CholeskyFactorization{Tv, Ti} <: AbstractLUFactorization{Tv,Ti}
     A::Union{ExtendableSparseMatrix{Tv,Ti},Nothing}
     fact::Union{SuiteSparse.CHOLMOD.Factor{Tv},Nothing}
     phash::UInt64

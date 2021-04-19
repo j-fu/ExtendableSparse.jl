@@ -1,4 +1,4 @@
-mutable struct AMGPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
+mutable struct AMGPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     A::ExtendableSparseMatrix{Tv,Ti}
     fact
     max_levels::Int

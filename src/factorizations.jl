@@ -23,19 +23,19 @@ and  methods
   Moreover, they have the ExtendableSparseMatrix as a field, ensuring 
   consistency after construction.
 """
-abstract type AbstractExtendableSparseFactorization{Tv, Ti} end
+abstract type AbstractFactorization{Tv, Ti} end
 
 """
 $(TYPEDEF)
 Abstract subtype for preconditioners
 """
-abstract type AbstractExtendableSparsePreconditioner{Tv, Ti} <:AbstractExtendableSparseFactorization{Tv, Ti} end
+abstract type AbstractPreconditioner{Tv, Ti} <:AbstractFactorization{Tv, Ti} end
 
 """
 $(TYPEDEF)
 Abstract subtype for (full) LU factorizations
 """
-abstract type AbstractExtendableSparseLU{Tv, Ti} <:AbstractExtendableSparseFactorization{Tv, Ti}  end
+abstract type AbstractLUFactorization{Tv, Ti} <:AbstractFactorization{Tv, Ti}  end
 
 
 
@@ -46,54 +46,8 @@ issolver(factorization)
 
 Determine if factorization is a solver or not
 """
-issolver(::AbstractExtendableSparseLU)=true
-issolver(::AbstractExtendableSparsePreconditioner)=false
-
-
-"""
-```
-factorize(matrix; kind=:ilu0)
-```
-Create the [`ILU0Preconditioner`](@ref) from this package.
-
-```
-factorize(matrix; kind=:jacobi)
-```
-Create the [`JacobiPreconditioner`](@ref) from this package.
-
-```
-factorize(matrix; kind=:pjacobi)
-```
-Create the [`ParallelJacobiPreconditioner`](@ref) from this package.
-
-
-```
-factorize(matrix; kind=:ilut, droptol=1.0e-3)
-```
-Create the [`ILUTPreconditioner`](@ref) wrapping the one 
-from [IncompleteLU.jl](https://github.com/haampie/IncompleteLU.jl)
-For using this, you need to issue `using IncompleteLU`
-
-
-```
-factorize(matrix; kind=:rsamg)
-```
-Create the  [`AMGPreconditioner`](@ref) wrapping the Ruge-Stüben AMG preconditioner from [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl)
-"""
-
-
-#=
-Create factoriztion object without matrix,
-and only have factorize! as API.
-
-LUFactorization
-CholeskyFactorization
-PardisoLUFactorization
-ILU0Preconditioner
-JacobiPreconditioner
-ILUTPreconditioner
-AMGPreconditioner(rugestueben/smagg)
-=#
+issolver(::AbstractLUFactorization)=true
+issolver(::AbstractPreconditioner)=false
 
 
 """
@@ -104,7 +58,7 @@ factorize!(factorization, matrix)
 Update or create factorization, possibly reusing information from the current state.
 This method is aware of pattern changes.
 """
-function factorize!(p::AbstractExtendableSparseFactorization, A::ExtendableSparseMatrix)
+function factorize!(p::AbstractFactorization, A::ExtendableSparseMatrix)
     p.A=A
     update!(p)
     p
@@ -121,7 +75,10 @@ This method is aware of pattern changes.
 
 If `nothing` is passed as first parameter, [`factorize`](@ref) is called.
 """
-LinearAlgebra.lu!(lufact::AbstractExtendableSparseFactorization, A::ExtendableSparseMatrix)=factorize!(lufact,A)
+LinearAlgebra.lu!(lufact::AbstractFactorization, A::ExtendableSparseMatrix)=factorize!(lufact,A)
+
+LinearAlgebra.lu(A::ExtendableSparseMatrix)=factorize!(LUFactorization(),A)
+
 
 """
 ```
@@ -130,7 +87,7 @@ LinearAlgebra.lu!(lufact::AbstractExtendableSparseFactorization, A::ExtendableSp
 
 Solve  LU factorization problem.
 """
-Base.:\(lufact::AbstractExtendableSparseLU, v::AbstractArray{T,1} where T)=ldiv!(similar(v), lufact,v)
+Base.:\(lufact::AbstractLUFactorization, v::AbstractArray{T,1} where T)=ldiv!(similar(v), lufact,v)
 
 
 """
@@ -139,7 +96,7 @@ update!(factorization)
 ```
 Update factorization after matrix update.
 """
-update!(::AbstractExtendableSparseFactorization)
+update!(::AbstractFactorization)
 
 
 """
@@ -150,9 +107,8 @@ ldiv!(factorization,v)
 
 Solve factorization.
 """
-LinearAlgebra.ldiv!(u,fact::AbstractExtendableSparseFactorization, v)=ldiv!(u, fact.fact, v)
-LinearAlgebra.ldiv!(fact::AbstractExtendableSparseFactorization, v)=ldiv!(fact.fact,v)
-
+LinearAlgebra.ldiv!(u,fact::AbstractFactorization, v)=ldiv!(u, fact.fact, v)
+LinearAlgebra.ldiv!(fact::AbstractFactorization, v)=ldiv!(fact.fact,v)
 
 
 

@@ -3,7 +3,7 @@ $(TYPEDEF)
 
 ILU(T) preconditioner
 """
-mutable struct ILUTPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
+mutable struct ILUTPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     A::ExtendableSparseMatrix
     fact::IncompleteLU.ILUFactorization{Tv,Ti}
     droptol::Float64
