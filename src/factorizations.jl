@@ -102,8 +102,15 @@ end
 ```
 factorize(matrix)
 factorize(matrix; kind=:umfpack)
+factorize(matrix; kind=:default)
 ```
-Default Julia LU factorization based on UMFPACK.
+Default Julia LU factorization based on SuiteSparse.UMFPACK.
+
+```
+factorize(matrix; kind=:cholmod)
+factorize(matrix; kind=:cholesky)
+```
+Default Cholesky factorization via SuiteSparse.CHOLMOD
 
 ```
 factorize(matrix; kind=:pardiso)
@@ -145,6 +152,9 @@ Create the  [`AMGPreconditioner`](@ref) wrapping the Ruge-Stüben AMG preconditi
 function factorize(A::ExtendableSparseMatrix; kwargs...)
     opt=options(;kwargs...)
     opt[:kind]==:umfpack && return  ExtendableSparseUmfpackLU(A)
+    opt[:kind]==:default && return  ExtendableSparseUmfpackLU(A)
+    opt[:kind]==:cholmod && return  ExtendableSparseCholmodCholesky(A)
+    opt[:kind]==:cholesky && return  ExtendableSparseCholmodCholesky(A)
     opt[:kind]==:pardiso && return  PardisoLU(A,ps=Pardiso.PardisoSolver())
     opt[:kind]==:mklpardiso && return  PardisoLU(A,ps=Pardiso.MKLPardisoSolver())
     if opt[:ensurelu]
@@ -237,3 +247,4 @@ include("jacobi.jl")
 include("ilu0.jl")
 include("parallel_jacobi.jl")
 include("umfpack_lu.jl")
+include("cholmod_cholesky.jl")

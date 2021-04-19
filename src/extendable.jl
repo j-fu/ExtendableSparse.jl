@@ -342,6 +342,16 @@ function LinearAlgebra.cond(A::ExtendableSparseMatrix, p::Real=2)
     return LinearAlgebra.cond(A.cscmatrix,p)
 end
 
+"""
+$(SIGNATURES)
+
+[`flush!`](@ref) and check for symmetry of cscmatrix
+"""
+function LinearAlgebra.issymmetric(A::ExtendableSparseMatrix)
+    @inbounds flush!(A)
+    return LinearAlgebra.issymmetric(A.cscmatrix)
+end
+
 
 
 """
@@ -382,3 +392,5 @@ function SparseArrays.dropzeros!(ext::ExtendableSparseMatrix)
     @inbounds flush!(ext)
     dropzeros!(ext.cscmatrix)
 end
+
+
