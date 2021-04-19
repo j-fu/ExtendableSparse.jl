@@ -1,15 +1,30 @@
-"""
-$(TYPEDEF)
-
-Jacobi preconditoner
-"""
-mutable struct JacobiPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
+mutable struct JacobiPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     A::ExtendableSparseMatrix{Tv,Ti}
     invdiag::Array{Tv,1}
+    function JacobiPreconditioner{Tv,Ti}() where {Tv,Ti}
+        p=new()
+        p.invdiag=zeros(Tv,0)
+        p
+    end
 end
 
-function update!(precon::JacobiPreconditioner)
+
+"""
+```
+JacobiPreconditioner()
+JacobiPreconditioner(matrix)
+```
+
+Jacobi preconditioner
+"""
+JacobiPreconditioner()=JacobiPreconditioner{Float64,Int64}()
+
+function update!(precon::JacobiPreconditioner{Tv,Ti}) where {Tv,Ti}
+    flush!(precon.A)
     cscmatrix=precon.A.cscmatrix
+    if length(precon.invdiag)==0
+        precon.invdiag=Array{Tv,1}(undef,cscmatrix.n)
+    end
     invdiag=precon.invdiag
     n=cscmatrix.n
     @inbounds for i=1:n
@@ -18,21 +33,6 @@ function update!(precon::JacobiPreconditioner)
     precon
 end
 
-"""
-```
-JacobiPreconditioner(A)
-JacobiPreconditioner(cscmatrix)
-```
-"""
-function JacobiPreconditioner(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
-    @assert size(A,1)==size(A,2)
-    flush!(A)
-    invdiag=Array{Tv,1}(undef,A.cscmatrix.n)
-    precon=JacobiPreconditioner{Tv, Ti}(A,invdiag)
-    update!(precon)
-end
-
-JacobiPreconditioner(cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}=JacobiPreconditioner(ExtendableSparseMatrix(cscmatrix))
 
 
 function  LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, precon::JacobiPreconditioner, v::AbstractArray{T,1} where T)

@@ -16,9 +16,11 @@ export SparseMatrixLNK,ExtendableSparseMatrix,flush!,nnz, updateindex!, rawupdat
 
 include("factorizations.jl")
 export JacobiPreconditioner, ILU0Preconditioner, ParallelJacobiPreconditioner
+export AbstractFactorization,LUFactorization, CholeskyFactorization
 export issolver
-export factorize,factorize!, update!
+export factorize!, update!
 export ILUTPreconditioner, AMGPreconditioner
+export PardisoLU, MKLPardisoLU
 
 include("simple_iteration.jl")
 export simple,simple!

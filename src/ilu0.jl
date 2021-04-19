@@ -1,46 +1,48 @@
-"""
-$(TYPEDEF)
-
-ILU(0) Preconditioner
-"""
-mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
-    extmatrix::ExtendableSparseMatrix{Tv,Ti}
+mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
+    A::ExtendableSparseMatrix{Tv,Ti}
     xdiag::Array{Tv,1}
     idiag::Array{Ti,1}
     phash::UInt64
+    function ILU0Preconditioner{Tv,Ti}() where {Tv,Ti}
+        p=new()
+        p.phash=0
+        p
+    end
 end
-
 
 """
 ```
-ILU0Preconditioner(extsparse)
-ILU0Preconditioner(cscmatrix)
+ILU0Preconditioner()
+ILU0Preconditioner(matrix)
 ```
-"""
-function ILU0Preconditioner(extmatrix::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
-    @assert size(extmatrix,1)==size(extmatrix,2)
-    flush!(extmatrix)
-    n=size(extmatrix,1)
-    xdiag=Array{Tv,1}(undef,n)
-    idiag=Array{Ti,1}(undef,n)
-    precon=ILU0Preconditioner{Tv, Ti}(extmatrix,xdiag,idiag,0.0)
-    update!(precon)
-end
 
-ILU0Preconditioner(cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}=ILU0Preconditioner(ExtendableSparseMatrix(cscmatrix))
+ILU preconditioner with zero fill-in.
+"""
+ILU0Preconditioner()=ILU0Preconditioner{Float64,Int64}()
+
 
 function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
-    cscmatrix=precon.extmatrix.cscmatrix
+    flush!(precon.A)
+    cscmatrix=precon.A.cscmatrix
     colptr=cscmatrix.colptr
     rowval=cscmatrix.rowval
     nzval=cscmatrix.nzval
     n=cscmatrix.n
+
+    if precon.phash==0
+        n=size(precon.A,1)
+        precon.xdiag=Array{Tv,1}(undef,n)
+        precon.idiag=Array{Ti,1}(undef,n)
+    end
+
     xdiag=precon.xdiag
     idiag=precon.idiag
 
+
+    
     # Find main diagonal index and
     # copy main diagonal values
-    if precon.phash != precon.extmatrix.phash
+    if precon.phash != precon.A.phash
         @inbounds for j=1:n
             @inbounds for k=colptr[j]:colptr[j+1]-1
                 i=rowval[k]
@@ -50,9 +52,9 @@ function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
                 end
             end
         end
-        precon.phash=precon.extmatrix.phash
+        precon.phash=precon.A.phash
     end
-    
+
     @inbounds for j=1:n
         xdiag[j]=one(Tv)/nzval[idiag[j]]
         @inbounds for k=idiag[j]+1:colptr[j+1]-1
@@ -68,16 +70,9 @@ function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
     precon
 end
 
-function factorize!(precon::ILU0Preconditioner, A::ExtendableSparseMatrix; kwargs...)
-    flush!(A)
-    precon.extmatrix=A
-    update!(precon)
-    precon
-end
-
 
 function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ILU0Preconditioner, v::AbstractArray{T,1}) where T
-    cscmatrix=precon.extmatrix.cscmatrix
+    cscmatrix=precon.A.cscmatrix
     colptr=cscmatrix.colptr
     rowval=cscmatrix.rowval
     n=cscmatrix.n

@@ -1,22 +1,31 @@
-"""
-$(TYPEDEF)
-
-"""
-mutable struct AMGPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
+mutable struct AMGPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     A::ExtendableSparseMatrix{Tv,Ti}
     fact
+    max_levels::Int
+    max_coarse::Int
+    function AMGPreconditioner{Tv,Ti}(;max_levels=10, max_coarse=10) where {Tv,Ti}
+        precon=new()
+        precon.max_levels=max_levels
+        precon.max_coarse=max_coarse
+        precon
+    end
 end
 
 """
 ```
-AMGPreconditioner(extmatrix)
+AMGPreconditioner(;max_levels=10, max_coarse=10)
+AMGPreconditioner(matrix;max_levels=10, max_coarse=10)
 ```
+
+Create the  [`AMGPreconditioner`](@ref) wrapping the Ruge-Stüben AMG preconditioner from [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl)
 """
-function AMGPreconditioner(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
-    @inbounds flush!(A)
-    p=AlgebraicMultigrid.aspreconditioner(AlgebraicMultigrid.ruge_stuben(A.cscmatrix))
-    AMGPreconditioner{Tv,Ti}(A,p)
+AMGPreconditioner(;kwargs...)=AMGPreconditioner{Float64,Int64}(;kwargs...)
+
+@eval begin
+    @makefrommatrix AMGPreconditioner
 end
+
+
 
 function update!(precon::AMGPreconditioner{Tv,Ti}) where {Tv,Ti}
     @inbounds flush!(precon.A)

@@ -1,13 +1,41 @@
-"""
-$(TYPEDEF)
+abstract type AbstractPardisoLU{Tv,Ti} <: AbstractLUFactorization{Tv,Ti} end
 
-LU Factorization
-"""
-mutable struct PardisoLU{Tv, Ti} <: AbstractExtendableSparseLU{Tv,Ti}
-    A::ExtendableSparseMatrix{Tv,Ti}
+
+mutable struct PardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
+    A::Union{ExtendableSparseMatrix{Tv,Ti},Nothing}
     ps::Pardiso.AbstractPardisoSolver
     phash::UInt64
 end
+PardisoLU{Tv,Ti}() where {Tv,Ti} =PardisoLU{Tv,Ti}(nothing,Pardiso.PardisoSolver(),0)
+
+
+"""
+
+LU factorization based on pardiso. For using this, you need to issue `using Pardiso`
+and have the pardiso library from  [pardiso-project.org](https://pardiso-project.org) 
+installed.
+"""
+PardisoLU()=PardisoLU{Float64,Int64}(nothing,Pardiso.PardisoSolver(),0)
+
+
+mutable struct MKLPardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
+    A::Union{ExtendableSparseMatrix{Tv,Ti},Nothing}
+    ps::Pardiso.AbstractPardisoSolver
+    phash::UInt64
+end
+MKLPardisoLU{Tv,Ti}() where {Tv,Ti} = MKLPardisoLU{Tv,Ti}(nothing,Pardiso.MKLPardisoSolver(),0)
+
+
+"""
+```
+MKLPardisoLU()
+MKLPardisoLU(matrix)
+```
+
+LU factorization based on pardiso. For using this, you need to issue `using Pardiso`.
+This version  uses the early 2000's fork in Intel's MKL library.
+"""
+MKLPardisoLU()=MKLPardisoLU{Float64,Int64}(nothing,Pardiso.MKLPardisoSolver(),0)
 
 
 function Pardiso.set_matrixtype!(ps, A::ExtendableSparseMatrix)
@@ -26,27 +54,13 @@ function Pardiso.set_matrixtype!(ps, A::ExtendableSparseMatrix)
     end
 end
 
-"""
-```
-PardisoLU(A; ps=Pardiso.MKLPardisoSolver)
-```
-"""
-function PardisoLU(A::ExtendableSparseMatrix{Tv,Ti};ps::Pardiso.AbstractPardisoSolver=Pardiso.MKLPardisoSolver()) where {Tv,Ti}
-    @inbounds flush!(A)
-    Acsc=A.cscmatrix
-    Pardiso.pardisoinit(ps)
-    Pardiso.set_matrixtype!(ps,A)
-    Pardiso.fix_iparm!(ps, :N)
-    Pardiso.set_phase!(ps, Pardiso.ANALYSIS_NUM_FACT)
-    Pardiso.pardiso(ps, Tv[], Acsc, Tv[])
-    PardisoLU(A,ps,A.phash)
-end
 
-function update!(lufact::PardisoLU{Tv,Ti}) where {Tv, Ti}
+function update!(lufact::AbstractPardisoLU{Tv,Ti}) where {Tv, Ti}
     ps=lufact.ps
     flush!(lufact.A)
     Acsc=lufact.A.cscmatrix
     if lufact.phash!=lufact.A.phash
+        Pardiso.pardisoinit(ps)
         Pardiso.set_phase!(ps, Pardiso.RELEASE_ALL)
         Pardiso.pardiso(ps, Tv[], Acsc, Tv[])
         Pardiso.set_matrixtype!(ps,lufact.A)
@@ -59,7 +73,7 @@ function update!(lufact::PardisoLU{Tv,Ti}) where {Tv, Ti}
     lufact
 end
 
-function LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, lufact::PardisoLU, v::AbstractArray{T,1} where T)
+function LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, lufact::AbstractPardisoLU, v::AbstractArray{T,1} where T)
     ps=lufact.ps
     Acsc=lufact.A.cscmatrix
     Pardiso.set_phase!(ps, Pardiso.SOLVE_ITERATIVE_REFINE)
@@ -67,4 +81,9 @@ function LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, lufact::PardisoLU, v
     u
 end
 
-LinearAlgebra.ldiv!(fact::PardisoLU, v::AbstractArray{T,1} where T)=ldiv!(v,fact,copy(v))
+LinearAlgebra.ldiv!(fact::AbstractPardisoLU, v::AbstractArray{T,1} where T)=ldiv!(v,fact,copy(v))
+
+@eval begin
+    @makefrommatrix PardisoLU
+    @makefrommatrix MKLPardisoLU
+end

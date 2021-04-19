@@ -1,25 +1,22 @@
-"""
-$(TYPEDEF)
-
-Default Julia LU Factorization based on umfpack.
-"""
-mutable struct ExtendableSparseUmfpackLU{Tv, Ti} <: AbstractExtendableSparseLU{Tv,Ti}
-    A::ExtendableSparseMatrix{Tv,Ti}
-    fact::SuiteSparse.UMFPACK.UmfpackLU{Tv,Ti}
+mutable struct LUFactorization{Tv,Ti} <: AbstractLUFactorization{Tv,Ti}
+    A::Union{Nothing,ExtendableSparseMatrix{Tv,Ti}}
+    fact::Union{Nothing,SuiteSparse.UMFPACK.UmfpackLU{Tv,Ti}}
     phash::UInt64
 end
 
-"""
-```
-ExtendableSparseUmfpackLU(A)
-```
-"""
-function ExtendableSparseUmfpackLU(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
-    flush!(A)
-    ExtendableSparseUmfpackLU(A,lu(A.cscmatrix),A.phash)
-end
 
-function update!(lufact::ExtendableSparseUmfpackLU)
+"""
+```
+LUFactorization()
+LUFactorization(matrix)
+```
+        
+Default Julia LU Factorization based on umfpack.
+"""
+LUFactorization()=LUFactorization{Float64,Int64}(nothing,nothing,0)
+
+
+function update!(lufact::LUFactorization)
     flush!(lufact.A)
     if lufact.A.phash!=lufact.phash
         lufact.fact=lu(lufact.A.cscmatrix)

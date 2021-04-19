@@ -228,12 +228,34 @@ function test_precon(Precon,k,l,m;maxiter=10000)
 end
 
 
+function test_precon2(precon,k,l,m;maxiter=10000)
+    A=fdrand(k,l,m,matrixtype=ExtendableSparseMatrix, rand= ()-> 1.0)
+    b=ones(size(A,2))
+    exact=A\b
+    factorize!(precon,A)
+    it,hist=simple(A,b,Pl=precon,maxiter=maxiter,reltol=1.0e-10,log=true)
+    r=hist[:resnorm]
+    nr=length(r)
+    tail=min(100,length(r)÷2)
+    all(x-> x<1,r[end-tail:end]./r[end-tail-1:end-1]),norm(it-exact)
+end
+
+
 @testset "preconditioners" begin
     @test   all(isapprox.(test_precon(ILU0Preconditioner,20,20,20),           (true, 1.3535160424212675e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon(JacobiPreconditioner,20,20,20),         (true, 2.0406032775945658e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon(ParallelJacobiPreconditioner,20,20,20), (true, 2.0406032775945658e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon(ILUTPreconditioner,20,20,20),           (true, 1.2719511868322086e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon(AMGPreconditioner,20,20,20),            (true, 6.863753664354144e-7), rtol=1.0e-2))
+end
+
+
+@testset "preconditioners 2" begin
+    @test   all(isapprox.(test_precon2(ILU0Preconditioner(),20,20,20),           (true, 1.3535160424212675e-5), rtol=1.0e-5))
+    @test   all(isapprox.(test_precon2(JacobiPreconditioner(),20,20,20),         (true, 2.0406032775945658e-5), rtol=1.0e-5))
+    @test   all(isapprox.(test_precon2(ParallelJacobiPreconditioner(),20,20,20), (true, 2.0406032775945658e-5), rtol=1.0e-5))
+    @test   all(isapprox.(test_precon2(ILUTPreconditioner(),20,20,20),           (true, 1.2719511868322086e-5), rtol=1.0e-5))
+    @test   all(isapprox.(test_precon2(AMGPreconditioner(),20,20,20),            (true, 6.863753664354144e-7), rtol=1.0e-2))
 end
 
 
@@ -283,9 +305,7 @@ end
     @test test_hermitian(300,:L)
 end
 
-
-
-function test_lu(k,l,m; kind=:umfpack)
+function test_lu1(k,l,m; lufac=LUFactorization())
     Acsc=fdrand(k,l,m,rand=()->1,matrixtype=SparseMatrixCSC)
     b=rand(k*l*m)
     LUcsc=lu(Acsc)
@@ -297,62 +317,59 @@ function test_lu(k,l,m; kind=:umfpack)
     x2csc=LUcsc\b
 
     Aext=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
-    LUext=lu(Aext,kind=kind)
-    x1ext=LUext\b
+    lu!(lufac,Aext)
+    x1ext=lufac\b
     for i=1:k*l*m
         Aext[i,i]+=1.0
     end
-    update!(LUext)
-    x2ext=LUext\b
+    update!(lufac)
+    x2ext=lufac\b
     x1csc≈x1ext && x2csc ≈ x2ext
 end
 
-function test_lupattern1(k,l,m; kind=:umfpack)
+function test_lu2(k,l,m;lufac=LUFactorization())
     Aext=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
     b=rand(k*l*m)
-    LUext=lu(Aext,kind=kind)
-    x1ext=LUext\b
-    for i=1:k*l*m-3
+    lu!(lufac,Aext)
+    x1ext=lufac\b
+    for i=4:k*l*m-3
         Aext[i,i+3]-=1.0e-4
+        Aext[i-3,i]-=1.0e-4
     end
-    LUext=lu!(LUext,Aext)
-    x2ext=LUext\b
+    lufac=lu!(lufac,Aext)
+    x2ext=lufac\b
     all(x1ext.< x2ext)
 end
 
-function test_lupattern2(k,l,m)
-    Aext=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
-    b=rand(k*l*m)
-    LUext=lu(Aext)
-    x1ext=LUext\b
-    for i=1:k*l*m-3
-        Aext[i,i+3]-=1.0e-4
-    end
-    update!(LUext)
-    x2ext=LUext\b
-    all(x1ext.< x2ext)
+
+@testset "LUFactorization" begin
+    @test test_lu1(10,10,10)
+    @test test_lu1(25,40,1)
+    @test test_lu1(1000,1,1)
+
+    @test test_lu2(10,10,10)
+    @test test_lu2(25,40,1)
+    @test test_lu2(1000,1,1)
 end
 
-@testset "lu!+update!" begin
-    @test test_lu(10,10,10)
-    @test test_lu(25,40,1)
-    @test test_lu(1000,1,1)
+@testset "Cholesky" begin
+    @test test_lu1(10,10,10,lufac=CholeskyFactorization())
+    @test test_lu1(25,40,1,lufac=CholeskyFactorization())
+    @test test_lu1(1000,1,1,lufac=CholeskyFactorization())
 
-    @test test_lupattern1(10,10,10)
-    @test test_lupattern1(25,40,1)
-    @test test_lupattern1(1000,1,1)
-
-    @test test_lupattern2(10,10,10)
-    @test test_lupattern2(25,40,1)
-    @test test_lupattern2(1000,1,1)
+    @test test_lu2(10,10,10,lufac=CholeskyFactorization())
+    @test test_lu2(25,40,1,lufac=CholeskyFactorization())
+    @test test_lu2(1000,1,1,lufac=CholeskyFactorization())
 end
 
 @testset "pardiso" begin
-    @test test_lu(10,10,10,kind=:mklpardiso)
-    @test test_lu(25,40,1,kind=:mklpardiso)
-    @test test_lu(1000,1,1,kind=:mklpardiso)
+    @test test_lu1(10,10,10,lufac=MKLPardisoLU())
+    @test test_lu1(25,40,1,lufac=MKLPardisoLU())
+    @test test_lu1(1000,1,1,lufac=MKLPardisoLU())
 
-    @test test_lupattern1(10,10,10,kind=:mklpardiso)
-    @test test_lupattern1(25,40,1,kind=:mklpardiso)
-    @test test_lupattern1(1000,1,1,kind=:mklpardiso)
+    @test test_lu2(10,10,10,lufac=MKLPardisoLU())
+    @test test_lu2(25,40,1,lufac=MKLPardisoLU())
+    @test test_lu2(1000,1,1,lufac=MKLPardisoLU())
 end
+
+

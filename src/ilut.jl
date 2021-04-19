@@ -1,22 +1,28 @@
-"""
-$(TYPEDEF)
-
-ILU(T) preconditioner
-"""
-mutable struct ILUTPreconditioner{Tv, Ti} <: AbstractExtendableSparsePreconditioner{Tv,Ti}
+mutable struct ILUTPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     A::ExtendableSparseMatrix
     fact::IncompleteLU.ILUFactorization{Tv,Ti}
     droptol::Float64
+    function ILUTPreconditioner{Tv,Ti}(;droptol=1.0e-3) where {Tv,Ti}
+        p=new()
+        p.droptol=droptol
+        p
+    end
 end
 
 """
 ```
+ILUTPreconditioner(;droptol=1.0e-3)
 ILUTPreconditioner(matrix; droptol=1.0e-3)
 ```
+
+Create the [`ILUTPreconditioner`](@ref) wrapping the one 
+from [IncompleteLU.jl](https://github.com/haampie/IncompleteLU.jl)
+For using this, you need to issue `using IncompleteLU`.
 """
-function ILUTPreconditioner(A::ExtendableSparseMatrix; droptol=1.0e-3)
-    @inbounds flush!(A)
-    ILUTPreconditioner(A,IncompleteLU.ilu(A.cscmatrix,τ=droptol),droptol)
+ILUTPreconditioner(;kwargs...)=ILUTPreconditioner{Float64,Int64}(;kwargs...)
+
+@eval begin
+    @makefrommatrix ILUTPreconditioner
 end
 
 function update!(precon::ILUTPreconditioner)
