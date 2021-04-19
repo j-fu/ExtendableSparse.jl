@@ -3,4 +3,5 @@ QUARRY
 docs/build
 *~
 Manifest.toml
+.repl_history.jl
 

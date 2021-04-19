@@ -2,15 +2,16 @@
 
 ## Factorizations
 
-In this package, preconditioners and LU factorizations are subcategories are both seen
-as complete or approximate _factorizations_. Correspondingly there is a common API for
+In this package, preconditioners and LU factorizations are both seen
+as complete or approximate _factorizations_. Correspondingly we provide a common  API for
 their creation.
 
-Factorizations from these package know the matrices which have been factorized.
 
 ```@autodocs
 Modules = [ExtendableSparse]
 Pages = ["factorizations.jl"]
+Order = [:function, :type]
+Private = false
 ```
 
 ## LU Factorizations

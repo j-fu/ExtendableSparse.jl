@@ -4,19 +4,15 @@
   
   Any such preconditioner should have the following fields
 ````
-  A
+  A::ExtendableSparseMatrix
   fact
-  phash
+  phash::UInt64
 ````
-and  methods
+and  provide a method
 ````
-  factorize(A; kwargs)
-  ldiv!(u, precon,v)
-  ldiv!(precon,v)
-  issolver(precon)
   update!(precon)
-  factorize!(precon,A; kwargs)
 ````   
+
   The idea is that, depending if the matrix pattern has changed, 
   different steps are needed to update the preconditioner.
 
@@ -27,12 +23,14 @@ abstract type AbstractFactorization{Tv, Ti} end
 
 """
 $(TYPEDEF)
+
 Abstract subtype for preconditioners
 """
 abstract type AbstractPreconditioner{Tv, Ti} <:AbstractFactorization{Tv, Ti} end
 
 """
 $(TYPEDEF)
+
 Abstract subtype for (full) LU factorizations
 """
 abstract type AbstractLUFactorization{Tv, Ti} <:AbstractFactorization{Tv, Ti}  end
@@ -50,6 +48,7 @@ issolver(::AbstractLUFactorization)=true
 issolver(::AbstractPreconditioner)=false
 
 
+
 """
 ```
 factorize!(factorization, matrix)
@@ -63,6 +62,10 @@ function factorize!(p::AbstractFactorization, A::ExtendableSparseMatrix)
     update!(p)
     p
 end
+
+
+
+
 
 
 """
@@ -112,8 +115,31 @@ LinearAlgebra.ldiv!(fact::AbstractFactorization, v)=ldiv!(fact.fact,v)
 
 
 
+macro makefrommatrix(fact)
+    return quote
+        $(esc(fact))(A::ExtendableSparseMatrix{Tv,Ti}; kwargs...) where {Tv,Ti} = factorize!($(esc(fact))(),A; kwargs...)
+        $(esc(fact))(A::SparseMatrixCSC{Tv,Ti}; kwargs...) where {Tv,Ti} = $(esc(fact))(ExtendableSparseMatrix(A); kwargs...)
+    end
+end
+
+
+
 include("jacobi.jl")
 include("ilu0.jl")
 include("parallel_jacobi.jl")
 include("umfpack_lu.jl")
 include("cholmod_cholesky.jl")
+
+@eval begin
+    
+    @makefrommatrix LUFactorization
+    @makefrommatrix CholeskyFactorization
+    @makefrommatrix ILU0Preconditioner
+    @makefrommatrix JacobiPreconditioner
+    @makefrommatrix ParallelJacobiPreconditioner
+
+end
+
+
+
+

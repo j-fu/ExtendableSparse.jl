@@ -6,13 +6,15 @@ end
 
 
 """
-$(SIGNATURES)
+```
+LUFactorization()
+LUFactorization(matrix)
+```
         
 Default Julia LU Factorization based on umfpack.
 """
 LUFactorization()=LUFactorization{Float64,Int64}(nothing,nothing,0)
 
-LUFactorization(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti} = factorize!(LUFactorization(),A)
 
 function update!(lufact::LUFactorization)
     flush!(lufact.A)

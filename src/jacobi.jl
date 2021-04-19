@@ -1,8 +1,3 @@
-"""
-$(TYPEDEF)
-
-Jacobi preconditoner
-"""
 mutable struct JacobiPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     A::ExtendableSparseMatrix{Tv,Ti}
     invdiag::Array{Tv,1}
@@ -13,6 +8,15 @@ mutable struct JacobiPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     end
 end
 
+
+"""
+```
+JacobiPreconditioner()
+JacobiPreconditioner(matrix)
+```
+
+Jacobi preconditioner
+"""
 JacobiPreconditioner()=JacobiPreconditioner{Float64,Int64}()
 
 function update!(precon::JacobiPreconditioner{Tv,Ti}) where {Tv,Ti}
@@ -29,15 +33,6 @@ function update!(precon::JacobiPreconditioner{Tv,Ti}) where {Tv,Ti}
     precon
 end
 
-"""
-```
-JacobiPreconditioner(A)
-JacobiPreconditioner(cscmatrix)
-```
-"""
-JacobiPreconditioner(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti} = factorize!(JacobiPreconditioner{Tv, Ti}(),A)
-
-JacobiPreconditioner(cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}=JacobiPreconditioner(ExtendableSparseMatrix(cscmatrix))
 
 
 function  LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, precon::JacobiPreconditioner, v::AbstractArray{T,1} where T)

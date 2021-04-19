@@ -1,8 +1,3 @@
-"""
-$(TYPEDEF)
-
-ILU(0) Preconditioner
-"""
 mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     A::ExtendableSparseMatrix{Tv,Ti}
     xdiag::Array{Tv,1}
@@ -15,15 +10,16 @@ mutable struct ILU0Preconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     end
 end
 
+"""
+```
+ILU0Preconditioner()
+ILU0Preconditioner(matrix)
+```
+
+ILU preconditioner with zero fill-in.
+"""
 ILU0Preconditioner()=ILU0Preconditioner{Float64,Int64}()
-"""
-```
-ILU0Preconditioner(extsparse)
-ILU0Preconditioner(cscmatrix)
-```
-"""
-ILU0Preconditioner(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}=factorize!(ILU0Preconditioner{Tv,Ti}(),A)
-ILU0Preconditioner(cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}=ILU0Preconditioner(ExtendableSparseMatrix(cscmatrix))
+
 
 function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
     flush!(precon.A)

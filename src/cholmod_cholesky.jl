@@ -6,18 +6,13 @@ mutable struct CholeskyFactorization{Tv, Ti} <: AbstractLUFactorization{Tv,Ti}
 end
 
 """
-$(SIGNATURES)
+CholeskyFactorization()
+CholeskyFactorization(matrix)
 
 Default Cholesky factorization via cholmod.
 """
 CholeskyFactorization()=CholeskyFactorization{Float64,Int64}(nothing,nothing,0,nothing)
 
-
-function CholeskyFactorization(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}
-    flush!(A)
-    A64=Symmetric(SparseMatrixCSC{Float64,Int64}(A.cscmatrix))
-    CholeskyFactorization(A,cholesky(A64),A.phash,A64)
-end
 
 function update!(cholfact::CholeskyFactorization)
     A=cholfact.A

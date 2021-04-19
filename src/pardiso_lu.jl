@@ -6,17 +6,16 @@ mutable struct PardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
     ps::Pardiso.AbstractPardisoSolver
     phash::UInt64
 end
+PardisoLU{Tv,Ti}() where {Tv,Ti} =PardisoLU{Tv,Ti}(nothing,Pardiso.PardisoSolver(),0)
+
 
 """
-$(SIGNATURES)
 
 LU factorization based on pardiso. For using this, you need to issue `using Pardiso`
 and have the pardiso library from  [pardiso-project.org](https://pardiso-project.org) 
 installed.
 """
 PardisoLU()=PardisoLU{Float64,Int64}(nothing,Pardiso.PardisoSolver(),0)
-PardisoLU{Tv,Ti}() where {Tv,Ti} =PardisoLU{Tv,Ti}(nothing,Pardiso.PardisoSolver(),0)
-PardisoLU(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti} = factorize!(PardisoLU(),A)
 
 
 mutable struct MKLPardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
@@ -24,16 +23,19 @@ mutable struct MKLPardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
     ps::Pardiso.AbstractPardisoSolver
     phash::UInt64
 end
+MKLPardisoLU{Tv,Ti}() where {Tv,Ti} = MKLPardisoLU{Tv,Ti}(nothing,Pardiso.MKLPardisoSolver(),0)
+
 
 """
-$(SIGNATURES)
+```
+MKLPardisoLU()
+MKLPardisoLU(matrix)
+```
 
 LU factorization based on pardiso. For using this, you need to issue `using Pardiso`.
 This version  uses the early 2000's fork in Intel's MKL library.
 """
 MKLPardisoLU()=MKLPardisoLU{Float64,Int64}(nothing,Pardiso.MKLPardisoSolver(),0)
-MKLPardisoLU(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}=factorize!(MKLPardisoLU(),A)
-MKLPardisoLU{Tv,Ti}() where {Tv,Ti} =PardisoLU{Tv,Ti}(nothing,Pardiso.MKLPardisoSolver(),0)
 
 
 function Pardiso.set_matrixtype!(ps, A::ExtendableSparseMatrix)
@@ -81,3 +83,7 @@ end
 
 LinearAlgebra.ldiv!(fact::AbstractPardisoLU, v::AbstractArray{T,1} where T)=ldiv!(v,fact,copy(v))
 
+@eval begin
+    @makefrommatrix PardisoLU
+    @makefrommatrix MKLPardisoLU
+end

@@ -1,8 +1,3 @@
-"""
-$(TYPEDEF)
-
-Parallel Jacobi preconditioner
-"""
 mutable struct ParallelJacobiPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     A::ExtendableSparseMatrix{Tv,Ti}
     invdiag::Array{Tv,1}
@@ -27,17 +22,15 @@ function update!(precon::ParallelJacobiPreconditioner{Tv,Ti}) where {Tv,Ti}
     precon
 end
 
+"""
+```
+ParallelJacobiPreconditioner()
+ParallelJacobiPreconditioner(matrix)
+```
+
+Parallel Jacobi preconditioner
+"""
 ParallelJacobiPreconditioner()=ParallelJacobiPreconditioner{Float64,Int64}()
-
-
-"""
-```
-ParallelJacobiPreconditioner(A)
-ParallelJacobiPreconditioner(cscmatrix)
-```
-"""
-ParallelJacobiPreconditioner(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}=factorize!(ParallelJacobiPreconditioner{Tv, Ti}(),A)
-ParallelJacobiPreconditioner(cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}=ParallelJacobiPreconditioner(ExtendableSparseMatrix(cscmatrix))
 
 function  LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, precon::ParallelJacobiPreconditioner, v::AbstractArray{T,1} where T)
     invdiag=precon.invdiag
