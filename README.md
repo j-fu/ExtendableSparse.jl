@@ -52,12 +52,13 @@ See [Julia issue #15630](https://github.com/JuliaLang/julia/issues/15630) for a 
 
 
 
-## Preconditioners
+## Factorizations and Preconditioners
 The package provides a common API for factorizations and preconditioners supporting
-series of solutions as during nonlinear and transient solves.
+series of solutions of similar problem as they occur during nonlinear and transient solves.
 For details, see the [corresponding documentation](https://j-fu.github.io/ExtendableSparse.jl/stable/iter/).
 
-## Interfaces to other packages
+
+### Interfaces to other packages
 The package provides interfaces to other sparse matrix solvers and preconditioners. Dependencies on these
 packages are handeled via [Requires.jl](https://github.com/JuliaPackaging/Requires.jl).
 Currently, support includes:
@@ -66,4 +67,6 @@ Currently, support includes:
   and [MKL Pardiso](https://software.intel.com/content/www/us/en/develop/documentation/onemkl-developer-reference-fortran/top/sparse-solver-routines/onemkl-pardiso-parallel-direct-sparse-solver-interface.html))
 - [IncompleteLU.jl](https://github.com/haampie/IncompleteLU.jl)
 - [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl) (Ruge-Stüben AMG)
+
+For a similar approach, see [Preconditioners.jl](https://github.com/mohamed82008/Preconditioners.jl)
 

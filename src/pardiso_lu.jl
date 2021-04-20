@@ -3,24 +3,36 @@ abstract type AbstractPardisoLU{Tv,Ti} <: AbstractLUFactorization{Tv,Ti} end
 
 mutable struct PardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
     A::Union{ExtendableSparseMatrix{Tv,Ti},Nothing}
-    ps::Pardiso.AbstractPardisoSolver
+    ps::Pardiso.PardisoSolver
     phash::UInt64
 end
 PardisoLU{Tv,Ti}() where {Tv,Ti} =PardisoLU{Tv,Ti}(nothing,Pardiso.PardisoSolver(),0)
 
 
 """
+```
+PardisoLU()
+PardisoLU(matrix)
+```
 
 LU factorization based on pardiso. For using this, you need to issue `using Pardiso`
 and have the pardiso library from  [pardiso-project.org](https://pardiso-project.org) 
-installed.
+[installed](https://github.com/JuliaSparse/Pardiso.jl#pardiso-60).
+
+For (setting Pardiso internal parameters)[https://github.com/JuliaSparse/Pardiso.jl#readme], 
+you can access the `PardisoSolver` e.g. like
+```
+using Pardiso
+plu=PardisoLU()
+Pardiso.set_iparm!(plu.ps,5,13.0)
+```
 """
 PardisoLU()=PardisoLU{Float64,Int64}(nothing,Pardiso.PardisoSolver(),0)
 
 
 mutable struct MKLPardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
     A::Union{ExtendableSparseMatrix{Tv,Ti},Nothing}
-    ps::Pardiso.AbstractPardisoSolver
+    ps::Pardiso.MKLPardisoSolver
     phash::UInt64
 end
 MKLPardisoLU{Tv,Ti}() where {Tv,Ti} = MKLPardisoLU{Tv,Ti}(nothing,Pardiso.MKLPardisoSolver(),0)
@@ -34,6 +46,15 @@ MKLPardisoLU(matrix)
 
 LU factorization based on pardiso. For using this, you need to issue `using Pardiso`.
 This version  uses the early 2000's fork in Intel's MKL library.
+
+
+For (setting Pardiso internal parameters)[https://github.com/JuliaSparse/Pardiso.jl#readme], 
+you can access the `PardisoSolver` e.g. like
+```
+using Pardiso
+plu=MKLPardisoLU()
+Pardiso.set_iparm!(plu.ps,5,13.0)
+```
 """
 MKLPardisoLU()=MKLPardisoLU{Float64,Int64}(nothing,Pardiso.MKLPardisoSolver(),0)
 
