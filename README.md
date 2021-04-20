@@ -16,6 +16,8 @@ Any linear algebra method on `ExtendableSparseMatrix` starts with a `flush!` met
 
 `ExtendableSparseMatrix` is aimed to work as a drop-in replacement to `SparseMatrixCSC` in finite element and finite volume codes especally in those cases where the sparsity structure is hard to detect a priori and where working with an intermediadte COO representation appears to be not convenient.
 
+
+
 ## Caveat
 
 This package assumes that a $m \times n$  matrix is sparse if *each* row and *each* column have less than $C$ entries with
@@ -50,5 +52,18 @@ See [Julia issue #15630](https://github.com/JuliaLang/julia/issues/15630) for a 
 
 
 
+## Preconditioners
+The package provides a common API for factorizations and preconditioners supporting
+series of solutions as during nonlinear and transient solves.
+For details, see the [corresponding documentation](https://j-fu.github.io/ExtendableSparse.jl/stable/iter/).
 
+## Interfaces to other packages
+The package provides interfaces to other sparse matrix solvers and preconditioners. Dependencies on these
+packages are handeled via [Requires.jl](https://github.com/JuliaPackaging/Requires.jl).
+Currently, support includes:
+
+- [Pardiso.jl](https://github.com/JuliaSparse/Pardiso.jl) (both ["project Pardiso"](https://pardiso-project.org)
+  and [MKL Pardiso](https://software.intel.com/content/www/us/en/develop/documentation/onemkl-developer-reference-fortran/top/sparse-solver-routines/onemkl-pardiso-parallel-direct-sparse-solver-interface.html))
+- [IncompleteLU.jl](https://github.com/haampie/IncompleteLU.jl)
+- [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl) (Ruge-Stüben AMG)
 
