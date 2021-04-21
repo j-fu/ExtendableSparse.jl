@@ -117,7 +117,7 @@ LinearAlgebra.ldiv!(fact::AbstractFactorization, v)=ldiv!(fact.fact,v)
 
 macro makefrommatrix(fact)
     return quote
-        $(esc(fact))(A::ExtendableSparseMatrix{Tv,Ti}; kwargs...) where {Tv,Ti} = factorize!($(esc(fact))(),A; kwargs...)
+        $(esc(fact))(A::ExtendableSparseMatrix{Tv,Ti}; kwargs...) where {Tv,Ti} = factorize!($(esc(fact))(;valuetype=Tv, indextype=Ti),A; kwargs...)
         $(esc(fact))(A::SparseMatrixCSC{Tv,Ti}; kwargs...) where {Tv,Ti} = $(esc(fact))(ExtendableSparseMatrix(A); kwargs...)
     end
 end

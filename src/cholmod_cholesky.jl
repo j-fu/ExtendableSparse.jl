@@ -6,12 +6,12 @@ mutable struct CholeskyFactorization{Tv, Ti} <: AbstractLUFactorization{Tv,Ti}
 end
 
 """
-CholeskyFactorization()
+CholeskyFactorization(;valuetype=Float64, indextype=Int64)
 CholeskyFactorization(matrix)
 
 Default Cholesky factorization via cholmod.
 """
-CholeskyFactorization()=CholeskyFactorization{Float64,Int64}(nothing,nothing,0,nothing)
+CholeskyFactorization(;valuetype::Type=Float64, indextype::Type=Int64)=CholeskyFactorization{valuetype,indextype}(nothing,nothing,0,nothing)
 
 
 function update!(cholfact::CholeskyFactorization)

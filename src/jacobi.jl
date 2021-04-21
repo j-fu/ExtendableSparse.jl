@@ -11,13 +11,13 @@ end
 
 """
 ```
-JacobiPreconditioner()
+JacobiPreconditioner(;valuetype=Float64, indextype=Int64)
 JacobiPreconditioner(matrix)
 ```
 
 Jacobi preconditioner
 """
-JacobiPreconditioner()=JacobiPreconditioner{Float64,Int64}()
+JacobiPreconditioner(;valuetype::Type=Float64, indextype::Type=Int64)=JacobiPreconditioner{valuetype,indextype}()
 
 function update!(precon::JacobiPreconditioner{Tv,Ti}) where {Tv,Ti}
     flush!(precon.A)

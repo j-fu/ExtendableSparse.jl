@@ -1,6 +1,6 @@
 mutable struct AMGPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv,Ti}
     A::ExtendableSparseMatrix{Tv,Ti}
-    fact
+    fact::AlgebraicMultigrid.Preconditioner
     max_levels::Int
     max_coarse::Int
     function AMGPreconditioner{Tv,Ti}(;max_levels=10, max_coarse=10) where {Tv,Ti}
@@ -13,13 +13,13 @@ end
 
 """
 ```
-AMGPreconditioner(;max_levels=10, max_coarse=10)
+AMGPreconditioner(;max_levels=10, max_coarse=10, valuetype=Float64,indextype=Int64)
 AMGPreconditioner(matrix;max_levels=10, max_coarse=10)
 ```
 
 Create the  [`AMGPreconditioner`](@ref) wrapping the Ruge-Stüben AMG preconditioner from [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl)
 """
-AMGPreconditioner(;kwargs...)=AMGPreconditioner{Float64,Int64}(;kwargs...)
+AMGPreconditioner(;valuetype::Type=Float64, indextype::Type=Int64,kwargs...)=AMGPreconditioner{valuetype,indextype}(;kwargs...)
 
 @eval begin
     @makefrommatrix AMGPreconditioner

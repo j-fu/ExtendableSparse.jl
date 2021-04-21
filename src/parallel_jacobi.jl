@@ -24,13 +24,13 @@ end
 
 """
 ```
-ParallelJacobiPreconditioner()
+ParallelJacobiPreconditioner(;valuetype=Float64, indextype=Int64)
 ParallelJacobiPreconditioner(matrix)
 ```
 
 Parallel Jacobi preconditioner
 """
-ParallelJacobiPreconditioner()=ParallelJacobiPreconditioner{Float64,Int64}()
+ParallelJacobiPreconditioner(;valuetype::Type=Float64, indextype::Type=Int64)=ParallelJacobiPreconditioner{valuetype,indextype}()
 
 function  LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, precon::ParallelJacobiPreconditioner, v::AbstractArray{T,1} where T)
     invdiag=precon.invdiag

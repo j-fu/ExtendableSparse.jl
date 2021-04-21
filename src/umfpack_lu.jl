@@ -7,13 +7,13 @@ end
 
 """
 ```
-LUFactorization()
+LUFactorization(;valuetype=Float64, indextype=Int64)
 LUFactorization(matrix)
 ```
         
 Default Julia LU Factorization based on umfpack.
 """
-LUFactorization()=LUFactorization{Float64,Int64}(nothing,nothing,0)
+LUFactorization(;valuetype::Type=Float64,indextype::Type=Int64)=LUFactorization{valuetype,indextype}(nothing,nothing,0)
 
 
 function update!(lufact::LUFactorization)
