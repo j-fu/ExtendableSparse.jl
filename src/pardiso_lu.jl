@@ -1,13 +1,15 @@
 abstract type AbstractPardisoLU{Tv,Ti} <: AbstractLUFactorization{Tv,Ti} end
 
-
 mutable struct PardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
     A::Union{ExtendableSparseMatrix{Tv,Ti},Nothing}
     ps::Pardiso.PardisoSolver
     phash::UInt64
 end
-PardisoLU{Tv,Ti}() where {Tv,Ti} =PardisoLU{Tv,Ti}(nothing,Pardiso.PardisoSolver(),0)
 
+function PardisoLU{Tv,Ti}() where {Tv,Ti}
+    fact=PardisoLU{Tv,Ti}(nothing,Pardiso.PardisoSolver(),0)
+    set_default_matrixtype!(fact)
+end
 
 """
 ```
@@ -27,13 +29,20 @@ plu=PardisoLU()
 Pardiso.set_iparm!(plu.ps,5,13.0)
 ```
 """
-PardisoLU(;valuetype::Type=Float64, indextype::Type=Int64)=PardisoLU{valuetype,indextype}(nothing,Pardiso.PardisoSolver(),0)
+PardisoLU(;valuetype::Type=Float64, indextype::Type=Int64)=PardisoLU{valuetype,indextype}()
 
 
+
+#############################################################################################
 mutable struct MKLPardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
     A::Union{ExtendableSparseMatrix{Tv,Ti},Nothing}
     ps::Pardiso.MKLPardisoSolver
     phash::UInt64
+end
+
+function MKLPardisoLU{Tv,Ti}() where {Tv,Ti}
+    fact=MKLPardisoLU{Tv,Ti}(nothing,Pardiso.MKLPardisoSolver(),0)
+    set_default_matrixtype!(fact)
 end
 
 
@@ -55,8 +64,18 @@ plu=MKLPardisoLU()
 Pardiso.set_iparm!(plu.ps,5,13.0)
 ```
 """
-MKLPardisoLU(;valuetype::Type=Float64, indextype::Type=Int64)=MKLPardisoLU{valuetype,indextype}(nothing,Pardiso.MKLPardisoSolver(),0)
+MKLPardisoLU(;valuetype::Type=Float64, indextype::Type=Int64)=MKLPardisoLU{valuetype,indextype}()
 
+
+##########################################################################################
+function set_default_matrixtype!(fact::AbstractPardisoLU{Tv,Ti}) where {Tv, Ti}
+    if Tv<:Complex
+        Pardiso.set_matrixtype!(fact.ps,Pardiso.COMPLEX_NONSYM)
+    else
+        Pardiso.set_matrixtype!(fact.ps,Pardiso.REAL_NONSYM)
+    end
+    fact
+end
 
 function update!(lufact::AbstractPardisoLU{Tv,Ti}) where {Tv, Ti}
     ps=lufact.ps
@@ -66,12 +85,6 @@ function update!(lufact::AbstractPardisoLU{Tv,Ti}) where {Tv, Ti}
         Pardiso.pardisoinit(ps)
         Pardiso.set_phase!(ps, Pardiso.RELEASE_ALL)
         Pardiso.pardiso(ps, Tv[], Acsc, Tv[])
-
-        if Tv<:Complex
-            Pardiso.set_matrixtype!(ps,Pardiso.COMPLEX_NONSYM)
-        else
-            Pardiso.set_matrixtype!(ps,Pardiso.REAL_NONSYM)
-        end
         Pardiso.set_phase!(ps, Pardiso.ANALYSIS_NUM_FACT)
         lufact.phash=lufact.A.phash
     else
