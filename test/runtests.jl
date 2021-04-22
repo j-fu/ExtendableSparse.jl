@@ -362,7 +362,7 @@ end
     @test test_lu2(1000,1,1,lufac=CholeskyFactorization())
 end
 
-@testset "pardiso" begin
+@testset "mkl-pardiso" begin
     @test test_lu1(10,10,10,lufac=MKLPardisoLU())
     @test test_lu1(25,40,1,lufac=MKLPardisoLU())
     @test test_lu1(1000,1,1,lufac=MKLPardisoLU())
@@ -372,4 +372,16 @@ end
     @test test_lu2(1000,1,1,lufac=MKLPardisoLU())
 end
 
+
+if Pardiso.PARDISO_LOADED[]
+    @testset "pardiso" begin
+        @test test_lu1(10,10,10,lufac=PardisoLU())
+        @test test_lu1(25,40,1,lufac=PardisoLU())
+        @test test_lu1(1000,1,1,lufac=PardisoLU())
+        
+        @test test_lu2(10,10,10,lufac=PardisoLU())
+        @test test_lu2(25,40,1,lufac=PardisoLU())
+        @test test_lu2(1000,1,1,lufac=PardisoLU())
+    end
+end
 
