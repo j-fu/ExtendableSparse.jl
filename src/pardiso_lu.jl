@@ -6,9 +6,9 @@ mutable struct PardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
     phash::UInt64
 end
 
-function PardisoLU{Tv,Ti}(;iparm=nothing,dparm=nothing,matrixtype=nothing) where {Tv,Ti}
+function PardisoLU{Tv,Ti}(;iparm=nothing,dparm=nothing,mtype=nothing) where {Tv,Ti}
     fact=PardisoLU{Tv,Ti}(nothing,Pardiso.PardisoSolver(),0)
-    default_initialize!(fact,iparm,dparm,matrixtype)
+    default_initialize!(fact,iparm,dparm,mtype)
 end
 
 """
@@ -17,16 +17,16 @@ PardisoLU(;valuetype=Float64,
            indextype=Int64,
            iparm::Vector, 
            dparm::Vector, 
-           matrixtype=Int)
+           mtype::Int)
 
-PardisoLU(matrix; iparm,dparm,matrixtype)
+PardisoLU(matrix; iparm,dparm,mtype)
 ```
 
 LU factorization based on pardiso. For using this, you need to issue `using Pardiso`
 and have the pardiso library from  [pardiso-project.org](https://pardiso-project.org) 
 [installed](https://github.com/JuliaSparse/Pardiso.jl#pardiso-60).
 
-The optional keyword arguments `matrixtype`, `iparm`  and `dparm` are 
+The optional keyword arguments `mtype`, `iparm`  and `dparm` are 
 (Pardiso internal parameters)[https://github.com/JuliaSparse/Pardiso.jl#readme].
 
 Forsetting them, one can also access the `PardisoSolver` e.g. like
@@ -46,9 +46,9 @@ mutable struct MKLPardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv,Ti}
     phash::UInt64
 end
 
-function MKLPardisoLU{Tv,Ti}(;iparm=nothing,matrixtype=nothing) where {Tv,Ti}
+function MKLPardisoLU{Tv,Ti}(;iparm=nothing,mtype=nothing) where {Tv,Ti}
     fact=MKLPardisoLU{Tv,Ti}(nothing,Pardiso.MKLPardisoSolver(),0)
-    default_initialize!(fact, iparm,nothing,matrixtype)
+    default_initialize!(fact, iparm,nothing,mtype)
 end
 
 
@@ -57,15 +57,15 @@ end
 MKLPardisoLU(;valuetype=Float64, 
            indextype=Int64,
            iparm::Vector, 
-           matrixtype=Int)
+           mtype::Int)
 
-MKLPardisoLU(matrix; iparm, matrixtype)
+MKLPardisoLU(matrix; iparm, mtype)
 ```
 
 LU factorization based on pardiso. For using this, you need to issue `using Pardiso`.
 This version  uses the early 2000's fork in Intel's MKL library.
 
-The optional keyword arguments `matrixtype` and `iparm`  are  
+The optional keyword arguments `mtype` and `iparm`  are  
 (Pardiso internal parameters)[https://github.com/JuliaSparse/Pardiso.jl#readme].
 
 For setting them you can also access the `PardisoSolver` e.g. like
@@ -79,13 +79,13 @@ MKLPardisoLU(;valuetype::Type=Float64, indextype::Type=Int64,kwargs...)=MKLPardi
 
 
 ##########################################################################################
-function default_initialize!(fact::AbstractPardisoLU{Tv,Ti}, iparm,dparm,matrixtype) where {Tv, Ti}
-    if !isnothing(matrixtype)
-        my_matrixtype=matrixtype
+function default_initialize!(fact::AbstractPardisoLU{Tv,Ti}, iparm,dparm,mtype) where {Tv, Ti}
+    if !isnothing(mtype)
+        my_mtype=mtype
     elseif Tv<:Complex
-        my_matrixtype=Pardiso.COMPLEX_NONSYM
+        my_mtype=Pardiso.COMPLEX_NONSYM
     else
-        my_matrixtype=Pardiso.REAL_NONSYM
+        my_mtype=Pardiso.REAL_NONSYM
     end
     
     Pardiso.set_matrixtype!(fact.ps,Pardiso.REAL_NONSYM)
