@@ -8,6 +8,7 @@ using BenchmarkTools
 using Pardiso
 using AlgebraicMultigrid
 using IncompleteLU
+using IterativeSolvers
 
 ##############################################################
 @testset "Constructors" begin
@@ -392,5 +393,28 @@ if Pardiso.PARDISO_LOADED[]
         @test test_lu2(1000,1,1,lufac=PardisoLU(mtype=2))
 
     end
+end
+
+
+
+##############################################
+function test_parilu0(n)
+	A = ExtendableSparseMatrix(n, n)
+	sprand_sdd!(A) 
+	flush!(A)
+	A = A.cscmatrix
+	b = A * ones(n)
+	P_par = ParallelILU0Preconditioner(A)
+	A_reord, b_reord = reorderlinsys(A, b, P_par.coloring)
+	P_ser = ILU0Preconditioner(A_reord)
+	sol_ser, hist_ser = gmres(A_reord, b_reord, Pl=P_ser, log=true)
+	sol_par, hist_par = gmres(A_reord, b_reord, Pl=P_par, log=true)
+	sol_ser == sol_par && hist_ser.iters == hist_par.iters
+end
+
+@testset "Parallel ILU0" begin
+    @test test_parilu0(10)
+    @test test_parilu0(100)
+    @test test_parilu0(1000)
 end
 
