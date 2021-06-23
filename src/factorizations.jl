@@ -127,6 +127,7 @@ end
 include("jacobi.jl")
 include("ilu0.jl")
 include("parallel_jacobi.jl")
+include("parallel_ilu0.jl")
 include("umfpack_lu.jl")
 include("cholmod_cholesky.jl")
 
@@ -137,6 +138,7 @@ include("cholmod_cholesky.jl")
     @makefrommatrix ILU0Preconditioner
     @makefrommatrix JacobiPreconditioner
     @makefrommatrix ParallelJacobiPreconditioner
+    @makefrommatrix ParallelILU0Preconditioner
 
 end
 

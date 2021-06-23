@@ -15,7 +15,7 @@ include("extendable.jl")
 export SparseMatrixLNK,ExtendableSparseMatrix,flush!,nnz, updateindex!, rawupdateindex!, colptrs
 
 include("factorizations.jl")
-export JacobiPreconditioner, ILU0Preconditioner, ParallelJacobiPreconditioner
+export JacobiPreconditioner, ILU0Preconditioner, ParallelJacobiPreconditioner, ParallelILU0Preconditioner, reorderlinsys
 export AbstractFactorization,LUFactorization, CholeskyFactorization
 export issolver
 export factorize!, update!
