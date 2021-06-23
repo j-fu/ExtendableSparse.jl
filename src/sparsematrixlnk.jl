@@ -310,6 +310,8 @@ function Base.:+(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC)::SparseMatrix
     @assert(csc.m==lnk.m)
     @assert(csc.n==lnk.n)
     
+    # overallocate arrays in order to avoid
+    # presumably slower push!
     xnnz=nnz(csc)+nnz(lnk)
     colptr=Vector{Ti}(undef,csc.n+1)
     rowval=Vector{Ti}(undef,xnnz)
@@ -389,6 +391,9 @@ function Base.:+(lnk::SparseMatrixLNK{Tv,Ti},csc::SparseMatrixCSC)::SparseMatrix
         end
     end
     colptr[csc.n+1]=inz
+    # Julia 1.7 wants this correct
+    resize!(rowval,inz-1)
+    resize!(nzval,inz-1)
     SparseMatrixCSC{Tv,Ti}(csc.m,csc.n,colptr,rowval,nzval)
 end
 
