@@ -80,9 +80,11 @@ MKLPardisoLU(;valuetype::Type=Float64, indextype::Type=Int64,kwargs...)=MKLPardi
 
 ##########################################################################################
 function default_initialize!(fact::AbstractPardisoLU{Tv,Ti}, iparm,dparm,mtype) where {Tv, Ti}
-    if !isnothing(mtype)
-        my_mtype=mtype
-    elseif Tv<:Complex
+    # if !isnothing(mtype)
+    #     my_mtype=mtype fix this!
+    # else
+
+    if Tv<:Complex
         my_mtype=Pardiso.COMPLEX_NONSYM
     else
         my_mtype=Pardiso.REAL_NONSYM

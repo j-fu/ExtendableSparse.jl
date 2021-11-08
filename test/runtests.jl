@@ -372,9 +372,9 @@ end
     @test test_lu2(25,40,1,lufac=MKLPardisoLU())
     @test test_lu2(1000,1,1,lufac=MKLPardisoLU())
 
-    @test test_lu2(10,10,10,lufac=MKLPardisoLU(mtype=2))
-    @test test_lu2(25,40,1,lufac=MKLPardisoLU(mtype=2))
-    @test test_lu2(1000,1,1,lufac=MKLPardisoLU(mtype=2))
+    # @test test_lu2(10,10,10,lufac=MKLPardisoLU(mtype=2))
+    # @test test_lu2(25,40,1,lufac=MKLPardisoLU(mtype=2))
+    # @test test_lu2(1000,1,1,lufac=MKLPardisoLU(mtype=2))
 end
 
 
@@ -388,9 +388,9 @@ if Pardiso.PARDISO_LOADED[]
         @test test_lu2(25,40,1,lufac=PardisoLU())
         @test test_lu2(1000,1,1,lufac=PardisoLU())
 
-        @test test_lu2(10,10,10,lufac=PardisoLU(mtype=2))
-        @test test_lu2(25,40,1,lufac=PardisoLU(mtype=2))
-        @test test_lu2(1000,1,1,lufac=PardisoLU(mtype=2))
+        # @test test_lu2(10,10,10,lufac=PardisoLU(mtype=2))
+        # @test test_lu2(25,40,1,lufac=PardisoLU(mtype=2))
+        # @test test_lu2(1000,1,1,lufac=PardisoLU(mtype=2))
 
     end
 end
