@@ -88,7 +88,7 @@ function default_initialize!(fact::AbstractPardisoLU{Tv,Ti}, iparm,dparm,mtype) 
         my_mtype=Pardiso.REAL_NONSYM
     end
     
-    Pardiso.set_matrixtype!(fact.ps,Pardiso.REAL_NONSYM)
+    Pardiso.set_matrixtype!(fact.ps,my_mtype)
 
     if !isnothing(iparm)
         for i=1:min(length(iparm),length(fact.ps.iparm))
