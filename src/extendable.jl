@@ -394,3 +394,10 @@ function SparseArrays.dropzeros!(ext::ExtendableSparseMatrix)
 end
 
 
+function copy(S::ExtendableSparseMatrix)
+    if isnothing(S.lnkmatrix)
+        ExtendableSparseMatrix(copy(S.cscmatrix), nothing, S.phash)
+    else
+        ExtendableSparseMatrix(copy(S.cscmatrix), copy(S.lnkmatrix), S.phash)
+    end
+end

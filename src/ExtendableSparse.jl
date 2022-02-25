@@ -6,7 +6,8 @@ using Requires
 
 using DocStringExtensions
 
-
+import SparseArrays: rowvals, getcolptr, nonzeros
+import Base: copy
 
 include("sparsematrixcsc.jl")
 include("sparsematrixlnk.jl")

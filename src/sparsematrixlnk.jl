@@ -409,3 +409,10 @@ function SparseArrays.SparseMatrixCSC(lnk::SparseMatrixLNK)::SparseMatrixCSC
     csc=spzeros(lnk.m,lnk.n)
     lnk+csc
 end
+
+
+rowvals(S::SparseMatrixLNK) = getfield(S, :rowval)
+getcolptr(S::SparseMatrixLNK) = getfield(S, :colptr)
+nonzeros(S::SparseMatrixLNK) = getfield(S, :nzval)
+
+copy(S::SparseMatrixLNK) = SparseMatrixLNK(size(S, 1), size(S, 2), S.nnz, S.nentries, copy(getcolptr(S)), copy(rowvals(S)), copy(nonzeros(S)))
