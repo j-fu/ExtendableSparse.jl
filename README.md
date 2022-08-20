@@ -20,8 +20,8 @@ Any linear algebra method on `ExtendableSparseMatrix` starts with a `flush!` met
 
 ## Caveat
 
-This package assumes that a $ m \times n $  matrix is sparse if *each* row and *each* column have less than $ C $ entries with
-$ C << n$ and $C <<m $ . Adding a full matrix row will be a performance hit.
+This package assumes that a  $m \times n$  matrix is sparse if *each* row and *each* column have less than $C$ entries with
+$C << n$ and $C <<m$ . Adding a full matrix row will be a performance hit.
 
 
 ## Working with ForwardDiff

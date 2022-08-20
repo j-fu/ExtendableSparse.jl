@@ -380,6 +380,7 @@ end
 end
 
 @testset "mkl-pardiso" begin
+if !sys.isapple 
     @test test_lu1(10,10,10,lufac=MKLPardisoLU())
     @test test_lu1(25,40,1,lufac=MKLPardisoLU())
     @test test_lu1(1000,1,1,lufac=MKLPardisoLU())
@@ -387,7 +388,7 @@ end
     @test test_lu2(10,10,10,lufac=MKLPardisoLU())
     @test test_lu2(25,40,1,lufac=MKLPardisoLU())
     @test test_lu2(1000,1,1,lufac=MKLPardisoLU())
-
+end
     # @test test_lu2(10,10,10,lufac=MKLPardisoLU(mtype=2))
     # @test test_lu2(25,40,1,lufac=MKLPardisoLU(mtype=2))
     # @test test_lu2(1000,1,1,lufac=MKLPardisoLU(mtype=2))
