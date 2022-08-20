@@ -230,7 +230,12 @@ $(SIGNATURES)
 """
 function SparseArrays.rowvals(ext::ExtendableSparseMatrix)
     @inbounds flush!(ext)
-    return rowvals(ext.cscmatrix)
+    rowvals(ext.cscmatrix)
+end
+
+function SparseArrays.getrowval(S::ExtendableSparseMatrix)
+    flush!(S)
+    getfield(S.cscmatrix, :rowval)
 end
 
 
@@ -239,7 +244,7 @@ $(SIGNATURES)
 
 [`flush!`](@ref) and return colptr of  in ext.cscmatrix.
 """
-function colptrs(ext::ExtendableSparseMatrix)
+function SparseArrays.getcolptr(ext::ExtendableSparseMatrix)
     @inbounds flush!(ext)
     return ext.cscmatrix.colptr
 end

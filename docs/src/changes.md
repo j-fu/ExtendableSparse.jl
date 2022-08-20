@@ -1,4 +1,9 @@
 # Changes
+## v0.7, August 19, 2022
+- Require Julia 1.6
+- first steps to compatibility with LinearSolve.jl
+## v0.6, April 20, 2021
+- use type parameters to describe factorizations
 ## v0.5, April 10, 2021
 - Introduce lu/lu! , factorize/factorize!, unifying LU factorizations and preconditioners
 - Interface packages: Pardiso, AlgebraicMultigrid, IncompleteLU via Requires.jl

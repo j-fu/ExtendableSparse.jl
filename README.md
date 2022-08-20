@@ -14,14 +14,14 @@ The later is modeled after the linked list sparse matrix format described in the
 
 Any linear algebra method on `ExtendableSparseMatrix` starts with a `flush!` method which adds the LNK entries and the existing CSC entries into a new CSC struct and resets the LNK struct.
 
-`ExtendableSparseMatrix` is aimed to work as a drop-in replacement to `SparseMatrixCSC` in finite element and finite volume codes especally in those cases where the sparsity structure is hard to detect a priori and where working with an intermediadte COO representation appears to be not convenient.
+`ExtendableSparseMatrix` is aimed to work as a drop-in replacement to `SparseMatrixCSC` in finite element and finite volume codes especially in those cases where the sparsity structure is hard to detect a priori and where working with an intermediadte COO representation appears to be not convenient.
 
 
 
 ## Caveat
 
 This package assumes that a  $m \times n$  matrix is sparse if *each* row and *each* column have less than $C$ entries with
-$C << n$ and $C <<m$ . Adding a full matrix row will be a performance hit.
+$C << n$ and $C << m$ . Adding a full matrix row will be a performance hit.
 
 
 ## Working with ForwardDiff
@@ -59,6 +59,9 @@ For details, see the [corresponding documentation](https://j-fu.github.io/Extend
 
 
 ### Interfaces to other packages
+With version 0.7, the package becomes compatible with [LinearSolve.jl](https://github.com/SciML/LinearSolve.jl).
+Matrices of type `ExtendableSparseMatrix` can be passed to the `LinearProblem` constructor of [LinearSolve.jl](https://github.com/SciML/LinearSolve.jl).
+
 The package provides interfaces to other sparse matrix solvers and preconditioners. Dependencies on these
 packages are handeled via [Requires.jl](https://github.com/JuliaPackaging/Requires.jl).
 Currently, support includes:
