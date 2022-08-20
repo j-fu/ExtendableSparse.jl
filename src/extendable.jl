@@ -62,6 +62,7 @@ Create similar but emtpy extendableSparseMatrix
 """
 Base.similar(m::ExtendableSparseMatrix{Tv,Ti}) where {Tv,Ti}=ExtendableSparseMatrix{Tv,Ti}(size(m)...)
 
+Base.similar(m::ExtendableSparseMatrix{Tv,Ti},::Type{T}) where {Tv,Ti,T}=ExtendableSparseMatrix{T,Ti}(size(m)...)
 
 """
 $(SIGNATURES)
@@ -394,10 +395,11 @@ function SparseArrays.dropzeros!(ext::ExtendableSparseMatrix)
 end
 
 
-function copy(S::ExtendableSparseMatrix)
+function Base.copy(S::ExtendableSparseMatrix)
     if isnothing(S.lnkmatrix)
         ExtendableSparseMatrix(copy(S.cscmatrix), nothing, S.phash)
     else
         ExtendableSparseMatrix(copy(S.cscmatrix), copy(S.lnkmatrix), S.phash)
     end
 end
+

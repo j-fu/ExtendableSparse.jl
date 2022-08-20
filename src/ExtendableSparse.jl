@@ -2,18 +2,27 @@ module ExtendableSparse
 using SparseArrays
 using LinearAlgebra
 using SuiteSparse
+using Setfield: @set!
+using UnPack: @unpack
+import LinearSolve,SciMLBase
+
 using Requires
 
 using DocStringExtensions
 
 import SparseArrays: rowvals, getcolptr, nonzeros
-import Base: copy
+
 
 include("sparsematrixcsc.jl")
 include("sparsematrixlnk.jl")
 include("extendable.jl")
 
 export SparseMatrixLNK,ExtendableSparseMatrix,flush!,nnz, updateindex!, rawupdateindex!, colptrs
+
+
+include("linearsolve.jl")
+
+
 
 include("factorizations.jl")
 export JacobiPreconditioner, ILU0Preconditioner, ParallelJacobiPreconditioner, ParallelILU0Preconditioner, reorderlinsys

@@ -75,3 +75,11 @@ Hash of csc matrix pattern.
 phash(csc::SparseMatrixCSC)=hash((hash(csc.colptr),hash(csc.rowval)))
 # probably no good idea to add two hashes, so we hash them together.
 
+
+"""
+    pattern_equal(a::SparseMatrixCSC,b::SparseMatrixCSC)
+
+Check if sparsity patterns of two SparseMatrixCSC objects are equal.
+This is generally faster than comparing hashes.
+"""
+pattern_equal(a::SparseMatrixCSC,b::SparseMatrixCSC) = a.colptr==b.colptr && a.rowval==b.rowval

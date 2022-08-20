@@ -10,6 +10,8 @@ using AlgebraicMultigrid
 using IncompleteLU
 using IterativeSolvers
 
+using LinearSolve
+
 ##############################################################
 @testset "Constructors" begin
     function test_constructors()
@@ -320,7 +322,7 @@ end
     @test test_hermitian(300,:L)
 end
 
-function test_lu1(k,l,m; lufac=LUFactorization())
+function test_lu1(k,l,m; lufac=ExtendableSparse.LUFactorization())
     Acsc=fdrand(k,l,m,rand=()->1,matrixtype=SparseMatrixCSC)
     b=rand(k*l*m)
     LUcsc=lu(Acsc)
@@ -342,7 +344,7 @@ function test_lu1(k,l,m; lufac=LUFactorization())
     x1csc≈x1ext && x2csc ≈ x2ext
 end
 
-function test_lu2(k,l,m;lufac=LUFactorization())
+function test_lu2(k,l,m;lufac=ExtendableSparse.LUFactorization())
     Aext=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
     b=rand(k*l*m)
     lu!(lufac,Aext)
@@ -357,7 +359,7 @@ function test_lu2(k,l,m;lufac=LUFactorization())
 end
 
 
-@testset "LUFactorization" begin
+@testset "ExtendableSparse.LUFactorization" begin
     @test test_lu1(10,10,10)
     @test test_lu1(25,40,1)
     @test test_lu1(1000,1,1)
@@ -432,3 +434,30 @@ end
     @test test_parilu0(1000)
 end
 
+
+function test_linearsolve(n)
+ 
+    A=fdrand(n,1,1, matrixtype=ExtendableSparseMatrix)
+    b=rand(n)
+    c=A\b
+    @test c ≈ LinearSolve.solve(LinearProblem(A,b)).u
+    
+    A=fdrand(n,n,1, matrixtype=ExtendableSparseMatrix)
+    b=rand(n*n)
+    c=A\b
+    @test c ≈ LinearSolve.solve(LinearProblem(A,b)).u
+
+    @test c ≈ LinearSolve.solve(LinearProblem(A,b),UMFPACKFactorization()).u
+    @test c ≈ LinearSolve.solve(LinearProblem(A,b),KLUFactorization()).u
+    @test c ≈ LinearSolve.solve(LinearProblem(A,b),IterativeSolversJL_CG(),Pl=ILU0Preconditioner(A)).u
+    @test c ≈ LinearSolve.solve(LinearProblem(A,b),IterativeSolversJL_CG(),Pl=JacobiPreconditioner(A)).u
+    @test c ≈ LinearSolve.solve(LinearProblem(A,b),IterativeSolversJL_CG(),Pl=ParallelJacobiPreconditioner(A)).u
+    @test c ≈ LinearSolve.solve(LinearProblem(A,b),IterativeSolversJL_CG(),Pl=ILUTPreconditioner(A)).u
+    @test c ≈ LinearSolve.solve(LinearProblem(A,b),IterativeSolversJL_CG(),Pl=AMGPreconditioner(A)).u
+
+    
+end
+
+@testset "LinearSolve" begin
+    test_linearsolve(20)
+end
