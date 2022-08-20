@@ -380,7 +380,7 @@ end
 end
 
 @testset "mkl-pardiso" begin
-if !sys.isapple 
+if !Sys.isapple()
     @test test_lu1(10,10,10,lufac=MKLPardisoLU())
     @test test_lu1(25,40,1,lufac=MKLPardisoLU())
     @test test_lu1(1000,1,1,lufac=MKLPardisoLU())
