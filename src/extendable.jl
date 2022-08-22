@@ -178,9 +178,14 @@ function Base.show(io::IO,::MIME"text/plain",ext::ExtendableSparseMatrix)
     m, n = size(ext)
     print(io, m, "×", n, " ", typeof(ext), " with ", xnnz, " stored ",
           xnnz == 1 ? "entry" : "entries")
+    
+    if !haskey(io, :compact)
+        io = IOContext(io, :compact => true)
+    end
+    
     if !(m == 0 || n == 0 || xnnz==0)
-        print(io, ":")
-        show(IOContext(io), ext.cscmatrix)
+        print(io, ":\n")
+        Base.print_array(IOContext(io), ext.cscmatrix)
     end
 end
 
