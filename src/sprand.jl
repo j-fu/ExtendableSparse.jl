@@ -229,21 +229,30 @@ Tested for Matrix, SparseMatrixCSC,  ExtendableSparseMatrix, SparseMatrixLNK and
 function fdrand(nx,ny=1,nz=1;
                 matrixtype::Union{Type,Symbol}=SparseMatrixCSC,
                 update = (A,v,i,j)-> A[i,j]+=v,
-                rand= ()-> 0.1+rand())
+                rand= ()-> 0.1+rand(),symmetric=true)
     N=nx*ny*nz
     if matrixtype==:COO
-        return fdrand_coo(nx,ny,nz, rand=rand)
-    elseif matrixtype==ExtendableSparseMatrix
-        A=ExtendableSparseMatrix(N,N)
-    elseif matrixtype==SparseMatrixLNK
-        A=SparseMatrixLNK(N,N)
-    elseif matrixtype==SparseMatrixCSC
-        A=spzeros(N,N)
-    elseif matrixtype==Tridiagonal
-        A=Tridiagonal(zeros(nx-1),zeros(nx),zeros(nx-1))
-    elseif matrixtype==Matrix
-        A=zeros(N,N)
+        A=fdrand_coo(nx,ny,nz, rand=rand)
+        else
+        if matrixtype==ExtendableSparseMatrix
+            A=ExtendableSparseMatrix(N,N)
+        elseif matrixtype==SparseMatrixLNK
+            A=SparseMatrixLNK(N,N)
+        elseif matrixtype==SparseMatrixCSC
+            A=spzeros(N,N)
+        elseif matrixtype==Tridiagonal
+            A=Tridiagonal(zeros(nx-1),zeros(nx),zeros(nx-1))
+        elseif matrixtype==Matrix
+            A=zeros(N,N)
+        end
+        A=fdrand!(A,nx,ny,nz,update = update, rand=rand)
     end
-    fdrand!(A,nx,ny,nz,update = update, rand=rand)
+    if symmetric
+        A
+    else
+        Diagonal([rand() for i=1:size(A,1)])*A
+    end
 end
+
+
 

@@ -182,8 +182,8 @@ end
 end
 
 ##############################################
-function test_fdrand(k,l,m)
-    A=fdrand(k,l,m,matrixtype=ExtendableSparseMatrix)
+function test_fdrand(k,l,m; symmetric=true)
+    A=fdrand(k,l,m,matrixtype=ExtendableSparseMatrix,symmetric=symmetric)
     jacobi_iteration_matrix=I-inv(Diagonal(A))*A
     ext=extrema(real(eigvals(Matrix(jacobi_iteration_matrix))))
     mininv=minimum(inv(Matrix(A)))
@@ -195,6 +195,9 @@ end
   @test  test_fdrand(1000,1,1)
   @test  test_fdrand(20,20,1)
   @test  test_fdrand(10,10,10)
+  @test  test_fdrand(1000,1,1,symmetric=false)
+  @test  test_fdrand(20,20,1,symmetric=false)
+  @test  test_fdrand(10,10,10,symmetric=false)
 end
 
 ##############################################

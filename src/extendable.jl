@@ -404,7 +404,17 @@ function SparseArrays.dropzeros!(ext::ExtendableSparseMatrix)
     dropzeros!(ext.cscmatrix)
 end
 
+"""
+$(SIGNATURES)
+"""
+function Base.:*(d::Diagonal,ext::ExtendableSparseMatrix)
+    @inbounds flush!(ext)
+    return ExtendableSparseMatrix(d*ext.cscmatrix)
+end
 
+"""
+$(SIGNATURES)
+"""
 function Base.copy(S::ExtendableSparseMatrix)
     if isnothing(S.lnkmatrix)
         ExtendableSparseMatrix(copy(S.cscmatrix), nothing, S.phash)
