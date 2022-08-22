@@ -47,6 +47,8 @@ function sprand_sdd!(A::AbstractSparseMatrix{Tv,Ti}; nnzrow=4) where {Tv,Ti}
     A
 end
 
+
+
 """
 $(SIGNATURES)
 
@@ -57,7 +59,7 @@ with finite  difference discretization data  on a unit  hypercube. See
 It is required that `size(A)==(N,N)` where `N=nx*ny*nz`
 """
 function fdrand!(A::T,
-                 nx,ny,nz;
+                 nx,ny=1,nz=1;
                  update= (A,v,i,j)-> A[i,j]+=v,
                  rand=()-> rand()) where T<:AbstractMatrix
     
@@ -70,13 +72,19 @@ function fdrand!(A::T,
     _flush!(m::ExtendableSparseMatrix)=flush!(m)
     _flush!(m::SparseMatrixCSC)=m
     _flush!(m::SparseMatrixLNK)=m
-    _flush!(m::Matrix)=m
+    _flush!(m::AbstractMatrix)=m
 
     _nonzeros(m::Matrix)=vec(m)
     _nonzeros(m::ExtendableSparseMatrix)=nonzeros(m)
     _nonzeros(m::SparseMatrixLNK)=m.nzval
     _nonzeros(m::SparseMatrixCSC)=nonzeros(m)
 
+    zero!(A::AbstractMatrix{T}) where T = A.=zero(T)
+    zero!(A::SparseMatrixCSC{T,Ti}) where {T,Ti} = _nonzeros(A).=zero(T)
+    zero!(A::ExtendableSparseMatrix{T,Ti}) where {T,Ti} = _nonzeros(A).=zero(T)
+    zero!(A::SparseMatrixLNK{T,Ti}) where {T,Ti} = _nonzeros(A).=zero(T)
+
+    zero!(A)
     
     function update_pair(A,v,i,j)
         update(A,-v,i,j)
@@ -85,8 +93,6 @@ function fdrand!(A::T,
         update(A,v,j,j)
     end
     
-    nzv=_nonzeros(A)
-    nzv.=0.0
 
     
     hx=1.0/nx
@@ -129,7 +135,7 @@ $(SIGNATURES)
 Create SparseMatrixCSC via COO intermedite arrrays
 """
 
-function fdrand_coo(nx,ny,nz;
+function fdrand_coo(nx,ny=1,nz=1;
                     rand=()-> rand())
     N=nx*ny*nz
     I=zeros(Int64,0)
@@ -220,7 +226,7 @@ are random unless e.g.  `rand=()->1` is passed as random number generator.
 Tested for Matrix, SparseMatrixCSC,  ExtendableSparseMatrix, SparseMatrixLNK and `:COO`
 
 """
-function fdrand(nx,ny,nz;
+function fdrand(nx,ny=1,nz=1;
                 matrixtype::Union{Type,Symbol}=SparseMatrixCSC,
                 update = (A,v,i,j)-> A[i,j]+=v,
                 rand= ()-> 0.1+rand())
@@ -233,6 +239,8 @@ function fdrand(nx,ny,nz;
         A=SparseMatrixLNK(N,N)
     elseif matrixtype==SparseMatrixCSC
         A=spzeros(N,N)
+    elseif matrixtype==Tridiagonal
+        A=Tridiagonal(zeros(nx-1),zeros(nx),zeros(nx-1))
     elseif matrixtype==Matrix
         A=zeros(N,N)
     end
