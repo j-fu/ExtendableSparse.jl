@@ -194,7 +194,7 @@ $(SIGNATURES)
 Create matrix  for a mock  finite difference operator for  a diffusion
 problem with random coefficients on a unit hypercube ``\\Omega\\subset\\mathbb R^d``.
 with ``d=1`` if  `nx>1 && ny==1 && nz==1`, ``d=2`` if  `nx>1 && ny>1 && nz==1` and
-``d=3`` if  `nx>1 && ny>1 && nz>1` .
+``d=3`` if  `nx>1 && ny>1 && nz>1` . In the symmetric case it corresponds to
 
 ```math
     \\begin{align*}
@@ -205,9 +205,10 @@ with ``d=1`` if  `nx>1 && ny==1 && nz==1`, ``d=2`` if  `nx>1 && ny>1 && nz==1` a
 
 The matrix is irreducibly diagonally dominant, has positive main diagonal entries 
 and nonpositive off-diagonal entries, hence it has the M-Property.
-Therefore, its inverse will be a dense matrix with positive entries. 
-Moreover it is symmmetric, and  positive definite, and the spectral radius
-of the  Jacobi iteration matrix ``\rho(I-D(A)^{-1}A)<1`` .
+Therefore, its inverse will be a dense matrix with positive entries,
+and the spectral radius of the  Jacobi iteration matrix ``\rho(I-D(A)^{-1}A)<1`` .
+ 
+Moreover, in the symmetric case, it is positive definite.
 
 Parameters+ default values:
 
@@ -219,11 +220,12 @@ Parameters+ default values:
 |    `matrixtype = SparseMatrixCSC` | Matrix type                        |
 |  `update = (A,v,i,j)-> A[i,j]+=v` | Element update function            |
 |    `rand =()-> rand()`            | Random number generator            |
+|    `symmetric=true`               | Whether to create symmetric matrix or not|
                                                                              
 The sparsity structure is fixed to an orthogonal grid, resulting in a 3, 5 or 7
 diagonal matrix depending on dimension. The entries
 are random unless e.g.  `rand=()->1` is passed as random number generator.
-Tested for Matrix, SparseMatrixCSC,  ExtendableSparseMatrix, SparseMatrixLNK and `:COO`
+Tested for Matrix, SparseMatrixCSC,  ExtendableSparseMatrix, Tridiagonal, SparseMatrixLNK and `:COO`
 
 """
 function fdrand(nx,ny=1,nz=1;
@@ -256,3 +258,42 @@ end
 
 
 
+function solverbenchmark(solver,nx,ny=1,nz=1; symmetric=false, matrixtype=ExtendableSparseMatrix,seconds=0.5,  repeat=1, tol=sqrt(eps(Float64)))
+    A=fdrand(nx,ny,nz;symmetric,matrixtype)
+    n=size(A,1)
+    x=rand(n)
+    b=A*x
+    u=solver(A,b)
+    nrm=norm(u-x,1)/n
+    if nrm>tol
+        error("solution  inaccurate: $((nx,ny,nz)), |u-exact|=$nrm")
+    end
+    secs=0.0
+    nsol=0
+    tmin=1.0e30
+    while secs<seconds
+        t=@elapsed solver(A,b)
+        secs+=t
+        tmin=min(tmin,t)
+        nsol+=1
+    end
+    tmin
+end
+
+function solverbenchmark(solver; dim=1, nsizes=10, sizes=[10*2^i for i=1:nsizes],symmetric=false, matrixtype=ExtendableSparseMatrix,seconds=0.1,tol=sqrt(eps(Float64)))
+    if dim==1
+        ns=sizes
+    elseif dim==2
+        ns= [  (Int(ceil(x^(1/2))),Int(ceil(x^(1/2)))) for x in sizes]
+    elseif dim==3
+        ns= [  (Int(ceil(x^(1/3))),Int(ceil(x^(1/3))),Int(ceil(x^(1/3)))) for x in sizes]
+    end
+    times=zeros(0)
+    sizes=zeros(Int,0)
+    for s in ns
+        t=solverbenchmark(solver,s...;symmetric,matrixtype,seconds,tol)
+        push!(times,t)
+        push!(sizes,prod(s))
+    end
+    sizes,times
+end

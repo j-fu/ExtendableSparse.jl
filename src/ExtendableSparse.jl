@@ -39,7 +39,7 @@ export simple,simple!
 
 
 include("sprand.jl")
-export sprand!,sprand_sdd!, fdrand,fdrand!,fdrand_coo
+export sprand!,sprand_sdd!, fdrand,fdrand!,fdrand_coo, solverbenchmark
 
 
 function __init__()
