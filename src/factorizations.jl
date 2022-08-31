@@ -122,24 +122,31 @@ macro makefrommatrix(fact)
     end
 end
 
-
-
 include("jacobi.jl")
 include("ilu0.jl")
 include("parallel_jacobi.jl")
 include("parallel_ilu0.jl")
-include("umfpack_lu.jl")
-include("cholmod_cholesky.jl")
 
 @eval begin
-    
-    @makefrommatrix LUFactorization
-    @makefrommatrix CholeskyFactorization
+
     @makefrommatrix ILU0Preconditioner
     @makefrommatrix JacobiPreconditioner
     @makefrommatrix ParallelJacobiPreconditioner
     @makefrommatrix ParallelILU0Preconditioner
 
+end
+
+if Base.USE_GPL_LIBS
+#requires SuiteSparse which is not available in non-GPL builds
+    include("umfpack_lu.jl")
+    include("cholmod_cholesky.jl")
+    
+    @eval begin
+    	
+        @makefrommatrix LUFactorization
+        @makefrommatrix CholeskyFactorization
+    
+    end
 end
 
 
