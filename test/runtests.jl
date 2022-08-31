@@ -168,21 +168,21 @@ if Base.USE_GPL_LIBS begin
     b≈ Ax
 end
 else
-	true
+    true
 end
 end
 
 @testset "Operations" begin    
- 	for irun=1:10
- 		m=rand((1:1000))
- 		n=rand((1:1000))
- 		d=0.3*rand()
- 		@test test_addition(m=m,n=n,d=d)
- 	end
- 	
- 	@test test_operations(10)
- 	@test test_operations(100)
- 	@test test_operations(1000)
+    for irun=1:10
+        m=rand((1:1000))
+        n=rand((1:1000))
+        d=0.3*rand()
+        @test test_addition(m=m,n=n,d=d)
+    end
+ 
+    @test test_operations(10)
+    @test test_operations(100)
+    @test test_operations(1000)
 end
 
 ##############################################
@@ -267,7 +267,6 @@ end
 
 if Base.USE_GPL_LIBS begin
 #requires SuiteSparse which is not available on non-GPL builds
-	#depends on lu! which is not available in non-GPL builds
 @testset "preconditioners" begin
     @test   all(isapprox.(test_precon(ILU0Preconditioner,20,20,20),           (true, 1.3535160424212675e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon(JacobiPreconditioner,20,20,20),         (true, 2.0406032775945658e-5), rtol=1.0e-5))
@@ -299,7 +298,7 @@ if Base.USE_GPL_LIBS
 #requires SuiteSparse which is not available on non-GPL builds
     SA\b≈ Scsc\b
 else
-	true
+    true
 end
 end
 
@@ -329,7 +328,7 @@ if Base.USE_GPL_LIBS
 #requires SuiteSparse which is not available on non-GPL builds
     HA\b≈ Hcsc\b
 else
-	true
+    true
 end
 end
 
