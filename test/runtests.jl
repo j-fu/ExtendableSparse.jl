@@ -9,6 +9,7 @@ using Pardiso
 using AlgebraicMultigrid
 using IncompleteLU
 using IterativeSolvers
+using Sparspak
 
 
 ##############################################################
@@ -403,26 +404,21 @@ end
 end
 
 
-if Base.USE_GPL_LIBS
-#requires SuiteSparse which is not available on non-GPL builds
 @testset "mkl-pardiso" begin
-if !Sys.isapple()
-    @test test_lu1(10,10,10,lufac=MKLPardisoLU())
-    @test test_lu1(25,40,1,lufac=MKLPardisoLU())
-    @test test_lu1(1000,1,1,lufac=MKLPardisoLU())
-
-    @test test_lu2(10,10,10,lufac=MKLPardisoLU())
-    @test test_lu2(25,40,1,lufac=MKLPardisoLU())
-    @test test_lu2(1000,1,1,lufac=MKLPardisoLU())
-end
+    if !Sys.isapple()
+        @test test_lu1(10,10,10,lufac=MKLPardisoLU())
+        @test test_lu1(25,40,1,lufac=MKLPardisoLU())
+        @test test_lu1(1000,1,1,lufac=MKLPardisoLU())
+        
+        @test test_lu2(10,10,10,lufac=MKLPardisoLU())
+        @test test_lu2(25,40,1,lufac=MKLPardisoLU())
+        @test test_lu2(1000,1,1,lufac=MKLPardisoLU())
+    end
     # @test test_lu2(10,10,10,lufac=MKLPardisoLU(mtype=2))
     # @test test_lu2(25,40,1,lufac=MKLPardisoLU(mtype=2))
     # @test test_lu2(1000,1,1,lufac=MKLPardisoLU(mtype=2))
 end
-end
 
-if Base.USE_GPL_LIBS
-#requires SuiteSparse which is not available on non-GPL builds
 if Pardiso.PARDISO_LOADED[]
     @testset "pardiso" begin
         @test test_lu1(10,10,10,lufac=PardisoLU())
@@ -439,6 +435,17 @@ if Pardiso.PARDISO_LOADED[]
 
     end
 end
+
+
+@testset "sparspak" begin
+    @test test_lu1(10,10,10,lufac=SparspakLU())
+    @test test_lu1(25,40,1,lufac=SparspakLU())
+    @test test_lu1(1000,1,1,lufac=SparspakLU())
+    
+    @test test_lu2(10,10,10,lufac=SparspakLU())
+    @test test_lu2(25,40,1,lufac=SparspakLU())
+    @test test_lu2(1000,1,1,lufac=SparspakLU())
+    
 end
 
 
