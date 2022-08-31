@@ -1,4 +1,8 @@
 # Changes
+## v0.8, Sept 1, 2022
+- Remove LinearSolve compatibility in favor of (future) interfacing via AbstractSparseMatrixCSC
+- Add Sparspak LU factorization
+- Add handling of GPL free sysimage build
 ## v0.7, August 19, 2022
 - Require Julia 1.6
 - first steps to compatibility with LinearSolve.jl

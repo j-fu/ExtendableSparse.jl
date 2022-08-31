@@ -59,8 +59,8 @@ For details, see the [corresponding documentation](https://j-fu.github.io/Extend
 
 
 ### Interfaces to other packages
-With version 0.7, the package becomes compatible with [LinearSolve.jl](https://github.com/SciML/LinearSolve.jl).
-Matrices of type `ExtendableSparseMatrix` can be passed to the `LinearProblem` constructor of [LinearSolve.jl](https://github.com/SciML/LinearSolve.jl).
+
+Compatibility with [LinearSolve.jl](https://github.com/SciML/LinearSolve.jl) is under development.
 
 The package provides interfaces to other sparse matrix solvers and preconditioners. Dependencies on these
 packages are handeled via [Requires.jl](https://github.com/JuliaPackaging/Requires.jl).
@@ -70,6 +70,7 @@ Currently, support includes:
   and [MKL Pardiso](https://software.intel.com/content/www/us/en/develop/documentation/onemkl-developer-reference-fortran/top/sparse-solver-routines/onemkl-pardiso-parallel-direct-sparse-solver-interface.html))
 - [IncompleteLU.jl](https://github.com/haampie/IncompleteLU.jl)
 - [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl) (Ruge-Stüben AMG)
+- [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl) (P.Krysl's Julia re-implementation of Sparspak by George & Liu)
 
 For a similar approach, see [Preconditioners.jl](https://github.com/mohamed82008/Preconditioners.jl)
 

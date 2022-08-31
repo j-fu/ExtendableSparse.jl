@@ -1,5 +1,5 @@
 push!(LOAD_PATH,"../src/")
-using Documenter, ExtendableSparse,Pardiso,AlgebraicMultigrid,IncompleteLU,LinearSolve
+using Documenter, ExtendableSparse,Pardiso,AlgebraicMultigrid,IncompleteLU,Sparspak
 
 function mkdocs()
     makedocs(sitename="ExtendableSparse.jl",
@@ -13,7 +13,7 @@ function mkdocs()
                  "example.md",
                  "extsparse.md",
                  "iter.md",
-                 "linearsolve.md",
+#                 "linearsolve.md",
                  "internal.md",
                  "changes.md",
              ])

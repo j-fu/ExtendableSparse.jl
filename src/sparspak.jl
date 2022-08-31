@@ -15,7 +15,7 @@ end
 SparspakLU(;valuetype=Float64) 
 ```
 
-LU factorization based on P.Kryls's re-implementation of SPARSPAK.
+LU factorization based on [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl) (P.Krysl's Julia re-implementation of Sparspak by George & Liu)
 """
 SparspakLU(;valuetype::Type=Float64, indextype::Type=Int64,kwargs...)=SparspakLU{valuetype,indextype}(;kwargs...)
 

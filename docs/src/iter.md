@@ -66,7 +66,7 @@ nm1,nm2
 ### API
 ```@autodocs
 Modules = [ExtendableSparse]
-Pages = ["umfpack_lu.jl", "pardiso_lu.jl"]
+Pages = ["umfpack_lu.jl", "pardiso_lu.jl", "sparspak.jl"]
 ```
 
 ## Preconditioners
