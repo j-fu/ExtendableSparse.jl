@@ -10,7 +10,6 @@ using AlgebraicMultigrid
 using IncompleteLU
 using IterativeSolvers
 
-using LinearSolve
 
 ##############################################################
 @testset "Constructors" begin
@@ -464,33 +463,3 @@ end
     @test test_parilu0(1000)
 end
 
-
-function test_linearsolve(n)
- 
-    A=fdrand(n,1,1, matrixtype=ExtendableSparseMatrix)
-    b=rand(n)
-    c=A\b
-    @test c ≈ LinearSolve.solve(LinearProblem(A,b)).u
-    
-    A=fdrand(n,n,1, matrixtype=ExtendableSparseMatrix)
-    b=rand(n*n)
-    c=A\b
-    @test c ≈ LinearSolve.solve(LinearProblem(A,b)).u
-
-    @test c ≈ LinearSolve.solve(LinearProblem(A,b),UMFPACKFactorization()).u
-    @test c ≈ LinearSolve.solve(LinearProblem(A,b),KLUFactorization()).u
-    @test c ≈ LinearSolve.solve(LinearProblem(A,b),IterativeSolversJL_CG(),Pl=ILU0Preconditioner(A)).u
-    @test c ≈ LinearSolve.solve(LinearProblem(A,b),IterativeSolversJL_CG(),Pl=JacobiPreconditioner(A)).u
-    @test c ≈ LinearSolve.solve(LinearProblem(A,b),IterativeSolversJL_CG(),Pl=ParallelJacobiPreconditioner(A)).u
-    @test c ≈ LinearSolve.solve(LinearProblem(A,b),IterativeSolversJL_CG(),Pl=ILUTPreconditioner(A)).u
-    @test c ≈ LinearSolve.solve(LinearProblem(A,b),IterativeSolversJL_CG(),Pl=AMGPreconditioner(A)).u
-
-    
-end
-
-if Base.USE_GPL_LIBS
-#requires SuiteSparse which is not available on non-GPL builds
-@testset "LinearSolve" begin
-    test_linearsolve(20)
-end
-end

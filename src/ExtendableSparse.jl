@@ -2,9 +2,6 @@ module ExtendableSparse
 using SparseArrays
 using LinearAlgebra
 using SuiteSparse
-using Setfield: @set!
-using UnPack: @unpack
-import LinearSolve,SciMLBase
 
 using Requires
 
@@ -18,10 +15,6 @@ include("sparsematrixlnk.jl")
 include("extendable.jl")
 
 export SparseMatrixLNK,ExtendableSparseMatrix,flush!,nnz, updateindex!, rawupdateindex!, colptrs
-
-
-include("linearsolve.jl")
-
 
 
 include("factorizations.jl")
