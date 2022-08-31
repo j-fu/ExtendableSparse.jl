@@ -157,28 +157,32 @@ function test_addition(;m=10,n=10,d=0.1) where {Tv,Ti}
     csc2==2*csc
 end
 
-
 function test_operations(n)
     A=ExtendableSparseMatrix(n,n)
     sprand_sdd!(A)
     b=rand(n)
+if Base.USE_GPL_LIBS begin
+#requires SuiteSparse which is not available on non-GPL builds
     x=A\b
     Ax=A*x
     b≈ Ax
 end
-
+else
+	true
+end
+end
 
 @testset "Operations" begin    
-    for irun=1:10
-        m=rand((1:1000))
-        n=rand((1:1000))
-        d=0.3*rand()
-        @test test_addition(m=m,n=n,d=d)
-    end
-        
-    @test test_operations(10)
-    @test test_operations(100)
-    @test test_operations(1000)
+ 	for irun=1:10
+ 		m=rand((1:1000))
+ 		n=rand((1:1000))
+ 		d=0.3*rand()
+ 		@test test_addition(m=m,n=n,d=d)
+ 	end
+ 	
+ 	@test test_operations(10)
+ 	@test test_operations(100)
+ 	@test test_operations(1000)
 end
 
 ##############################################
@@ -261,6 +265,9 @@ function test_precon2(precon,k,l,m;maxiter=10000)
 end
 
 
+if Base.USE_GPL_LIBS begin
+#requires SuiteSparse which is not available on non-GPL builds
+	#depends on lu! which is not available in non-GPL builds
 @testset "preconditioners" begin
     @test   all(isapprox.(test_precon(ILU0Preconditioner,20,20,20),           (true, 1.3535160424212675e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon(JacobiPreconditioner,20,20,20),         (true, 2.0406032775945658e-5), rtol=1.0e-5))
@@ -269,7 +276,6 @@ end
     @test   all(isapprox.(test_precon(AMGPreconditioner,20,20,20),            (true, 6.863753664354144e-7), rtol=1.0e-2))
 end
 
-
 @testset "preconditioners 2" begin
     @test   all(isapprox.(test_precon2(ILU0Preconditioner(),20,20,20),           (true, 1.3535160424212675e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon2(JacobiPreconditioner(),20,20,20),         (true, 2.0406032775945658e-5), rtol=1.0e-5))
@@ -277,7 +283,8 @@ end
     @test   all(isapprox.(test_precon2(ILUTPreconditioner(),20,20,20),           (true, 1.2719511868322086e-5), rtol=1.0e-5))
     @test   all(isapprox.(test_precon2(AMGPreconditioner(),20,20,20),            (true, 6.863753664354144e-7), rtol=1.0e-2))
 end
-
+end
+end
 
 
 ##############################################
@@ -288,7 +295,12 @@ function test_symmetric(n,uplo)
     flush!(A)
     SA=Symmetric(A,uplo)
     Scsc=Symmetric(A.cscmatrix,uplo)
+if Base.USE_GPL_LIBS
+#requires SuiteSparse which is not available on non-GPL builds
     SA\b≈ Scsc\b
+else
+	true
+end
 end
 
 
@@ -313,7 +325,12 @@ function test_hermitian(n,uplo)
     b=rand(n)
     HA=Hermitian(A,uplo)
     Hcsc=Hermitian(A.cscmatrix,uplo)
+if Base.USE_GPL_LIBS
+#requires SuiteSparse which is not available on non-GPL builds
     HA\b≈ Hcsc\b
+else
+	true
+end
 end
 
 @testset "hermitian" begin
@@ -361,7 +378,8 @@ function test_lu2(k,l,m;lufac=ExtendableSparse.LUFactorization())
     all(x1ext.< x2ext)
 end
 
-
+if Base.USE_GPL_LIBS
+#requires SuiteSparse which is not available on non-GPL builds
 @testset "ExtendableSparse.LUFactorization" begin
     @test test_lu1(10,10,10)
     @test test_lu1(25,40,1)
@@ -371,7 +389,10 @@ end
     @test test_lu2(25,40,1)
     @test test_lu2(1000,1,1)
 end
+end
 
+if Base.USE_GPL_LIBS
+#requires SuiteSparse which is not available on non-GPL builds
 @testset "Cholesky" begin
     @test test_lu1(10,10,10,lufac=CholeskyFactorization())
     @test test_lu1(25,40,1,lufac=CholeskyFactorization())
@@ -381,7 +402,11 @@ end
     @test test_lu2(25,40,1,lufac=CholeskyFactorization())
     @test test_lu2(1000,1,1,lufac=CholeskyFactorization())
 end
+end
 
+
+if Base.USE_GPL_LIBS
+#requires SuiteSparse which is not available on non-GPL builds
 @testset "mkl-pardiso" begin
 if !Sys.isapple()
     @test test_lu1(10,10,10,lufac=MKLPardisoLU())
@@ -396,8 +421,10 @@ end
     # @test test_lu2(25,40,1,lufac=MKLPardisoLU(mtype=2))
     # @test test_lu2(1000,1,1,lufac=MKLPardisoLU(mtype=2))
 end
+end
 
-
+if Base.USE_GPL_LIBS
+#requires SuiteSparse which is not available on non-GPL builds
 if Pardiso.PARDISO_LOADED[]
     @testset "pardiso" begin
         @test test_lu1(10,10,10,lufac=PardisoLU())
@@ -414,7 +441,7 @@ if Pardiso.PARDISO_LOADED[]
 
     end
 end
-
+end
 
 
 ##############################################
@@ -462,6 +489,9 @@ function test_linearsolve(n)
     
 end
 
+if Base.USE_GPL_LIBS
+#requires SuiteSparse which is not available on non-GPL builds
 @testset "LinearSolve" begin
     test_linearsolve(20)
+end
 end
