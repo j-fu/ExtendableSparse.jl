@@ -90,7 +90,7 @@ LinearAlgebra.lu(A::ExtendableSparseMatrix)=factorize!(LUFactorization(),A)
 
 Solve  LU factorization problem.
 """
-Base.:\(lufact::AbstractLUFactorization, v::AbstractArray{T,1} where T)=ldiv!(similar(v), lufact,v)
+Base.:\(lufact::AbstractLUFactorization{Tlu,Ti}, v::AbstractArray{Tv,1}) where {Tv, Tlu, Ti} = ldiv!(similar(v,Tlu), lufact,v)
 
 
 """

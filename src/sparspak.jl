@@ -21,17 +21,17 @@ SparspakLU(;valuetype::Type=Float64, indextype::Type=Int64,kwargs...)=SparspakLU
 
 function update!(lufact::SparspakLU{Tv,Ti}) where {Tv, Ti}
     flush!(lufact.A)
-    lufact.P=Sparspak.SpkProblem.Problem(size(lufact.A)...)
+    lufact.P=Sparspak.SpkProblem.Problem(size(lufact.A)...,nnz(lufact.A),zero(Tv))
     Sparspak.SpkProblem.insparse!(lufact.P,lufact.A)
     lufact.S=Sparspak.SparseSolver.SparseSolver(lufact.P)
 end
 
-function LinearAlgebra.ldiv!(u::AbstractArray{T,1} where T, lufact::SparspakLU, v::AbstractArray{T,1} where T)
+function LinearAlgebra.ldiv!(u::AbstractArray{Tu,1}, lufact::SparspakLU{T, Ti}, v::AbstractArray{Tv,1}) where {T,Tu,Tv,Ti}
     u.=ldiv!(lufact,v)
 end
 
-function LinearAlgebra.ldiv!(lufact::SparspakLU, v::AbstractArray{T,1} where T)
-    Sparspak.SpkProblem.infullrhs!(lufact.P,v)
+function LinearAlgebra.ldiv!(lufact::SparspakLU{T, Ti}, v::AbstractArray{Tv,1} ) where {T,Tv,Ti}
+    Sparspak.SpkProblem.infullrhs!(lufact.P,T.(v))
     Sparspak.SparseSolver.solve!(lufact.S)
     lufact.P.x
 end

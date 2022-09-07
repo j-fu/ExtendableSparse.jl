@@ -37,12 +37,12 @@ function sprand_sdd!(A::AbstractSparseMatrix{Tv,Ti}; nnzrow=4) where {Tv,Ti}
             jmax=min(n,i+bandwidth)
             j=rand((jmin:jmax))
             if i!=j
-                aij=rand()
+                aij=-rand(Tv)
                 A[i,j]=aij
                 aii+=abs(aij)
             end
         end
-        A[i,i]=aii+rand() # make it strictly diagonally dominant
+        A[i,i]=aii+rand(Tv) # make it strictly diagonally dominant
     end
     A
 end
@@ -135,12 +135,12 @@ $(SIGNATURES)
 Create SparseMatrixCSC via COO intermedite arrrays
 """
 
-function fdrand_coo(nx,ny=1,nz=1;
+function fdrand_coo(T,nx,ny=1,nz=1;
                     rand=()-> rand())
     N=nx*ny*nz
     I=zeros(Int64,0)
     J=zeros(Int64,0)
-    V=zeros(Float64,0)
+    V=zeros(T,0)
     
     function update(v,i,j)
         push!(I,i)
@@ -228,24 +228,24 @@ are random unless e.g.  `rand=()->1` is passed as random number generator.
 Tested for Matrix, SparseMatrixCSC,  ExtendableSparseMatrix, Tridiagonal, SparseMatrixLNK and `:COO`
 
 """
-function fdrand(nx,ny=1,nz=1;
+function fdrand(::Type{T},nx,ny=1,nz=1;
                 matrixtype::Union{Type,Symbol}=SparseMatrixCSC,
                 update = (A,v,i,j)-> A[i,j]+=v,
-                rand= ()-> 0.1+rand(),symmetric=true)
+                rand= ()-> 0.1+rand(),symmetric=true) where T
     N=nx*ny*nz
     if matrixtype==:COO
-        A=fdrand_coo(nx,ny,nz, rand=rand)
+        A=fdrand_coo(T,nx,ny,nz, rand=rand)
         else
         if matrixtype==ExtendableSparseMatrix
-            A=ExtendableSparseMatrix(N,N)
+            A=ExtendableSparseMatrix(T,N,N)
         elseif matrixtype==SparseMatrixLNK
-            A=SparseMatrixLNK(N,N)
+            A=SparseMatrixLNK(T,N,N)
         elseif matrixtype==SparseMatrixCSC
-            A=spzeros(N,N)
+            A=spzeros(T,N,N)
         elseif matrixtype==Tridiagonal
-            A=Tridiagonal(zeros(nx-1),zeros(nx),zeros(nx-1))
+            A=Tridiagonal(T,zeros(nx-1),zeros(nx),zeros(nx-1))
         elseif matrixtype==Matrix
-            A=zeros(N,N)
+            A=zeros(T,N,N)
         end
         A=fdrand!(A,nx,ny,nz,update = update, rand=rand)
     end
@@ -256,10 +256,10 @@ function fdrand(nx,ny=1,nz=1;
     end
 end
 
+fdrand(nx,ny=1,nz=1;kwargs...)=fdrand(Float64,nx,ny,nz;kwargs...)
 
-
-function solverbenchmark(solver,nx,ny=1,nz=1; symmetric=false, matrixtype=ExtendableSparseMatrix,seconds=0.5,  repeat=1, tol=sqrt(eps(Float64)))
-    A=fdrand(nx,ny,nz;symmetric,matrixtype)
+function solverbenchmark(T,solver,nx,ny=1,nz=1; symmetric=false, matrixtype=ExtendableSparseMatrix,seconds=0.5,  repeat=1, tol=sqrt(eps(Float64)))
+    A=fdrand(T,nx,ny,nz;symmetric,matrixtype)
     n=size(A,1)
     x=rand(n)
     b=A*x
@@ -280,7 +280,7 @@ function solverbenchmark(solver,nx,ny=1,nz=1; symmetric=false, matrixtype=Extend
     tmin
 end
 
-function solverbenchmark(solver; dim=1, nsizes=10, sizes=[10*2^i for i=1:nsizes],symmetric=false, matrixtype=ExtendableSparseMatrix,seconds=0.1,tol=sqrt(eps(Float64)))
+function solverbenchmark(T,solver; dim=1, nsizes=10, sizes=[10*2^i for i=1:nsizes],symmetric=false, matrixtype=ExtendableSparseMatrix,seconds=0.1,tol=sqrt(eps(Float64)))
     if dim==1
         ns=sizes
     elseif dim==2
@@ -291,7 +291,7 @@ function solverbenchmark(solver; dim=1, nsizes=10, sizes=[10*2^i for i=1:nsizes]
     times=zeros(0)
     sizes=zeros(Int,0)
     for s in ns
-        t=solverbenchmark(solver,s...;symmetric,matrixtype,seconds,tol)
+        t=solverbenchmark(T,solver,s...;symmetric,matrixtype,seconds,tol)
         push!(times,t)
         push!(sizes,prod(s))
     end
