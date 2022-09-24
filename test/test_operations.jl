@@ -16,15 +16,9 @@ function test_invert(n)
     A=ExtendableSparseMatrix(n,n)
     sprand_sdd!(A)
     b=rand(n)
-    if Base.USE_GPL_LIBS begin
-        #requires SuiteSparse which is not available on non-GPL builds
-        x=A\b
-        Ax=A*x
-        b≈ Ax
-    end
-    else
-        true
-    end
+    x=A\b
+    Ax=A*x
+    b≈ Ax
 end
 
 

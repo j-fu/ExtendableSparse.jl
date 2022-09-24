@@ -1,8 +1,14 @@
 module ExtendableSparse
 using SparseArrays
 using LinearAlgebra
+using Sparspak
 
-if Base.USE_GPL_LIBS
+
+# Define our own constant here in order to be able to
+# test things at least a little bit..
+const USE_GPL_LIBS=Base.USE_GPL_LIBS
+
+if USE_GPL_LIBS
     using SuiteSparse
 end
 
@@ -42,7 +48,6 @@ function __init__()
     @require Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2" include("pardiso_lu.jl")
     @require IncompleteLU = "40713840-3770-5561-ab4c-a76e7d0d7895" include("ilut.jl")
     @require AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c" include("amg.jl")
-    @require Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac" include("sparspak.jl")
 end
 
 

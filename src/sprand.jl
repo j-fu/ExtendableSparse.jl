@@ -61,7 +61,7 @@ It is required that `size(A)==(N,N)` where `N=nx*ny*nz`
 function fdrand!(A::T,
                  nx,ny=1,nz=1;
                  update= (A,v,i,j)-> A[i,j]+=v,
-                 rand=()-> rand()) where T<:AbstractMatrix
+                 rand=()-> rand(eltype(A))) where T<:AbstractMatrix
     
     sz=size(A)
     N=nx*ny*nz

@@ -4,7 +4,7 @@ using Test
 using ExtendableSparse
 using SparseArrays
 using LinearAlgebra
-using Sparspak
+
 
 include("test_lu.jl")
 

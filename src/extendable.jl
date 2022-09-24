@@ -265,17 +265,36 @@ function SparseArrays.findnz(ext::ExtendableSparseMatrix)
     return findnz(ext.cscmatrix)
 end
 
+if USE_GPL_LIBS
 
 
+for (Tv) in (:Float64,:Float32,:ComplexF64,:ComplexF32)
+    @eval begin
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
-[`\\`](@ref) for extmatrix
+[`\\`](@ref) for ExtendableSparse for $($Tv)
 """
-function LinearAlgebra.:\(ext::ExtendableSparseMatrix,B::AbstractVecOrMat{T} where T)
-    flush!(ext)
-    ext.cscmatrix\B
+        function LinearAlgebra.:\(ext::ExtendableSparseMatrix{$Tv,Ti}, B::AbstractVecOrMat{$Tv}) where Ti
+            flush!(ext)
+            ext.cscmatrix\B
+        end
+    end
 end
+
+end # USE_GPL_LIBS
+
+
+"""
+$(TYPEDSIGNATURES)
+
+[`\\`](@ref) for ExtendableSparse for generic floating point. This calls Sparspak.jl.
+"""
+function LinearAlgebra.:\(ext::ExtendableSparseMatrix{Tv,Ti}, b::AbstractVector{Tv}) where {Tv,Ti}
+    flush!(ext)
+    SparspakLU(ext)\b
+end
+
 
 
 """

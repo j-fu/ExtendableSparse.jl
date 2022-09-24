@@ -6,15 +6,13 @@ const Dual64=ForwardDiff.Dual{Float64,Float64,1}
 
 
 function test_lu1(T,k,l,m; lufac=ExtendableSparse.LUFactorization())
-    Acsc=fdrand(k,l,m,rand=()->1,matrixtype=SparseMatrixCSC)
+    A=fdrand(k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
     b=rand(k*l*m)
-    LUcsc=lu(Acsc)
-    x1csc=LUcsc\b
+    x1=A\b
     for i=1:k*l*m
-        Acsc[i,i]+=1.0
+        A[i,i]+=1.0
     end
-    LUcsc=lu!(LUcsc,Acsc)
-    x2csc=LUcsc\b
+    x2=A\b
 
     Aext=fdrand(T,k,l,m,rand=()->1,matrixtype=ExtendableSparseMatrix)
     lu!(lufac,Aext)
@@ -24,7 +22,7 @@ function test_lu1(T,k,l,m; lufac=ExtendableSparse.LUFactorization())
     end
     update!(lufac)
     x2ext=lufac\b
-    x1csc≈f64.(x1ext) && x2csc ≈ f64.(x2ext)
+    x1≈f64.(x1ext) && x2 ≈ f64.(x2ext)
 end
 
 function test_lu2(T,k,l,m;lufac=ExtendableSparse.LUFactorization())
