@@ -8,6 +8,7 @@ using Sparspak
 # test things at least a little bit..
 const USE_GPL_LIBS=Base.USE_GPL_LIBS
 
+
 if USE_GPL_LIBS
     using SuiteSparse
 end
