@@ -1,4 +1,6 @@
 # Changes
+## v0.9, Sept 28, 2022
+- `\` support for general number types and non-GPL system images based on Sparspak.jl 0.3.0
 ## v0.8, Sept 1, 2022
 - Remove LinearSolve compatibility in favor of (future) interfacing via AbstractSparseMatrixCSC
 - Add Sparspak LU factorization
