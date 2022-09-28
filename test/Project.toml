@@ -1,13 +1,15 @@
 [deps]
 AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 IncompleteLU = "40713840-3770-5561-ab4c-a76e7d0d7895"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MultiFloats = "bdf0d083-296b-4888-a5b6-7498122e68a5"
 Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
@@ -15,4 +17,3 @@ AlgebraicMultigrid = "0.4,0.5"
 IncompleteLU = "^0.2"
 IterativeSolvers = "0.9"
 Pardiso = "^0.5.1"
-Sparspak = "0.2.1"

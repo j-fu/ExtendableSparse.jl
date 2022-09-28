@@ -90,7 +90,7 @@ LinearAlgebra.lu(A::ExtendableSparseMatrix)=factorize!(LUFactorization(),A)
 
 Solve  LU factorization problem.
 """
-Base.:\(lufact::AbstractLUFactorization, v::AbstractArray{T,1} where T)=ldiv!(similar(v), lufact,v)
+Base.:\(lufact::AbstractLUFactorization{Tlu,Ti}, v::AbstractArray{Tv,1}) where {Tv, Tlu, Ti} = ldiv!(similar(v,Tlu), lufact,v)
 
 
 """
@@ -127,17 +127,21 @@ include("ilu0.jl")
 include("parallel_jacobi.jl")
 include("parallel_ilu0.jl")
 
+include("SparspakCSCInterface.jl")
+include("sparspak.jl")
+
 @eval begin
 
     @makefrommatrix ILU0Preconditioner
     @makefrommatrix JacobiPreconditioner
     @makefrommatrix ParallelJacobiPreconditioner
     @makefrommatrix ParallelILU0Preconditioner
-
+    @makefrommatrix SparspakLU
 end
 
-if Base.USE_GPL_LIBS
-#requires SuiteSparse which is not available in non-GPL builds
+
+if USE_GPL_LIBS
+    #requires SuiteSparse which is not available in non-GPL builds
     include("umfpack_lu.jl")
     include("cholmod_cholesky.jl")
     
@@ -147,6 +151,8 @@ if Base.USE_GPL_LIBS
         @makefrommatrix CholeskyFactorization
     
     end
+else
+    const LUFactorization=SparspakLU
 end
 
 
