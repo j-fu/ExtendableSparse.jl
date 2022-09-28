@@ -268,7 +268,7 @@ end
 if USE_GPL_LIBS
 
 
-for (Tv) in (:Float64,:Float32,:ComplexF64,:ComplexF32)
+for (Tv) in (:Float64,:ComplexF64)
     @eval begin
 """
 $(TYPEDSIGNATURES)
