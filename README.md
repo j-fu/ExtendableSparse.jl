@@ -5,7 +5,7 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://j-fu.github.io/ExtendableSparse.jl/dev)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3530554.svg)](https://doi.org/10.5281/zenodo.3530554)
 
-Sparse matrix class with efficient successive insertion of entries and entry update.
+Sparse matrix class with efficient successive insertion of entries and entry update, supporting general number types.
 
 ## Rationale
 Without an intermediate data structure, efficient successive insertion/update of possibly duplicate entries in random order into a standard compressed column storage structure appears to be not possible. The package introduces `ExtendableSparseMatrix`, a delegating wrapper containing a Julia standard `SparseMatrixCSC` struct for performing linear algebra operations and a `SparseMatrixLNK` struct realising a linked list based (but realised in vectors) format collecting new entries.
