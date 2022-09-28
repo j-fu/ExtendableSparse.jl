@@ -16,7 +16,9 @@ Any linear algebra method on `ExtendableSparseMatrix` starts with a `flush!` met
 
 `ExtendableSparseMatrix` is aimed to work as a drop-in replacement to `SparseMatrixCSC` in finite element and finite volume codes especially in those cases where the sparsity structure is hard to detect a priori and where working with an intermediadte COO representation appears to be not convenient.
 
-
+The package  provides a `\` method for `ExtendableSparseMatrix` which dispatches to Julia's standard `\` method for `SparseMatrixCSC` where possible.
+It relies on  [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl), P.Krysl's Julia MIT licensed re-implementation of Sparspak by George & Liu for
+number types  not supported by Julia's standard implementation. Notably, this  includes `ForwardDiff.Dual` numbers, thus supporting for automatic differentiation. When used with a non-GPL version of the system image, `\` is dispatched to Sparsepak.jl in all cases.
 
 ## Caveat
 
@@ -70,7 +72,6 @@ Currently, support includes:
   and [MKL Pardiso](https://software.intel.com/content/www/us/en/develop/documentation/onemkl-developer-reference-fortran/top/sparse-solver-routines/onemkl-pardiso-parallel-direct-sparse-solver-interface.html))
 - [IncompleteLU.jl](https://github.com/haampie/IncompleteLU.jl)
 - [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl) (Ruge-Stüben AMG)
-- [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl) (P.Krysl's Julia re-implementation of Sparspak by George & Liu)
 
 For a similar approach, see [Preconditioners.jl](https://github.com/mohamed82008/Preconditioners.jl)
 
