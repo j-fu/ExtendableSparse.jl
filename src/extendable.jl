@@ -302,7 +302,12 @@ $(SIGNATURES)
 
 [`\\`](@ref) for Symmetric{ExtendableSparse}
 """
-function LinearAlgebra.:\(symm_ext::Symmetric{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::AbstractVecOrMat{T} where T) where{Tm,Ti}
+function LinearAlgebra.:\(symm_ext::Symmetric{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::AbstractVector{T} where T) where{Tm,Ti}
+    flush!(symm_ext.data)
+    symm_csc=Symmetric(symm_ext.data.cscmatrix,Symbol(symm_ext.uplo))
+    symm_csc\B
+end
+function LinearAlgebra.:\(symm_ext::Symmetric{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::AbstractMatrix{T} where T) where{Tm,Ti}
     flush!(symm_ext.data)
     symm_csc=Symmetric(symm_ext.data.cscmatrix,Symbol(symm_ext.uplo))
     symm_csc\B
@@ -314,7 +319,12 @@ $(SIGNATURES)
 
 [`\\`](@ref) for Hermitian{ExtendableSparse}
 """
-function LinearAlgebra.:\(symm_ext::Hermitian{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::AbstractVecOrMat{T} where T) where{Tm,Ti}
+function LinearAlgebra.:\(symm_ext::Hermitian{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::AbstractVector{T} where T) where{Tm,Ti}
+    flush!(symm_ext.data)
+    symm_csc=Hermitian(symm_ext.data.cscmatrix,Symbol(symm_ext.uplo))
+    symm_csc\B
+end
+function LinearAlgebra.:\(symm_ext::Hermitian{Tm, ExtendableSparseMatrix{Tm, Ti}}, B::AbstractMatrix{T} where T) where{Tm,Ti}
     flush!(symm_ext.data)
     symm_csc=Hermitian(symm_ext.data.cscmatrix,Symbol(symm_ext.uplo))
     symm_csc\B
