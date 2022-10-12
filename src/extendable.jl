@@ -270,25 +270,22 @@ if USE_GPL_LIBS
 
 for (Tv) in (:Float64,:ComplexF64)
     @eval begin
-"""
-$(TYPEDSIGNATURES)
-
-[`\\`](@ref) for ExtendableSparse for $($Tv)
-"""
         function LinearAlgebra.:\(ext::ExtendableSparseMatrix{$Tv,Ti}, B::AbstractVecOrMat{$Tv}) where Ti
             flush!(ext)
             ext.cscmatrix\B
         end
     end
 end
-
+    
 end # USE_GPL_LIBS
 
 
 """
-$(TYPEDSIGNATURES)
+    A\b
 
-[`\\`](@ref) for ExtendableSparse for generic floating point. This calls Sparspak.jl.
+[`\\`](@ref) for ExtendableSparse. It calls the LU factorization form Sparspak.jl, unless GPL components
+are allowed  in the Julia sysimage and the floating point type of the matrix is Float64 or Complex64.
+In that case, Julias standard `\` is called, which is realized via UMFPACK.
 """
 function LinearAlgebra.:\(ext::ExtendableSparseMatrix{Tv,Ti}, b::AbstractVector{Tv}) where {Tv,Ti}
     flush!(ext)

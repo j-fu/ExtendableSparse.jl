@@ -71,7 +71,7 @@ function update!(precon::ILU0Preconditioner{Tv,Ti}) where {Tv,Ti}
 end
 
 
-function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ILU0Preconditioner, v::AbstractArray{T,1}) where T
+function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ILU0Preconditioner{Tv,Ti}, v::AbstractArray{T,1}) where {T,Tv,Ti}
     cscmatrix=precon.A.cscmatrix
     colptr=cscmatrix.colptr
     rowval=cscmatrix.rowval
@@ -81,7 +81,7 @@ function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ILU0Preconditioner,
     idiag=precon.idiag
     
     @inbounds for j=1:n
-        x=zero(T)
+        x=zero(Tv)
         @inbounds for k=colptr[j]:idiag[j]-1
             x+=nzval[k]*u[rowval[k]]
         end
@@ -89,7 +89,7 @@ function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ILU0Preconditioner,
     end
     
     @inbounds for j=n:-1:1
-        x=zero(T)
+        x=zero(Tv)
         @inbounds for k=idiag[j]+1:colptr[j+1]-1
             x+=u[rowval[k]]*nzval[k]
         end

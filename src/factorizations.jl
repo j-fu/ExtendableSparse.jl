@@ -80,7 +80,29 @@ If `nothing` is passed as first parameter, [`factorize`](@ref) is called.
 """
 LinearAlgebra.lu!(lufact::AbstractFactorization, A::ExtendableSparseMatrix)=factorize!(lufact,A)
 
-LinearAlgebra.lu(A::ExtendableSparseMatrix)=factorize!(LUFactorization(),A)
+
+
+"""
+```
+lu(matrix)
+```
+
+Create LU factorization. It calls the LU factorization form Sparspak.jl, unless GPL components
+are allowed  in the Julia sysimage and the floating point type of the matrix is Float64 or Complex64.
+In that case, Julias standard `lu` is called, which is realized via UMFPACK.
+"""
+LinearAlgebra.lu(A::ExtendableSparseMatrix{Tv,Ti}) where {Tv, Ti} =factorize!(SparspakLU{Tv,Ti}(),A)
+
+if USE_GPL_LIBS
+
+for (Tv) in (:Float64,:ComplexF64)
+    @eval begin
+        LinearAlgebra.lu(A::ExtendableSparseMatrix{$Tv,Ti}) where Ti =factorize!(LUFactorization{$Tv,Ti}(),A)
+    end
+end
+
+end # USE_GPL_LIBS
+
 
 
 """
