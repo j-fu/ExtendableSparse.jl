@@ -9,3 +9,9 @@ IncompleteLU = "40713840-3770-5561-ab4c-a76e7d0d7895"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
 Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"
 Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
+
+[compat]
+AlgebraicMultigrid = "0.4,0.5"
+IncompleteLU = "^0.2.1"
+IterativeSolvers = "0.9"
+Pardiso = "^0.5.1"
