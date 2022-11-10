@@ -44,6 +44,7 @@ function ExtendableSparseMatrix(valuetype::Type{Tv},indextype::Type{Ti},m, n) wh
 end
 
 ExtendableSparseMatrix(valuetype::Type{Tv},m, n) where{Tv}=ExtendableSparseMatrix{Tv,Int}(m,n)
+
 ExtendableSparseMatrix(m, n)=ExtendableSparseMatrix{Float64,Int}(m,n)
 
 """
@@ -53,6 +54,59 @@ $(SIGNATURES)
 """
 function ExtendableSparseMatrix(csc::SparseMatrixCSC{Tv,Ti}) where{Tv,Ti<:Integer}
     return ExtendableSparseMatrix{Tv,Ti}(csc, nothing, phash(csc))
+end
+
+
+"""
+$(SIGNATURES)
+
+ Create ExtendableSparseMatrix from Diagonal
+"""
+ExtendableSparseMatrix(D::Diagonal)=ExtendableSparseMatrix(sparse(D))
+
+"""
+$(SIGNATURES)
+
+ Create ExtendableSparseMatrix from AbstractMatrix, dropping all zero entries.
+ This is the equivalent to `sparse(A)`.
+"""
+ExtendableSparseMatrix(A::AbstractMatrix)=ExtendableSparseMatrix(sparse(A))
+
+"""
+    ExtendableSparseMatrix(I,J,V)
+    ExtendableSparseMatrix(I,J,V,m,n)
+    ExtendableSparseMatrix(I,J,V,combine::Function)
+    ExtendableSparseMatrix(I,J,V,m,n,combine::Function)
+
+Create ExtendableSparseMatrix from triplet (COO) data.
+"""
+ExtendableSparseMatrix(I,J,V::AbstractVector)=ExtendableSparseMatrix(sparse(I,J,V))
+ExtendableSparseMatrix(I,J,V::AbstractVector,m,n)=ExtendableSparseMatrix(sparse(I,J,V,m,n))
+ExtendableSparseMatrix(I,J,V::AbstractVector,combine::Function)=ExtendableSparseMatrix(sparse(I,J,V,combine))
+ExtendableSparseMatrix(I,J,V::AbstractVector,m,n,combine::Function)=ExtendableSparseMatrix(sparse(I,J,V,m,n,combine))
+
+
+# THese are probably too much...
+# function Base.transpose(A::ExtendableSparseMatrix)
+#     flush!(A)
+#     ExtendableSparseMatrix(Base.transpose(sparse(A)))
+# end
+# function Base.adjoint(A::ExtendableSparseMatrix)
+#     flush!(A)
+#     ExtendableSparseMatrix(Base.adjoint(sparse(A)))
+# end
+# function SparseArrays.sparse(text::LinearAlgebra.Transpose{Tv,ExtendableSparseMatrix{Tv,Ti}}) where {Tv,Ti}
+#     transpose(sparse(parent(text)))
+# end
+
+"""
+$(SIGNATURES)
+
+ Create SparseMatrixCSC from ExtendableSparseMatrix
+"""
+function SparseArrays.sparse(A::ExtendableSparseMatrix)
+    flush!(A)
+    A.cscmatrix
 end
 
 """
@@ -211,7 +265,7 @@ $(SIGNATURES)
 [`flush!`](@ref) and return number of nonzeros in ext.cscmatrix.
 """
 function SparseArrays.nnz(ext::ExtendableSparseMatrix)
-    @inbounds flush!(ext)
+     flush!(ext)
     return nnz(ext.cscmatrix)
 end
 
@@ -222,7 +276,7 @@ $(SIGNATURES)
 [`flush!`](@ref) and return nonzeros in ext.cscmatrix.
 """
 function SparseArrays.nonzeros(ext::ExtendableSparseMatrix)
-    @inbounds flush!(ext)
+     flush!(ext)
     return nonzeros(ext.cscmatrix)
 end
 
@@ -234,7 +288,7 @@ $(SIGNATURES)
 [`flush!`](@ref) and return rowvals in ext.cscmatrix.
 """
 function SparseArrays.rowvals(ext::ExtendableSparseMatrix)
-    @inbounds flush!(ext)
+     flush!(ext)
     rowvals(ext.cscmatrix)
 end
 
@@ -244,13 +298,16 @@ function SparseArrays.getrowval(S::ExtendableSparseMatrix)
 end
 
 
+
+
+
 """
 $(SIGNATURES)
 
 [`flush!`](@ref) and return colptr of  in ext.cscmatrix.
 """
 function SparseArrays.getcolptr(ext::ExtendableSparseMatrix)
-    @inbounds flush!(ext)
+     flush!(ext)
     return ext.cscmatrix.colptr
 end
 
@@ -261,7 +318,7 @@ $(SIGNATURES)
 [`flush!`](@ref) and return findnz(ext.cscmatrix).
 """
 function SparseArrays.findnz(ext::ExtendableSparseMatrix)
-    @inbounds flush!(ext)
+     flush!(ext)
     return findnz(ext.cscmatrix)
 end
 
@@ -334,7 +391,7 @@ $(SIGNATURES)
 [`flush!`](@ref) and ldiv with ext.cscmatrix
 """
 function  LinearAlgebra.ldiv!(r, ext::ExtendableSparse.ExtendableSparseMatrix, x)
-    @inbounds flush!(ext)
+     flush!(ext)
     return LinearAlgebra.ldiv!(r,ext.cscmatrix,x)
 end
 
@@ -344,7 +401,7 @@ $(SIGNATURES)
 [`flush!`](@ref) and multiply with ext.cscmatrix
 """
 function  LinearAlgebra.mul!(r,ext::ExtendableSparse.ExtendableSparseMatrix, x)
-    @inbounds flush!(ext)
+     flush!(ext)
     return LinearAlgebra.mul!(r,ext.cscmatrix,x)
 end
 
@@ -355,7 +412,7 @@ $(SIGNATURES)
 [`flush!`](@ref) and calculate norm from cscmatrix
 """
 function LinearAlgebra.norm(A::ExtendableSparseMatrix, p::Real=2)
-    @inbounds flush!(A)
+     flush!(A)
     return LinearAlgebra.norm(A.cscmatrix,p)
 end
 
@@ -365,7 +422,7 @@ $(SIGNATURES)
 [`flush!`](@ref) and calculate opnorm from cscmatrix
 """
 function LinearAlgebra.opnorm(A::ExtendableSparseMatrix, p::Real=2)
-    @inbounds flush!(A)
+     flush!(A)
     return LinearAlgebra.opnorm(A.cscmatrix,p)
 end
 
@@ -375,7 +432,7 @@ $(SIGNATURES)
 [`flush!`](@ref) and calculate cond from cscmatrix
 """
 function LinearAlgebra.cond(A::ExtendableSparseMatrix, p::Real=2)
-    @inbounds flush!(A)
+     flush!(A)
     return LinearAlgebra.cond(A.cscmatrix,p)
 end
 
@@ -385,7 +442,7 @@ $(SIGNATURES)
 [`flush!`](@ref) and check for symmetry of cscmatrix
 """
 function LinearAlgebra.issymmetric(A::ExtendableSparseMatrix)
-    @inbounds flush!(A)
+     flush!(A)
     return LinearAlgebra.issymmetric(A.cscmatrix)
 end
 
@@ -397,9 +454,45 @@ $(SIGNATURES)
 Add SparseMatrixCSC matrix and [`ExtendableSparseMatrix`](@ref)  ext.
 """
 function Base.:+(ext::ExtendableSparseMatrix,csc::SparseMatrixCSC)
-    @inbounds flush!(ext)
+     flush!(ext)
     return ext.cscmatrix+csc
 end
+
+function Base.:+(A::ExtendableSparseMatrix,B::ExtendableSparseMatrix)
+    flush!(A)
+    flush!(B)
+    return ExtendableSparseMatrix(A.cscmatrix+B.cscmatrix)
+end
+
+function Base.:-(A::ExtendableSparseMatrix,B::ExtendableSparseMatrix)
+    flush!(A)
+    flush!(B)
+    return ExtendableSparseMatrix(A.cscmatrix-B.cscmatrix)
+end
+
+
+function Base.:*(A::ExtendableSparseMatrix,B::ExtendableSparseMatrix)
+     flush!(A)
+     flush!(B)
+    return ExtendableSparseMatrix(A.cscmatrix*B.cscmatrix)
+end
+
+"""
+$(SIGNATURES)
+"""
+function Base.:*(d::Diagonal,ext::ExtendableSparseMatrix)
+    flush!(ext)
+    return ExtendableSparseMatrix(d*ext.cscmatrix)
+end
+
+"""
+$(SIGNATURES)
+"""
+function Base.:*(ext::ExtendableSparseMatrix,d::Diagonal)
+    flush!(ext)
+    return ExtendableSparseMatrix(ext.cscmatrix*d)
+end
+
 
 """
 $(SIGNATURES)
@@ -407,7 +500,7 @@ $(SIGNATURES)
 Subtract  SparseMatrixCSC matrix from  [`ExtendableSparseMatrix`](@ref)  ext.
 """
 function Base.:-(ext::ExtendableSparseMatrix,csc::SparseMatrixCSC)
-    @inbounds flush!(ext)
+     flush!(ext)
     return ext.cscmatrix-csc
 end
 
@@ -417,7 +510,7 @@ $(SIGNATURES)
 Subtract  [`ExtendableSparseMatrix`](@ref)  ext from  SparseMatrixCSC.
 """
 function Base.:-(csc::SparseMatrixCSC,ext::ExtendableSparseMatrix)
-    @inbounds flush!(ext)
+     flush!(ext)
     return csc - ext.cscmatrix
 end
 
@@ -426,17 +519,10 @@ end
 $(SIGNATURES)
 """
 function SparseArrays.dropzeros!(ext::ExtendableSparseMatrix)
-    @inbounds flush!(ext)
+     flush!(ext)
     dropzeros!(ext.cscmatrix)
 end
 
-"""
-$(SIGNATURES)
-"""
-function Base.:*(d::Diagonal,ext::ExtendableSparseMatrix)
-    @inbounds flush!(ext)
-    return ExtendableSparseMatrix(d*ext.cscmatrix)
-end
 
 """
 $(SIGNATURES)

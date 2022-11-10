@@ -1,11 +1,12 @@
 module test_operations
 using Test
 using SparseArrays
+using LinearAlgebra
 using ExtendableSparse
 
 
 #####################################################################
-function test_addition(;m=10,n=10,d=0.1) where {Tv,Ti}
+function test_addition(;m=10,n=10,d=0.1)
     csc=sprand(m,n,d)
     lnk=SparseMatrixLNK(csc)
     csc2=csc+lnk
@@ -18,19 +19,43 @@ function test_invert(n)
     b=rand(n)
     x=A\b
     Ax=A*x
-    b≈ Ax
+    b ≈ Ax
 end
 
+function test()
+    
+    for irun=1:10
+        m=rand((1:1000))
+        n=rand((1:1000))
+        d=0.3*rand()
+        @test test_addition(m=m,n=n,d=d)
+    end
+    
+    @test test_invert(10)
+    @test test_invert(100)
+    @test test_invert(1000)
 
-for irun=1:10
-    m=rand((1:1000))
-    n=rand((1:1000))
-    d=0.3*rand()
-    @test test_addition(m=m,n=n,d=d)
+    A=sprand(10,10,0.1)
+    B=sprand(10,10,0.1)
+    extA=ExtendableSparseMatrix(A)
+    extB=ExtendableSparseMatrix(B)
+
+    @test A+extB== A+B
+    @test A-extB== A-B
+    @test extA+B== A+B
+    @test extA-B== A-B
+    @test extA*extB == ExtendableSparseMatrix(A*B)
+    @test extA+extB == ExtendableSparseMatrix(A+B)
+    @test extA-extB == ExtendableSparseMatrix(A-B)
+
+    @test isa(extA*extB, ExtendableSparseMatrix)
+    @test isa(extA+extB, ExtendableSparseMatrix)    
+    @test isa(extA-extB, ExtendableSparseMatrix)
+
+    D=Diagonal(rand(10))
+    @test isa(D*extA, ExtendableSparseMatrix)
+    @test isa(extA*D, ExtendableSparseMatrix)
 end
 
-@test test_invert(10)
-@test test_invert(100)
-@test test_invert(1000)
-
+test()
 end
