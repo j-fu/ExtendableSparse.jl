@@ -6,8 +6,8 @@ using IncompleteLU
 using IterativeSolvers
 using LinearAlgebra
 
-function test_precon(Precon,k,l,m;maxiter=10000)
-    A=fdrand(k,l,m,matrixtype=ExtendableSparseMatrix, rand= ()-> 1.0)
+function test_precon(Precon,k,l,m;maxiter=10000,symmetric=true)
+    A=fdrand(k,l,m;matrixtype=ExtendableSparseMatrix,symmetric)
     b=ones(size(A,2))
     exact=A\b
     Pl=Precon(A)
@@ -19,8 +19,8 @@ function test_precon(Precon,k,l,m;maxiter=10000)
 end
 
 
-function test_precon2(precon,k,l,m;maxiter=10000)
-    A=fdrand(k,l,m,matrixtype=ExtendableSparseMatrix, rand= ()-> 1.0)
+function test_precon2(precon,k,l,m;maxiter=10000,symmetric=true)
+    A=fdrand(k,l,m;matrixtype=ExtendableSparseMatrix, symmetric)
     b=ones(size(A,2))
     exact=A\b
     factorize!(precon,A)

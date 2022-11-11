@@ -80,20 +80,22 @@ function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ILU0Preconditioner{
     xdiag=precon.xdiag
     idiag=precon.idiag
     
-    @inbounds for j=1:n
-        x=zero(Tv)
-        @inbounds for k=colptr[j]:idiag[j]-1
-            x+=nzval[k]*u[rowval[k]]
-        end
-        u[j]=xdiag[j]*(v[j]-x)
+    for j=1:n
+        u[j]=xdiag[j]*v[j]
     end
     
-    @inbounds for j=n:-1:1
-        x=zero(Tv)
-        @inbounds for k=idiag[j]+1:colptr[j+1]-1
-            x+=u[rowval[k]]*nzval[k]
+    for j=n:-1:1
+        for k=idiag[j]+1:colptr[j+1]-1
+	    i=rowval[k]
+            u[i]-=xdiag[i]*nzval[k]*u[j]
         end
-        u[j]-=x*xdiag[j]
+    end
+    
+    for j=1:n
+        for k=colptr[j]:idiag[j]-1
+	    i=rowval[k]
+            u[i]-=xdiag[i]*nzval[k]*u[j]
+        end            
     end
 end
 
