@@ -32,17 +32,28 @@ function test_precon2(precon,k,l,m;maxiter=10000,symmetric=true)
 end
 
 
+@test   all(test_precon(ILU0Preconditioner,20,20,20).≤           (true, 4e-5))
+@test   all(test_precon(ILUZeroPreconditioner,20,20,20).≤        (true, 4e-5))
+@test   all(test_precon(JacobiPreconditioner,20,20,20).≤         (true, 3e-4))
+@test   all(test_precon(ParallelJacobiPreconditioner,20,20,20).≤ (true, 3e-4))
+@test   all(test_precon(ILUTPreconditioner,20,20,20).≤           (true, 5e-5))
+@test   all(test_precon(AMGPreconditioner,20,20,20).≤            (true, 1e-5))
 
-@test   all(isapprox.(test_precon(ILU0Preconditioner,20,20,20),           (true, 1.3535160424212675e-5), rtol=1.0e-3))
-@test   all(isapprox.(test_precon(JacobiPreconditioner,20,20,20),         (true, 2.0406032775945658e-5), rtol=1.0e-3))
-@test   all(isapprox.(test_precon(ParallelJacobiPreconditioner,20,20,20), (true, 2.0406032775945658e-5), rtol=1.0e-3))
-@test   all(isapprox.(test_precon(ILUTPreconditioner,20,20,20),           (true, 1.2719511868322086e-5), rtol=1.0e-3))
-@test   all(isapprox.(test_precon(AMGPreconditioner,20,20,20),            (true, 6.863753664354144e-7), rtol=1.0e-2))
+@test   all(test_precon(ILU0Preconditioner,20,20,20,symmetric=false).≤           (true, 4e-5))
+@test   all(test_precon(ILUZeroPreconditioner,20,20,20,symmetric=false).≤        (true, 4e-5))
+@test   all(test_precon(JacobiPreconditioner,20,20,20,symmetric=false).≤         (true, 3e-4))
+@test   all(test_precon(ParallelJacobiPreconditioner,20,20,20,symmetric=false).≤ (true, 3e-4))
+@test   all(test_precon(ILUTPreconditioner,20,20,20,symmetric=false).≤           (true, 5e-5))
+#@test   all(test_precon(AMGPreconditioner,20,20,20,symmetric=false).≤            (true, 1e-5))
 
-@test   all(isapprox.(test_precon2(ILU0Preconditioner(),20,20,20),           (true, 1.3535160424212675e-5), rtol=1.0e-3))
-@test   all(isapprox.(test_precon2(JacobiPreconditioner(),20,20,20),         (true, 2.0406032775945658e-5), rtol=1.0e-3))
-@test   all(isapprox.(test_precon2(ParallelJacobiPreconditioner(),20,20,20), (true, 2.0406032775945658e-5), rtol=1.0e-3))
-@test   all(isapprox.(test_precon2(ILUTPreconditioner(),20,20,20),           (true, 1.2719511868322086e-5), rtol=1.0e-3))
-@test   all(isapprox.(test_precon2(AMGPreconditioner(),20,20,20),            (true, 6.863753664354144e-7), rtol=1.0e-2))
+
+
+@test   all(test_precon2(ILU0Preconditioner(),20,20,20).≤           (true, 4e-5))
+@test   all(test_precon2(ILUZeroPreconditioner(),20,20,20).≤        (true, 4e-5))
+@test   all(test_precon2(JacobiPreconditioner(),20,20,20).≤         (true, 3e-4))
+@test   all(test_precon2(ParallelJacobiPreconditioner(),20,20,20).≤ (true, 3e-4))
+@test   all(test_precon2(ILUTPreconditioner(),20,20,20).≤           (true, 5e-5))
+@test   all(test_precon2(AMGPreconditioner(),20,20,20).≤            (true, 1e-5))
+
 
 end
