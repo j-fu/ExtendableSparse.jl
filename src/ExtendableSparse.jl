@@ -2,6 +2,7 @@ module ExtendableSparse
 using SparseArrays
 using LinearAlgebra
 using Sparspak
+using ILUZero
 
 
 # Define our own constant here in order to be able to
@@ -28,17 +29,14 @@ export SparseMatrixLNK,ExtendableSparseMatrix,flush!,nnz, updateindex!, rawupdat
 
 
 include("factorizations.jl")
-export JacobiPreconditioner, ILU0Preconditioner, ParallelJacobiPreconditioner, ParallelILU0Preconditioner, reorderlinsys
+
+export JacobiPreconditioner, ILU0Preconditioner,ILUZeroPreconditioner, ParallelJacobiPreconditioner, ParallelILU0Preconditioner, reorderlinsys
 export AbstractFactorization,LUFactorization, CholeskyFactorization
 export issolver
 export factorize!, update!
-export ILUTPreconditioner, AMGPreconditioner
-export PardisoLU, MKLPardisoLU,SparspakLU
 
 include("simple_iteration.jl")
 export simple,simple!
-
-
 
 
 include("sprand.jl")
@@ -51,6 +49,8 @@ function __init__()
     @require AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c" include("amg.jl")
 end
 
+export ILUTPreconditioner, AMGPreconditioner
+export PardisoLU, MKLPardisoLU,SparspakLU
 
 
 end # module

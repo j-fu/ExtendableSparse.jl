@@ -93,26 +93,27 @@ function  LinearAlgebra.ldiv!(u::AbstractArray{T,1}, precon::ParallelILU0Precond
     coloring = precon.coloring
     coloring_index = precon.coloring_index
     coloring_index_reverse = precon.coloring_index_reverse
+
+    Threads.@threads for j=1:n
+        u[j]=xdiag[j]*v[j]
+    end
     
-    @inbounds for indset in coloring_index
-	    @inbounds Threads.@threads for j in indset
-	        x=zero(T)
-	        @inbounds for k=colptr[j]:idiag[j]-1
-	            x+=nzval[k]*u[rowval[k]]
-	        end
-	        u[j]=xdiag[j]*(v[j]-x)
-	    end
-	end
-    
-    @inbounds for indset in coloring_index_reverse
-    	@inbounds Threads.@threads for j in indset
-	        x=zero(T)
-	        @inbounds for k=idiag[j]+1:colptr[j+1]-1
-	            x+=u[rowval[k]]*nzval[k]
-	        end
-	        u[j]-=x*xdiag[j]
-	    end
-	end
+    for indset in coloring_index_reverse
+    	Threads.@threads for j in indset
+            for k=idiag[j]+1:colptr[j+1]-1
+	        i=rowval[k]
+                u[i]-=xdiag[i]*nzval[k]*u[j]
+            end
+        end
+    end
+    for indset in coloring_index
+	Threads.@threads for j in indset
+            for k=colptr[j]:idiag[j]-1
+	        i=rowval[k]
+                u[i]-=xdiag[i]*nzval[k]*u[j]
+            end            
+        end
+    end
 end
 
 
