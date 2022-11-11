@@ -16,7 +16,8 @@ ILU0Preconditioner(;valuetype=Float64,indextype=Int64)
 ILU0Preconditioner(matrix)
 ```
 
-ILU preconditioner with zero fill-in.
+Incomplete LU preconditioner with zero fill-in, without modification of off-diagonal entries, so it delivers
+slower convergende than  [`ILUZeroPreconditoner`](@ref).
 """
 ILU0Preconditioner(;valuetype::Type=Float64, indextype::Type=Int64)=ILU0Preconditioner{valuetype,indextype}()
 

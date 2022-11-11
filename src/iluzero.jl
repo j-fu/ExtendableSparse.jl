@@ -15,7 +15,8 @@ ILUZeroPreconditioner(;valuetype=Float64,indextype=Int64)
 ILUZeroPreconditioner(matrix)
 ```
 
-ILU preconditioner with zero fill-in based on [ILUZero.jl](https://github.com/mcovalt/ILUZero.jl)
+Incomplete LU preconditioner with zero fill-in using  [ILUZero.jl](https://github.com/mcovalt/ILUZero.jl). This preconditioner
+also calculates and stores updates to the off-diagonal entries and thus delivers better convergence than  the [`ILU0Preconditoner`](@ref).
 """
 ILUZeroPreconditioner(;valuetype::Type=Float64, indextype::Type=Int64)=ILUZeroPreconditioner{valuetype,indextype}()
 

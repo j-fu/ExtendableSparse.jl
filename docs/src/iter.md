@@ -124,6 +124,6 @@ nm1,nm2
 
 ```@autodocs
 Modules = [ExtendableSparse]
-Pages = ["jacobi.jl","ilu0.jl","parallel_jacobi.jl","ilut.jl","amg.jl"]
+Pages = ["jacobi.jl","parallel_jacobi.jl","iluzero.jl","ilu0.jl","ilut.jl","amg.jl"]
 ```
 
