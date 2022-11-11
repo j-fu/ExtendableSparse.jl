@@ -16,7 +16,7 @@ and  provide a method
   The idea is that, depending if the matrix pattern has changed, 
   different steps are needed to update the preconditioner.
 
-  Moreover, they have the ExtendableSparseMatrix as a field, ensuring 
+  Moreover, they have the ExtendableSparseMatrix `A` as a field and an `update!` method, ensuring 
   consistency after construction.
 """
 abstract type AbstractFactorization{Tv, Ti} end
@@ -146,6 +146,7 @@ end
 
 include("jacobi.jl")
 include("ilu0.jl")
+include("iluzero.jl")
 include("parallel_jacobi.jl")
 include("parallel_ilu0.jl")
 
@@ -153,8 +154,8 @@ include("SparspakCSCInterface.jl")
 include("sparspak.jl")
 
 @eval begin
-
     @makefrommatrix ILU0Preconditioner
+    @makefrommatrix ILUZeroPreconditioner
     @makefrommatrix JacobiPreconditioner
     @makefrommatrix ParallelJacobiPreconditioner
     @makefrommatrix ParallelILU0Preconditioner
