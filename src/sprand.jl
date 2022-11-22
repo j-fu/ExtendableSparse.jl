@@ -258,6 +258,9 @@ end
 
 fdrand(nx,ny=1,nz=1;kwargs...)=fdrand(Float64,nx,ny,nz;kwargs...)
 
+
+
+### for use with LinearSolve.jl
 function solverbenchmark(T,solver,nx,ny=1,nz=1; symmetric=false, matrixtype=ExtendableSparseMatrix,seconds=0.5,  repeat=1, tol=sqrt(eps(Float64)))
     A=fdrand(T,nx,ny,nz;symmetric,matrixtype)
     n=size(A,1)
@@ -297,3 +300,4 @@ function solverbenchmark(T,solver; dim=1, nsizes=10, sizes=[10*2^i for i=1:nsize
     end
     sizes,times
 end
+

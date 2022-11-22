@@ -27,3 +27,6 @@ function update!(lufact::LUFactorization)
     lufact
 end
 
+LinearAlgebra.ldiv!(fact::LUFactorization, v)=fact.fact\v
+LinearAlgebra.ldiv!(u,fact::LUFactorization, v)=u.=fact.fact\v
+

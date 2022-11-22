@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.11
+# v0.19.14
 
 using Markdown
 using InteractiveUtils
@@ -220,6 +220,22 @@ pyplot(alldicts, subset=(:klu_u_3d, :umfpack_u_3d, :lspardiso_u_3d, :backslash_u
 # ╔═╡ 318b60ec-d778-4e59-a699-cdc4fd42bf36
 pyplot(alldicts, subset=(:klu_u_3d, :umfpack_u_3d, :lspardiso_u_3d, :backslash_s_3d,:pcg_s_3d,:cholesky_s_3d))
 
+# ╔═╡ 00000000-0000-0000-0000-000000000001
+PLUTO_PROJECT_TOML_CONTENTS = """
+[deps]
+"""
+
+# ╔═╡ 00000000-0000-0000-0000-000000000002
+PLUTO_MANIFEST_TOML_CONTENTS = """
+# This file is machine-generated - editing it directly is not advised
+
+julia_version = "1.8.2"
+manifest_format = "2.0"
+project_hash = "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+
+[deps]
+"""
+
 # ╔═╡ Cell order:
 # ╠═60941eaa-1aea-11eb-1277-97b991548781
 # ╠═80247f26-bbc5-4253-a47b-26e953684850
@@ -261,3 +277,5 @@ pyplot(alldicts, subset=(:klu_u_3d, :umfpack_u_3d, :lspardiso_u_3d, :backslash_s
 # ╠═d7200524-6365-42f6-a096-77484df9e247
 # ╠═f991f70e-b202-4e0a-86bf-2c7cd7dbb678
 # ╠═6a72395d-4f41-4f12-abd7-501575feaf84
+# ╟─00000000-0000-0000-0000-000000000001
+# ╟─00000000-0000-0000-0000-000000000002
