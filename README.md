@@ -75,3 +75,9 @@ Currently, support includes:
 
 For a similar approach, see [Preconditioners.jl](https://github.com/mohamed82008/Preconditioners.jl)
 
+## Alternatives
+
+You may also evaluate alternatives to this package:
+
+- [DynamicSparseArrays.jl](https://github.com/atoptima/DynamicSparseArrays.jl)
+  
