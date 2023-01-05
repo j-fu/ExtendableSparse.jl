@@ -100,7 +100,7 @@ $(SIGNATURES)
     
 Constructor of empty matrix.
 """
-SparseMatrixLNK(m, n)  where {Tv} =SparseMatrixLNK(Float64,m,n)
+SparseMatrixLNK(m, n) =SparseMatrixLNK(Float64,m,n)
 
 
 """
