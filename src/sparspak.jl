@@ -1,4 +1,3 @@
-using ..SparspakCSCInterface
 
 mutable struct SparspakLU{Tv, Ti} <: AbstractLUFactorization{Tv,Ti} 
     A::Union{ExtendableSparseMatrix{Tv,Ti},Nothing}

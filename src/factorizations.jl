@@ -149,8 +149,6 @@ include("ilu0.jl")
 include("iluzero.jl")
 include("parallel_jacobi.jl")
 include("parallel_ilu0.jl")
-
-include("SparspakCSCInterface.jl")
 include("sparspak.jl")
 
 @eval begin
