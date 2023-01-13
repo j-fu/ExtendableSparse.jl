@@ -62,9 +62,11 @@ For details, see the [corresponding documentation](https://j-fu.github.io/Extend
 
 ### Interfaces to other packages
 
-Compatibility with [LinearSolve.jl](https://github.com/SciML/LinearSolve.jl) is under development.
+Compatibility with [LinearSolve.jl](https://github.com/SciML/LinearSolve.jl) has been achieved by
+providing methods for `LinearProblem` and `set_A` which work with `ExtendableSparseMatrix`. 
 
-The package provides interfaces to other sparse matrix solvers and preconditioners. Dependencies on these
+
+The package directly provides interfaces to other sparse matrix solvers and preconditioners. Dependencies on these
 packages are handeled via [Requires.jl](https://github.com/JuliaPackaging/Requires.jl).
 Currently, support includes:
 

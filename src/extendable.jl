@@ -109,6 +109,7 @@ function SparseArrays.sparse(A::ExtendableSparseMatrix)
     A.cscmatrix
 end
 
+
 """
 $(SIGNATURES)
 

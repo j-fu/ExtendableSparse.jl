@@ -34,17 +34,17 @@ end
     include("test_operations.jl")
 end
 
-
 @testset "fdrand" begin
     include("test_fdrand.jl")
 end
 
-@testset "sparspak" begin
-    include("test_sparspak.jl")
-end
 
 @testset "Backslash" begin
     include("test_backslash.jl")
+end
+
+@testset "LinearSolve" begin
+    include("test_linearsolve.jl")
 end
 
 @testset "Preconditioners" begin
@@ -55,12 +55,12 @@ end
     include("test_symmetric.jl")
 end
 
-@testset "sparspak" begin
-    include("test_sparspak.jl")
-end
-
 @testset "ExtendableSparse.LUFactorization" begin
     include("test_default_lu.jl")
+end
+
+@testset "Sparspak" begin
+    include("test_sparspak.jl")
 end
 
 if ExtendableSparse.USE_GPL_LIBS
