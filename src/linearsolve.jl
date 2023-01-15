@@ -3,12 +3,15 @@ $(SIGNATURES)
 
 Update LinearSolve cache.
 """
-LinearSolve.set_A(cache::LinearSolve.LinearCache, A::ExtendableSparseMatrix) = LinearSolve.set_A(cache, sparse(A))
+function LinearSolve.set_A(cache::LinearSolve.LinearCache, A::ExtendableSparseMatrix)
+    LinearSolve.set_A(cache, sparse(A))
+end
 
 """
 $(SIGNATURES)
 
 Create LinearProblem from ExtendableSparseMatrix.
 """
-LinearSolve.LinearProblem(A::ExtendableSparseMatrix,b)=LinearSolve.LinearProblem(sparse(A),b)
-
+function LinearSolve.LinearProblem(A::ExtendableSparseMatrix, b)
+    LinearSolve.LinearProblem(sparse(A), b)
+end
