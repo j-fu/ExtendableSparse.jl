@@ -23,7 +23,7 @@ include("sparsematrixlnk.jl")
 include("extendable.jl")
 
 export SparseMatrixLNK,
-       ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs
+       ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse
 
 include("factorizations.jl")
 
