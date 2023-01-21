@@ -1,7 +1,7 @@
 QUARRY
-.project.jl
 docs/build
 *~
 Manifest.toml
-.repl_history.jl
+.repl_history
+quarry
 

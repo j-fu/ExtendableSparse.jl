@@ -4,17 +4,19 @@ $(SIGNATURES)
 Return index corresponding to entry [i,j] in the array of nonzeros,
 if the entry exists, otherwise, return 0.
 """
-function findindex(csc::SparseMatrixCSC{T}, i, j) where T
-    if !(1 <= i <= csc.m && 1 <= j <= csc.n); throw(BoundsError()); end
+function findindex(csc::SparseMatrixCSC{T}, i, j) where {T}
+    if !(1 <= i <= csc.m && 1 <= j <= csc.n)
+        throw(BoundsError())
+    end
     r1 = Int(csc.colptr[j])
-    r2 = Int(csc.colptr[j+1]-1)
-    if r1>r2
+    r2 = Int(csc.colptr[j + 1] - 1)
+    if r1 > r2
         return 0
     end
 
     # See sparsematrix.jl
     r1 = searchsortedfirst(csc.rowval, i, r1, r2, Base.Forward)
-    if (r1>r2 ||csc.rowval[r1] != i)
+    if (r1 > r2 || csc.rowval[r1] != i)
         return 0
     end
     return r1
@@ -46,16 +48,15 @@ A
 ```
 
 """
-function updateindex!(csc::SparseMatrixCSC{Tv,Ti}, op, v,i, j) where{Tv,Ti<:Integer}
-    k=findindex(csc,i,j)
-    if k>0 # update existing value
-        csc.nzval[k]=op(csc.nzval[k],v)
+function updateindex!(csc::SparseMatrixCSC{Tv, Ti}, op, v, i, j) where {Tv, Ti <: Integer}
+    k = findindex(csc, i, j)
+    if k > 0 # update existing value
+        csc.nzval[k] = op(csc.nzval[k], v)
     else # insert new value
-        csc[i,j]=op(zero(Tv),v)
+        csc[i, j] = op(zero(Tv), v)
     end
     csc
 end
-
 
 """
 $(SIGNATURES)
@@ -63,18 +64,15 @@ $(SIGNATURES)
 Trival flush! method for allowing to run the code with both `ExtendableSparseMatrix` and
 `SparseMatrixCSC`.
 """
-flush!(csc::SparseMatrixCSC)=csc
-
-
+flush!(csc::SparseMatrixCSC) = csc
 
 """
 $(SIGNATURES)
 
 Hash of csc matrix pattern. 
 """
-phash(csc::SparseMatrixCSC)=hash((hash(csc.colptr),hash(csc.rowval)))
+phash(csc::SparseMatrixCSC) = hash((hash(csc.colptr), hash(csc.rowval)))
 # probably no good idea to add two hashes, so we hash them together.
-
 
 """
     pattern_equal(a::SparseMatrixCSC,b::SparseMatrixCSC)
@@ -82,4 +80,6 @@ phash(csc::SparseMatrixCSC)=hash((hash(csc.colptr),hash(csc.rowval)))
 Check if sparsity patterns of two SparseMatrixCSC objects are equal.
 This is generally faster than comparing hashes.
 """
-pattern_equal(a::SparseMatrixCSC,b::SparseMatrixCSC) = a.colptr==b.colptr && a.rowval==b.rowval
+function pattern_equal(a::SparseMatrixCSC, b::SparseMatrixCSC)
+    a.colptr == b.colptr && a.rowval == b.rowval
+end
