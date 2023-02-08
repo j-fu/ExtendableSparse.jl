@@ -11,6 +11,7 @@ function test_symm(n, uplo)
     flush!(A)
     SA = Symmetric(A, uplo)
     Scsc = Symmetric(A.cscmatrix, uplo)
+    
     if ExtendableSparse.USE_GPL_LIBS
         #requires SuiteSparse which is not available on non-GPL builds
         SA \ b ≈ Scsc \ b
