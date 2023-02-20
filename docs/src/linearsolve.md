@@ -2,7 +2,7 @@
 
 Starting with version 0.9.6, ExtendableSparse is compatible
 with [LinearSolve.jl](https://github.com/SciML/LinearSolve.jl).
-Since version 0.9.7, this is facilitated via the 
+Since version 0.9.7, this is facilitated via the
 AbstractSparseMatrixCSC interface.
 
 ```@autodocs

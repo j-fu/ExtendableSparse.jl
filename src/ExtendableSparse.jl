@@ -16,7 +16,7 @@ using Requires
 
 using DocStringExtensions
 
-import SparseArrays: AbstractSparseMatrixCSC,  rowvals, getcolptr, nonzeros
+import SparseArrays: AbstractSparseMatrixCSC, rowvals, getcolptr, nonzeros
 
 include("sparsematrixcsc.jl")
 include("sparsematrixlnk.jl")
