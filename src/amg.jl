@@ -23,7 +23,9 @@ function AMGPreconditioner(; valuetype::Type = Float64, indextype::Type = Int64,
     AMGPreconditioner{valuetype, indextype}(; kwargs...)
 end
 
-@eval begin @makefrommatrix AMGPreconditioner end
+@eval begin
+    @makefrommatrix AMGPreconditioner
+end
 
 function update!(precon::AMGPreconditioner{Tv, Ti}) where {Tv, Ti}
     @inbounds flush!(precon.A)

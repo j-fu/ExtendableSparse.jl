@@ -23,7 +23,9 @@ function ILUTPreconditioner(; valuetype::Type = Float64, indextype::Type = Int64
     ILUTPreconditioner{valuetype, indextype}(; kwargs...)
 end
 
-@eval begin @makefrommatrix ILUTPreconditioner end
+@eval begin
+    @makefrommatrix ILUTPreconditioner
+end
 
 function update!(precon::ILUTPreconditioner)
     A = precon.A

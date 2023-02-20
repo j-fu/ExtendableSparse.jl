@@ -2,8 +2,8 @@
 
 Starting with version 0.9.6, ExtendableSparse is compatible
 with [LinearSolve.jl](https://github.com/SciML/LinearSolve.jl).
-For this purpose, it extends the `LinearProblem` constructor and the
-`set_A` function by methods specific for `ExtendableSparseMatrix`.
+Since version 0.9.7, this is facilitated via the
+AbstractSparseMatrixCSC interface.
 
 ```@autodocs
 Modules = [ExtendableSparse]

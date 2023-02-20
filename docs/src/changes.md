@@ -1,5 +1,9 @@
 # Changes
 
+## v0.9.7, Jan 22, 2023
+
+  - support of AbstractSparseMatrixCSC interface
+
 ## v0.9.6, Jan 22, 2023
 
   - support for LinearSolve.jl
