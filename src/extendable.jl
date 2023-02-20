@@ -359,7 +359,7 @@ function SparseArrays.findnz(ext::ExtendableSparseMatrix)
 end
 
 
-@static if VERSION > v"1.6"
+@static if VERSION >= v"1.7"
 
 function SparseArrays._checkbuffers(ext::ExtendableSparseMatrix)
     flush!(ext)
