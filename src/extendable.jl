@@ -11,12 +11,12 @@ mutable struct ExtendableSparseMatrix{Tv,Ti<:Integer} <: AbstractSparseMatrixCSC
     """
     Final matrix data
     """
-    cscmatrix::SparseMatrixCSC{Tv,Ti}
+    cscmatrix::SparseMatrixCSC{Tv, Ti}
 
     """
     Linked list structure holding data of extension
     """
-    lnkmatrix::Union{SparseMatrixLNK{Tv,Ti},Nothing}
+    lnkmatrix::Union{SparseMatrixLNK{Tv, Ti}, Nothing}
 
     """
     Pattern hash
@@ -34,6 +34,7 @@ Create empty ExtendableSparseMatrix. This is equivalent to `spzeros(m,n)` for
 `SparseMartrixCSC`.
 
 """
+
 function ExtendableSparseMatrix{Tv,Ti}(m, n) where {Tv,Ti<:Integer}
     ExtendableSparseMatrix{Tv,Ti}(spzeros(Tv, Ti, m, n), nothing, 0)
 end
@@ -58,6 +59,7 @@ $(SIGNATURES)
 
  Create ExtendableSparseMatrix from SparseMatrixCSC
 """
+
 function ExtendableSparseMatrix(csc::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti<:Integer}
     return ExtendableSparseMatrix{Tv,Ti}(csc, nothing, phash(csc))
 end
@@ -156,6 +158,7 @@ A
 
 If `v` is zero, no new entry is created.
 """
+
 function updateindex!(
     ext::ExtendableSparseMatrix{Tv,Ti},
     op,
@@ -354,6 +357,7 @@ function SparseArrays.findnz(ext::ExtendableSparseMatrix)
     flush!(ext)
     return findnz(ext.cscmatrix)
 end
+
 
 function SparseArrays._checkbuffers(ext::ExtendableSparseMatrix)
     flush!(ext)
