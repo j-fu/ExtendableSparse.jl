@@ -359,9 +359,13 @@ function SparseArrays.findnz(ext::ExtendableSparseMatrix)
 end
 
 
+@static if VERSION > v"1.6"
+
 function SparseArrays._checkbuffers(ext::ExtendableSparseMatrix)
     flush!(ext)
     SparseArrays._checkbuffers(ext.cscmatrix)
+end
+
 end
 
 
@@ -375,7 +379,7 @@ In that case, Julias standard `\` is called, which is realized via UMFPACK.
 """
 function LinearAlgebra.:\(
     ext::ExtendableSparseMatrix{Tv,Ti},
-    b::AbstractVecOrMat,
+    b::AbstractVector,
 ) where {Tv,Ti}
     flush!(ext)
     SparspakLU(ext) \ b
@@ -388,9 +392,8 @@ $(SIGNATURES)
 """
 function LinearAlgebra.:\(
     symm_ext::Symmetric{Tm,ExtendableSparseMatrix{Tm,Ti}},
-    b::AbstractVecOrMat,
+    b::AbstractVector,
 ) where {Tm,Ti}
-    @show "hi"
     symm_ext.data \ b # no ldlt yet ...
 end
 
@@ -401,7 +404,7 @@ $(SIGNATURES)
 """
 function LinearAlgebra.:\(
     symm_ext::Hermitian{Tm,ExtendableSparseMatrix{Tm,Ti}},
-    b::AbstractVecOrMat,
+    b::AbstractVector,
 ) where {Tm,Ti}
     symm_ext.data \ B # no ldlt yet ...
 end
@@ -413,7 +416,7 @@ if USE_GPL_LIBS
         @eval begin
             function LinearAlgebra.:\(
                 ext::ExtendableSparseMatrix{$Tv,Ti},
-                B::AbstractVecOrMat,
+                B::AbstractVector,
             ) where {Ti}
                 flush!(ext)
                 ext.cscmatrix \ B
@@ -423,7 +426,7 @@ if USE_GPL_LIBS
         @eval begin
             function LinearAlgebra.:\(
                 symm_ext::Symmetric{$Tv,ExtendableSparseMatrix{$Tv,Ti}},
-                B::AbstractVecOrMat,
+                B::AbstractVector,
             ) where {Ti}
                 flush!(symm_ext.data)
                 symm_csc = Symmetric(symm_ext.data.cscmatrix, Symbol(symm_ext.uplo))
@@ -434,7 +437,7 @@ if USE_GPL_LIBS
         @eval begin
             function LinearAlgebra.:\(
                 symm_ext::Hermitian{$Tv,ExtendableSparseMatrix{$Tv,Ti}},
-                B::AbstractVecOrMat,
+                B::AbstractVector,
             ) where {Ti}
                 flush!(symm_ext.data)
                 symm_csc = Hermitian(symm_ext.data.cscmatrix, Symbol(symm_ext.uplo))
