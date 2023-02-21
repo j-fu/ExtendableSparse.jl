@@ -1,8 +1,8 @@
 # Changes
 
-## v0.9.7, Jan 22, 2023
-
+## v1.0.1, Jan 22, 2023
   - support of AbstractSparseMatrixCSC interface
+  - replace SparseArrays.sparse by SparseArrays.SparseMatrixCSC
 
 ## v0.9.6, Jan 22, 2023
 

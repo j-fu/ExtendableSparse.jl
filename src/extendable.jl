@@ -109,15 +109,17 @@ end
 #     transpose(sparse(parent(text)))
 # end
 
+
 """
 $(SIGNATURES)
 
  Create SparseMatrixCSC from ExtendableSparseMatrix
 """
-function SparseArrays.sparse(A::ExtendableSparseMatrix)
+function SparseArrays.SparseMatrixCSC(A::ExtendableSparseMatrix)
     flush!(A)
     A.cscmatrix
 end
+
 
 """
 $(SIGNATURES)
