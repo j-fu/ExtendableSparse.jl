@@ -103,3 +103,6 @@ end
 function LinearAlgebra.ldiv!(precon::ILU0Preconditioner, v::AbstractArray{T, 1} where {T})
     ldiv!(v, precon, v)
 end
+
+needs_copywrap(::ILU0Preconditioner)=false
+needs_copywrap(::Type{ILU0Preconditioner})=false

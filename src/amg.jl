@@ -31,3 +31,6 @@ function update!(precon::AMGPreconditioner{Tv, Ti}) where {Tv, Ti}
     @inbounds flush!(precon.A)
     precon.fact = AlgebraicMultigrid.aspreconditioner(AlgebraicMultigrid.ruge_stuben(precon.A.cscmatrix))
 end
+
+needs_copywrap(::AMGPreconditioner)=false
+needs_copywrap(::Type{AMGPreconditioner})=false

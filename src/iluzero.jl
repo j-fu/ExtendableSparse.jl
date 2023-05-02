@@ -26,11 +26,16 @@ function update!(precon::ILUZeroPreconditioner{Tv, Ti}) where {Tv, Ti}
     flush!(precon.A)
     if precon.A.phash != precon.phash
         precon.ilu = ilu0(precon.A.cscmatrix)
+        precon.phash=precon.A.phash
     else
         ilu0!(precon.ilu, precon.A.cscmatrix)
     end
     precon
 end
+
+needs_copywrap(::ILUZeroPreconditioner)=false
+needs_copywrap(::Type{ILUZeroPreconditioner})=false
+
 
 LinearAlgebra.ldiv!(u, precon::ILUZeroPreconditioner, v) = ldiv!(u, precon.ilu, v)
 LinearAlgebra.ldiv!(precon::ILUZeroPreconditioner, v) = ldiv!(precon.ilu, v)

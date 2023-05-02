@@ -3,6 +3,7 @@ using SparseArrays
 using LinearAlgebra
 using Sparspak
 using ILUZero
+using ThreadedIterables
 
 # Define our own constant here in order to be able to
 # test things at least a little bit..
@@ -28,11 +29,13 @@ export SparseMatrixLNK,
 include("factorizations.jl")
 
 export JacobiPreconditioner,
-       ILU0Preconditioner,
-       ILUZeroPreconditioner,
-       ParallelJacobiPreconditioner,
-       ParallelILU0Preconditioner,
-       reorderlinsys
+    ILU0Preconditioner,
+    ILUZeroPreconditioner,
+    ParallelJacobiPreconditioner,
+    ParallelILU0Preconditioner,
+    CopyWrapper,BlockPreconditioner,
+    reorderlinsys
+
 export AbstractFactorization, LUFactorization, CholeskyFactorization
 export issolver
 export factorize!, update!
@@ -51,5 +54,6 @@ end
 
 export ILUTPreconditioner, AMGPreconditioner
 export PardisoLU, MKLPardisoLU, SparspakLU
+
 
 end # module

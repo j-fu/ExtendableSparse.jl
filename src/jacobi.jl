@@ -47,3 +47,6 @@ end
 function LinearAlgebra.ldiv!(precon::JacobiPreconditioner, v::AbstractArray{T, 1} where {T})
     ldiv!(v, precon, v)
 end
+
+needs_copywrap(::JacobiPreconditioner)=false
+needs_copywrap(::Type{JacobiPreconditioner})=false

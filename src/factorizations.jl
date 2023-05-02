@@ -118,12 +118,13 @@ update!(::AbstractFactorization)
 ```
 ldiv!(u,factorization,v)
 ldiv!(factorization,v)
-```
+2```
 
 Solve factorization.
 """
 LinearAlgebra.ldiv!(u, fact::AbstractFactorization, v) = ldiv!(u, fact.fact, v)
 LinearAlgebra.ldiv!(fact::AbstractFactorization, v) = ldiv!(fact.fact, v)
+
 
 macro makefrommatrix(fact)
     return quote
@@ -142,6 +143,7 @@ include("iluzero.jl")
 include("parallel_jacobi.jl")
 include("parallel_ilu0.jl")
 include("sparspak.jl")
+include("blockpreconditioner.jl")
 
 @eval begin
     @makefrommatrix ILU0Preconditioner
@@ -150,6 +152,8 @@ include("sparspak.jl")
     @makefrommatrix ParallelJacobiPreconditioner
     @makefrommatrix ParallelILU0Preconditioner
     @makefrommatrix SparspakLU
+    @makefrommatrix UpdateteableBlockpreconditioner
+    @makefrommatrix BlockPreconditioner
 end
 
 if USE_GPL_LIBS
