@@ -1,52 +1,67 @@
-mutable struct JacobiPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv, Ti}
-    A::ExtendableSparseMatrix{Tv, Ti}
-    invdiag::Array{Tv, 1}
-    function JacobiPreconditioner{Tv, Ti}() where {Tv, Ti}
+mutable struct _JacobiPreconditioner{Tv}
+    invdiag::Vector{Tv}
+end
+
+function jacobi(A::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}
+    invdiag = Array{Tv, 1}(undef, A.n)
+    n = A.n
+    @inbounds for i = 1:n
+        invdiag[i] = one(Tv) / A[i, i]
+    end
+    _JacobiPreconditioner(invdiag)
+end
+
+function jacobi!(p::_JacobiPreconditioner{Tv},A::SparseMatrixCSC{Tv,Ti})where {Tv,Ti}
+    n = A.n
+    @inbounds for i = 1:n
+        p.invdiag[i] = one(Tv) / A[i, i]
+    end
+    p
+end
+
+mutable struct JacobiPreconditioner <: AbstractPreconditioner
+    A::ExtendableSparseMatrix
+    factorization::Union{_JacobiPreconditioner,Nothing}
+    phash::UInt64
+    function JacobiPreconditioner()
         p = new()
-        p.invdiag = zeros(Tv, 0)
+        p.factorization=nothing
+        p.phash=0
         p
     end
 end
 
+function LinearAlgebra.ldiv!(u,p::_JacobiPreconditioner,v)
+    n=length(p.invdiag)
+    for i = 1:n
+        @inbounds u[i] = p.invdiag[i] * v[i]
+    end
+end
+
+ LinearAlgebra.ldiv!(p::_JacobiPreconditioner,v)=ldiv!(v,p,v)
+
+
 """
 ```
-JacobiPreconditioner(;valuetype=Float64, indextype=Int64)
+JacobiPreconditioner()
 JacobiPreconditioner(matrix)
 ```
 
-Jacobi preconditioner
+Jacobi preconditioner.
 """
-function JacobiPreconditioner(; valuetype::Type = Float64, indextype::Type = Int64)
-    JacobiPreconditioner{valuetype, indextype}()
-end
+function JacobiPreconditioner end
 
-function update!(precon::JacobiPreconditioner{Tv, Ti}) where {Tv, Ti}
-    flush!(precon.A)
-    cscmatrix = precon.A.cscmatrix
-    if length(precon.invdiag) == 0
-        precon.invdiag = Array{Tv, 1}(undef, cscmatrix.n)
+function update!(p::JacobiPreconditioner)
+    flush!(p.A)
+    Tv=eltype(p.A)
+    if p.A.phash!=p.phash || isnothing(p.factorization)
+        p.factorization=jacobi(p.A.cscmatrix)
+        p.phash=p.A.phash
+    else
+        jacobi!(p.factorization,p.A.cscmatrix)
     end
-    invdiag = precon.invdiag
-    n = cscmatrix.n
-    @inbounds for i = 1:n
-        invdiag[i] = 1.0 / cscmatrix[i, i]
-    end
-    precon
+    p
 end
 
-function LinearAlgebra.ldiv!(u::AbstractArray{T, 1} where {T},
-                             precon::JacobiPreconditioner,
-                             v::AbstractArray{T, 1} where {T})
-    invdiag = precon.invdiag
-    n = length(invdiag)
-    @inbounds @simd for i = 1:n
-        u[i] = invdiag[i] * v[i]
-    end
-end
-
-function LinearAlgebra.ldiv!(precon::JacobiPreconditioner, v::AbstractArray{T, 1} where {T})
-    ldiv!(v, precon, v)
-end
-
-needs_copywrap(::JacobiPreconditioner)=false
-needs_copywrap(::Type{JacobiPreconditioner})=false
+allow_views(::JacobiPreconditioner)=true
+allow_views(::Type{JacobiPreconditioner})=true

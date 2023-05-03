@@ -1,22 +1,21 @@
-abstract type AbstractPardisoLU{Tv, Ti} <: AbstractLUFactorization{Tv, Ti} end
+abstract type AbstractPardisoLU <: AbstractLUFactorization end
 
-mutable struct PardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv, Ti}
-    A::Union{ExtendableSparseMatrix{Tv, Ti}, Nothing}
+mutable struct PardisoLU <: AbstractPardisoLU
+    A::Union{ExtendableSparseMatrix, Nothing}
     ps::Pardiso.PardisoSolver
     phash::UInt64
+    iparm::Union{Vector{Int},Nothing}
+    dparm::Union{Vector{Float64},Nothing}
+    mtype::Union{Int,Nothing}
 end
 
-function PardisoLU{Tv, Ti}(; iparm = nothing, dparm = nothing,
-                           mtype = nothing) where {Tv, Ti}
-    fact = PardisoLU{Tv, Ti}(nothing, Pardiso.PardisoSolver(), 0)
-    default_initialize!(fact, iparm, dparm, mtype)
+function PardisoLU(; iparm = nothing, dparm = nothing,mtype = nothing)
+    fact = PardisoLU(nothing, Pardiso.PardisoSolver(), 0,iparm,dparm,mtype)
 end
 
 """
 ```
-PardisoLU(;valuetype=Float64, 
-           indextype=Int64,
-           iparm::Vector, 
+PardisoLU(;iparm::Vector, 
            dparm::Vector, 
            mtype::Int)
 
@@ -37,28 +36,25 @@ plu=PardisoLU()
 Pardiso.set_iparm!(plu.ps,5,13.0)
 ```
 """
-function PardisoLU(; valuetype::Type = Float64, indextype::Type = Int64, kwargs...)
-    PardisoLU{valuetype, indextype}(; kwargs...)
-end
+function PardisoLU end
 
 #############################################################################################
-mutable struct MKLPardisoLU{Tv, Ti} <: AbstractPardisoLU{Tv, Ti}
-    A::Union{ExtendableSparseMatrix{Tv, Ti}, Nothing}
+mutable struct MKLPardisoLU <: AbstractPardisoLU
+    A::Union{ExtendableSparseMatrix, Nothing}
     ps::Pardiso.MKLPardisoSolver
     phash::UInt64
+    iparm::Union{Vector{Int},Nothing}
+    dparm::Nothing
+    mtype::Union{Int,Nothing}
 end
 
-function MKLPardisoLU{Tv, Ti}(; iparm = nothing, mtype = nothing) where {Tv, Ti}
-    fact = MKLPardisoLU{Tv, Ti}(nothing, Pardiso.MKLPardisoSolver(), 0)
-    default_initialize!(fact, iparm, nothing, mtype)
+function MKLPardisoLU(; iparm = nothing, mtype = nothing)
+    fact = MKLPardisoLU(nothing, Pardiso.MKLPardisoSolver(), 0,iparm,nothing,mtype)
 end
 
 """
 ```
-MKLPardisoLU(;valuetype=Float64, 
-           indextype=Int64,
-           iparm::Vector, 
-           mtype::Int)
+MKLPardisoLU(;iparm::Vector, mtype::Int)
 
 MKLPardisoLU(matrix; iparm, mtype)
 ```
@@ -76,15 +72,14 @@ plu=MKLPardisoLU()
 Pardiso.set_iparm!(plu.ps,5,13.0)
 ```
 """
-function MKLPardisoLU(; valuetype::Type = Float64, indextype::Type = Int64, kwargs...)
-    MKLPardisoLU{valuetype, indextype}(; kwargs...)
-end
+function MKLPardisoLU end
+
 
 ##########################################################################################
-function default_initialize!(fact::AbstractPardisoLU{Tv, Ti},
-                             iparm,
-                             dparm,
-                             mtype) where {Tv, Ti}
+function default_initialize!(Tv,fact::AbstractPardisoLU)
+    iparm=fact.iparm
+    dparm=fact.dparm
+    mtype=fact.mtype
     # if !isnothing(mtype)
     #     my_mtype=mtype fix this!
     # else
@@ -111,11 +106,13 @@ function default_initialize!(fact::AbstractPardisoLU{Tv, Ti},
     fact
 end
 
-function update!(lufact::AbstractPardisoLU{Tv, Ti}) where {Tv, Ti}
+function update!(lufact::AbstractPardisoLU)
     ps = lufact.ps
     flush!(lufact.A)
     Acsc = lufact.A.cscmatrix
+    Tv=eltype(Acsc)
     if lufact.phash != lufact.A.phash
+        default_initialize!(Tv,lufact)
         Pardiso.set_phase!(ps, Pardiso.RELEASE_ALL)
         Pardiso.pardiso(ps, Tv[], Acsc, Tv[])
         Pardiso.set_phase!(ps, Pardiso.ANALYSIS_NUM_FACT)
@@ -128,9 +125,9 @@ function update!(lufact::AbstractPardisoLU{Tv, Ti}) where {Tv, Ti}
     lufact
 end
 
-function LinearAlgebra.ldiv!(u::AbstractArray{T, 1} where {T},
+function LinearAlgebra.ldiv!(u::AbstractVector,
                              lufact::AbstractPardisoLU,
-                             v::AbstractArray{T, 1} where {T})
+                             v::AbstractVector)
     ps = lufact.ps
     Acsc = lufact.A.cscmatrix
     Pardiso.set_phase!(ps, Pardiso.SOLVE_ITERATIVE_REFINE)
@@ -138,7 +135,7 @@ function LinearAlgebra.ldiv!(u::AbstractArray{T, 1} where {T},
     u
 end
 
-function LinearAlgebra.ldiv!(fact::AbstractPardisoLU, v::AbstractArray{T, 1} where {T})
+function LinearAlgebra.ldiv!(fact::AbstractPardisoLU, v::AbstractVector)
     ldiv!(v, fact, copy(v))
 end
 

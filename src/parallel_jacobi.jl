@@ -1,50 +1,68 @@
-mutable struct ParallelJacobiPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv, Ti}
-    A::ExtendableSparseMatrix{Tv, Ti}
-    invdiag::Array{Tv, 1}
-    function ParallelJacobiPreconditioner{Tv, Ti}() where {Tv, Ti}
+mutable struct _ParallelJacobiPreconditioner{Tv}
+    invdiag::Vector{Tv}
+end
+
+function pjacobi(A::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}
+    invdiag = Array{Tv, 1}(undef, A.n)
+    n = A.n
+    Threads.@threads for i = 1:n
+        invdiag[i] = one(Tv) / A[i, i]
+    end
+    _ParallelJacobiPreconditioner(invdiag)
+end
+
+function pjacobi!(p::_ParallelJacobiPreconditioner{Tv},A::SparseMatrixCSC{Tv,Ti})where {Tv,Ti}
+    n = A.n
+    Threads.@threads for i = 1:n
+        p.invdiag[i] = one(Tv) / A[i, i]
+    end
+    p
+end
+
+
+function LinearAlgebra.ldiv!(u,p::_ParallelJacobiPreconditioner,v)
+    n=length(p.invdiag)
+    for i = 1:n
+        @inbounds u[i] = p.invdiag[i] * v[i]
+    end
+end
+
+LinearAlgebra.ldiv!(p::_ParallelJacobiPreconditioner,v)=ldiv!(v,p,v)
+
+
+mutable struct ParallelJacobiPreconditioner <: AbstractPreconditioner
+    A::ExtendableSparseMatrix
+    factorization::Union{_ParallelJacobiPreconditioner,Nothing}
+    phash::UInt64
+    function ParallelJacobiPreconditioner()
         p = new()
-        p.invdiag = zeros(Tv, 0)
+        p.factorization = nothing
+        p.phash=0
         p
     end
 end
 
-function update!(precon::ParallelJacobiPreconditioner{Tv, Ti}) where {Tv, Ti}
-    flush!(precon.A)
-    cscmatrix = precon.A.cscmatrix
-    if length(precon.invdiag) == 0
-        precon.invdiag = Array{Tv, 1}(undef, cscmatrix.n)
-    end
-    invdiag = precon.invdiag
-    n = cscmatrix.n
-    Threads.@threads for i = 1:n
-        @inbounds invdiag[i] = 1.0 / cscmatrix[i, i]
-    end
-    precon
-end
-
 """
 ```
-ParallelJacobiPreconditioner(;valuetype=Float64, indextype=Int64)
+ParallelJacobiPreconditioner()
 ParallelJacobiPreconditioner(matrix)
 ```
 
-Parallel Jacobi preconditioner
+ParallelJacobi preconditioner.
 """
-function ParallelJacobiPreconditioner(; valuetype::Type = Float64, indextype::Type = Int64)
-    ParallelJacobiPreconditioner{valuetype, indextype}()
-end
+function ParallelJacobiPreconditioner end
 
-function LinearAlgebra.ldiv!(u::AbstractArray{T, 1} where {T},
-                             precon::ParallelJacobiPreconditioner,
-                             v::AbstractArray{T, 1} where {T})
-    invdiag = precon.invdiag
-    n = length(invdiag)
-    Threads.@threads for i = 1:n
-        @inbounds u[i] = invdiag[i] * v[i]
+function update!(p::ParallelJacobiPreconditioner)
+    flush!(p.A)
+    Tv=eltype(p.A)
+    if p.A.phash!=p.phash || isnothing(p.factorization)
+        p.factorization=pjacobi(p.A.cscmatrix)
+        p.phash=p.A.phash
+    else
+        pjacobi!(p.factorization,p.A.cscmatrix)
     end
+    p
 end
 
-function LinearAlgebra.ldiv!(precon::ParallelJacobiPreconditioner,
-                             v::AbstractArray{T, 1} where {T})
-    ldiv!(v, precon, v)
-end
+allow_views(::ParallelJacobiPreconditioner)=true
+allow_views(::Type{ParallelJacobiPreconditioner})=true

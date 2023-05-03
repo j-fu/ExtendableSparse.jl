@@ -1,8 +1,8 @@
-mutable struct ILUTPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv, Ti}
-    A::ExtendableSparseMatrix{Tv, Ti}
-    fact::IncompleteLU.ILUFactorization{Tv, Ti}
+mutable struct ILUTPreconditioner <: AbstractPreconditioner
+    A::ExtendableSparseMatrix
+    factorization::IncompleteLU.ILUFactorization
     droptol::Float64
-    function ILUTPreconditioner{Tv, Ti}(; droptol = 1.0e-3) where {Tv, Ti}
+    function ILUTPreconditioner(; droptol = 1.0e-3)
         p = new()
         p.droptol = droptol
         p
@@ -11,7 +11,7 @@ end
 
 """
 ```
-ILUTPreconditioner(;droptol=1.0e-3,valuetype=Float64, indextype=Int64)
+ILUTPreconditioner(;droptol=1.0e-3)
 ILUTPreconditioner(matrix; droptol=1.0e-3)
 ```
 
@@ -19,9 +19,7 @@ Create the [`ILUTPreconditioner`](@ref) wrapping the one
 from [IncompleteLU.jl](https://github.com/haampie/IncompleteLU.jl)
 For using this, you need to issue `using IncompleteLU`.
 """
-function ILUTPreconditioner(; valuetype::Type = Float64, indextype::Type = Int64, kwargs...)
-    ILUTPreconditioner{valuetype, indextype}(; kwargs...)
-end
+function ILUTPreconditioner end
 
 @eval begin
     @makefrommatrix ILUTPreconditioner
@@ -30,5 +28,5 @@ end
 function update!(precon::ILUTPreconditioner)
     A = precon.A
     @inbounds flush!(A)
-    precon.fact = IncompleteLU.ilu(A.cscmatrix; τ = precon.droptol)
+    precon.factorization = IncompleteLU.ilu(A.cscmatrix; τ = precon.droptol)
 end

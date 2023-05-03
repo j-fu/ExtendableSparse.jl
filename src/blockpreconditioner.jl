@@ -1,25 +1,10 @@
-struct CopyWrapper
-    factorization
-end
-
-CopyWrapper(A::AbstractMatrix,factorization)= CopyWrapper(factorization(A))
-
-LinearAlgebra.ldiv!(cw::CopyWrapper,v)=ldiv!(cw.factorization,collect(v))
-
-function LinearAlgebra.ldiv!(u,cw::CopyWrapper,v)
-    vv=collect(v)
-    uu=collect(u)
-    ldiv!(uu,cw.factorization,vv)
-    u.=uu
-end
-
-mutable struct BlockPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv, Ti}
-    A::ExtendableSparseMatrix{Tv, Ti}
+mutable struct BlockPreconditioner <: AbstractPreconditioner
+    A::ExtendableSparseMatrix
     factorization
     phash::UInt64
     parts::Union{Nothing,Vector{AbstractVector}}
     facts::Vector
-    function BlockPreconditioner{Tv, Ti}(;parts=nothing, factorization=LUFactorization) where {Tv, Ti}
+    function BlockPreconditioner(;parts=nothing, factorization=LUFactorization) 
         p = new()
         p.phash = 0
         p.parts=parts
@@ -29,19 +14,21 @@ mutable struct BlockPreconditioner{Tv, Ti} <: AbstractPreconditioner{Tv, Ti}
 end
 
 
-needs_copywrap(::Any)=true
+allow_views(::Any)=false
 
 """
-    BlockPreconditioner(parts; valuetype=Float64, indextype=Int64, factorization=LUFactorization, copywrap=true)
-
-Create a block preconditioner from partition of unknowns given by parts.
-Factorization is a callable (Funtion or struct) which creates a preconditioner (with `ldiv!` methods) from an AbstractMatrix A.
+     BlockPreconditioner(parts; factorization=LUFactorization, copywrap=true)
+    
+Create a block preconditioner from partition of unknowns given by `parts`, a vector of AbstractVectors describing the
+indices of the partitions of the matrix. For a matrix of size `n x n`, e.g. parts could be `[ 1:n÷2, (n÷2+1):n]`
+or [ 1:2:n, 2:2:n].
+Factorization is a callable (Function or struct) which creates a preconditioner (with `ldiv!` methods) from an AbstractMatrix `A`.
 """
-function BlockPreconditioner(;parts=nothing, valuetype::Type = Float64, indextype::Type = Int64, factorization= LUFactorization)
-    BlockPreconditioner{valuetype, indextype}(;parts,factorization)
-end
+function BlockPreconditioner end
 
-function update!(precon::BlockPreconditioner{Tv, Ti}) where {Tv, Ti}
+
+
+function update!(precon::BlockPreconditioner)
     flush!(precon.A)
     nall=sum(length,precon.parts)
     n=size(precon.A,1)
@@ -52,12 +39,7 @@ function update!(precon::BlockPreconditioner{Tv, Ti}) where {Tv, Ti}
     if isnothing(precon.parts)
         parts=[1:n]
     end
-    @show needs_copywrap(precon.factorization)
-    if needs_copywrap(precon.factorization)
-        factorization= A-> CopyWrapper(A,precon.factorization)
-    else
-        factorization=precon.factorization
-    end
+    factorization=precon.factorization
     precon.facts=map(part->factorization(precon.A[part,part]),precon.parts)
 end
 
@@ -67,8 +49,17 @@ end
 function LinearAlgebra.ldiv!(p::BlockPreconditioner,v) 
     (;parts,facts)=p
     np=length(parts)
-    Threads.@threads for ipart=1:np
-	ldiv!(facts[ipart],view(v,parts[ipart]))
+
+    if allow_views(p.factorization)
+        Threads.@threads for ipart=1:np
+	    ldiv!(facts[ipart],view(v,parts[ipart]))
+        end
+    else
+        Threads.@threads for ipart=1:np
+            vv=v[parts[ipart]]
+	    ldiv!(facts[ipart],vv)
+            view(v,parts[ipart]).=vv
+        end
     end
     v
 end
@@ -76,8 +67,17 @@ end
 function LinearAlgebra.ldiv!(u,p::BlockPreconditioner,v)
     (;parts,facts)=p
     np=length(parts)
-    Threads.@threads for ipart=1:np
-	ldiv!(view(u,parts[ipart]), facts[ipart], view(v,parts[ipart]))
+    
+    if allow_views(p.factorization)
+        Threads.@threads for ipart=1:np
+	    ldiv!(view(u,parts[ipart]),facts[ipart],view(v,parts[ipart]))
+        end
+    else
+        Threads.@threads for ipart=1:np
+            uu=u[parts[ipart]]
+	    ldiv!(uu,facts[ipart],v[parts[ipart]])
+            view(u,parts[ipart]).=uu
+        end
     end
     u
 end

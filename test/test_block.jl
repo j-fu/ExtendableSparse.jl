@@ -7,7 +7,7 @@ using LinearAlgebra
 using Sparspak
 
 
-ExtendableSparse.needs_copywrap(::typeof(ilu0))=false
+ExtendableSparse.allow_views(::typeof(ilu0))=true
 
 function main(;n=100)
     

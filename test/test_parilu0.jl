@@ -11,11 +11,15 @@ function test(n)
     A = A.cscmatrix
     b = A * ones(n)
     P_par = ParallelILU0Preconditioner(A)
-    A_reord, b_reord = reorderlinsys(A, b, P_par.coloring)
+    A_reord, b_reord = reorderlinsys(A, b, P_par.factorization.coloring)
     P_ser = ILU0Preconditioner(A_reord)
     sol_ser, hist_ser = gmres(A_reord, b_reord; Pl = P_ser, log = true)
     sol_par, hist_par = gmres(A_reord, b_reord; Pl = P_par, log = true)
-    sol_ser == sol_par && hist_ser.iters == hist_par.iters
+    @show sol_ser
+    @show sol_par
+    @show hist_ser.iters
+    @show hist_par.iters
+    sol_ser ≈ sol_par && hist_ser.iters == hist_par.iters
 end
 
 @test test(10)

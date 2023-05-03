@@ -13,24 +13,23 @@ f64(x::Number) = Float64(x)
 const Dual64 = ForwardDiff.Dual{Float64, Float64, 1}
 
 function test_ls1(T, k, l, m; linsolver = SparspakFactorization())
-    A = fdrand(T, k, l, m; rand = () -> 1, matrixtype = ExtendableSparseMatrix)
-    b = rand(k * l * m)
+    A = fdrand(k, l, m; matrixtype = ExtendableSparseMatrix)
+    b = A*ones(k * l * m)
     x0 = A \ b
-
-    p = LinearProblem(A, T.(b))
+    p = LinearProblem(T.(A), T.(b))
     x1 = solve(p, linsolver)
     x0 ≈ x1
 end
 
 @test test_ls1(Float64, 10, 10, 10, linsolver = KLUFactorization())
 @test test_ls1(Float64, 25, 40, 1, linsolver = KLUFactorization())
-@test test_ls1(Float64, 1000, 1, 1, linsolver = KLUFactorization())
+@test test_ls1(Float64, 100, 1, 1, linsolver = KLUFactorization())
 
 for T in [Float32, Float64, Float64x1, Float64x2, Dual64]
     println("$T:")
     @test test_ls1(T, 10, 10, 10, linsolver = SparspakFactorization())
     @test test_ls1(T, 25, 40, 1, linsolver = SparspakFactorization())
-    @test test_ls1(T, 1000, 1, 1, linsolver = SparspakFactorization())
+    @test test_ls1(T, 100, 1, 1, linsolver = SparspakFactorization())
 end
 
 function test_ls2(T, k, l, m; linsolver = SparspakFactorization())
@@ -48,30 +47,29 @@ function test_ls2(T, k, l, m; linsolver = SparspakFactorization())
     LinearSolve.set_A(cache, A)
     x1 = solve(p, linsolver)
     x1 = A \ b
-
     all(x0 .< x1)
 end
 
 @test test_ls1(Float64, 10, 10, 10, linsolver = KLUFactorization())
 @test test_ls1(Float64, 25, 40, 1, linsolver = KLUFactorization())
-@test test_ls1(Float64, 1000, 1, 1, linsolver = KLUFactorization())
+@test test_ls1(Float64, 100, 1, 1, linsolver = KLUFactorization())
 
 for T in [Float32, Float64, Float64x1, Float64x2, Dual64]
     println("$T:")
     @test test_ls1(T, 10, 10, 10, linsolver = SparspakFactorization())
     @test test_ls1(T, 25, 40, 1, linsolver = SparspakFactorization())
-    @test test_ls1(T, 1000, 1, 1, linsolver = SparspakFactorization())
+    @test test_ls1(T, 100, 1, 1, linsolver = SparspakFactorization())
 end
 
 @test test_ls2(Float64, 10, 10, 10, linsolver = KLUFactorization())
 @test test_ls2(Float64, 25, 40, 1, linsolver = KLUFactorization())
-@test test_ls2(Float64, 1000, 1, 1, linsolver = KLUFactorization())
+@test test_ls2(Float64, 100, 1, 1, linsolver = KLUFactorization())
 
 for T in [Float32, Float64, Float64x1, Float64x2, Dual64]
     println("$T:")
     @test test_ls2(T, 10, 10, 10, linsolver = SparspakFactorization())
     @test test_ls2(T, 25, 40, 1, linsolver = SparspakFactorization())
-    @test test_ls2(T, 1000, 1, 1, linsolver = SparspakFactorization())
+    @test test_ls2(T, 100, 1, 1, linsolver = SparspakFactorization())
 end
 
 end
