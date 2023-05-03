@@ -32,7 +32,7 @@ export JacobiPreconditioner,
     ILUZeroPreconditioner,
     ParallelJacobiPreconditioner,
     ParallelILU0Preconditioner,
-    CopyWrapper,BlockPreconditioner,
+    BlockPreconditioner,allow_views,
     reorderlinsys
 
 export AbstractFactorization, LUFactorization, CholeskyFactorization

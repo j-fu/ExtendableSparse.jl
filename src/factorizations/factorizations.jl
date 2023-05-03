@@ -65,6 +65,8 @@ function factorize!(p::AbstractFactorization, A::ExtendableSparseMatrix)
     p
 end
 
+
+factorize!(p::AbstractFactorization, A::SparseMatrixCSC)=factorize!(p,ExtendableSparseMatrix(A))
 """
 ```
 lu!(factorization, matrix)

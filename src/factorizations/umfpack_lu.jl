@@ -11,7 +11,7 @@ LUFactorization()
 LUFactorization(matrix)
 ```
         
-Default Julia LU Factorization based on umfpack.
+Default LU Factorization. Maps to Sparspak.jl for non-GPL builds, otherwise to UMFPACK.
 """
 function LUFactorization end
 

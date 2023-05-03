@@ -117,7 +117,7 @@ ILU0Preconditioner(matrix)
 ```
 
 Incomplete LU preconditioner with zero fill-in, without modification of off-diagonal entries, so it delivers
-slower convergende than  [`ILUZeroPreconditoner`](@ref).
+slower convergende than  [`ILUZeroPreconditioner`](@ref).
 """
 function ILU0Preconditioner end
 

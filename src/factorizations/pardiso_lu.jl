@@ -27,7 +27,7 @@ and have the pardiso library from  [pardiso-project.org](https://pardiso-project
 [installed](https://github.com/JuliaSparse/Pardiso.jl#pardiso-60).
 
 The optional keyword arguments `mtype`, `iparm`  and `dparm` are 
-(Pardiso internal parameters)[https://github.com/JuliaSparse/Pardiso.jl#readme].
+[Pardiso internal parameters](https://github.com/JuliaSparse/Pardiso.jl#readme).
 
 Forsetting them, one can also access the `PardisoSolver` e.g. like
 ```
@@ -63,7 +63,7 @@ LU factorization based on pardiso. For using this, you need to issue `using Pard
 This version  uses the early 2000's fork in Intel's MKL library.
 
 The optional keyword arguments `mtype` and `iparm`  are  
-(Pardiso internal parameters)[https://github.com/JuliaSparse/Pardiso.jl#readme].
+[Pardiso internal parameters](https://github.com/JuliaSparse/Pardiso.jl#readme).
 
 For setting them you can also access the `PardisoSolver` e.g. like
 ```
