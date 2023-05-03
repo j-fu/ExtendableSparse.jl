@@ -1,70 +1,36 @@
-mutable struct ParallelILU0Preconditioner{Tv, Ti} <: AbstractPreconditioner{Tv, Ti}
-    A::ExtendableSparseMatrix{Tv, Ti}
-    xdiag::Array{Tv, 1}
-    idiag::Array{Ti, 1}
-    phash::UInt64
-
-    coloring::Array{Array{Ti, 1}, 1}
-    coloring_index::Array{Array{Ti, 1}, 1}
-    coloring_index_reverse::Array{Array{Ti, 1}, 1}
-
-    function ParallelILU0Preconditioner{Tv, Ti}() where {Tv, Ti}
-        p = new()
-        p.phash = 0
-        p
-    end
+mutable struct _ParallelILU0Preconditioner{Tv,Ti}
+    A::SparseMatrixCSC{Tv,Ti}
+    xdiag::Vector{Tv}
+    idiag::Vector{Ti}
+    coloring::Vector{Vector{Ti}}
+    coloring_index::Vector{Vector{Ti}}
+    coloring_index_reverse::Vector{Vector{Ti}}
 end
 
-"""
-```
-ParallelILU0Preconditioner(;valuetype=Float64,indextype=Int64)
-ParallelILU0Preconditioner(matrix)
-```
+function pilu0(A0::SparseMatrixCSC{Tv,Ti}) where {Tv, Ti}
+    coloring = graphcol(A0)
+    coloring_index, coloring_index_reverse = coloringindex(coloring)
+    A = ExtendableSparseMatrix(reordermatrix(A0, coloring)).cscmatrix
 
-Parallel ILU preconditioner with zero fill-in.
-"""
-function ParallelILU0Preconditioner(; valuetype::Type = Float64, indextype::Type = Int64)
-    ParallelILU0Preconditioner{valuetype, indextype}()
-end
-
-function update!(precon::ParallelILU0Preconditioner{Tv, Ti}) where {Tv, Ti}
-    flush!(precon.A)
-
-    # Get coloring and reorder matrix
-    precon.coloring = graphcol(precon.A.cscmatrix)
-    precon.coloring_index, precon.coloring_index_reverse = coloringindex(precon.coloring)
-    precon.A = ExtendableSparseMatrix(reordermatrix(precon.A.cscmatrix, precon.coloring))
-
-    cscmatrix = precon.A.cscmatrix
-    colptr = cscmatrix.colptr
-    rowval = cscmatrix.rowval
-    nzval = cscmatrix.nzval
-    n = cscmatrix.n
-
-    if precon.phash == 0
-        n = size(precon.A, 1)
-        precon.xdiag = Array{Tv, 1}(undef, n)
-        precon.idiag = Array{Ti, 1}(undef, n)
-    end
-
-    xdiag = precon.xdiag
-    idiag = precon.idiag
+    colptr = A.colptr
+    rowval = A.rowval
+    nzval =  A.nzval
+    n = A.n
+    xdiag=Vector{Tv}(undef,n)
+    idiag=Vector{Ti}(undef,n)
 
     # Find main diagonal index and
     # copy main diagonal values
-    if precon.phash != precon.A.phash
-        @inbounds for j = 1:n
-            @inbounds for k = colptr[j]:(colptr[j + 1] - 1)
-                i = rowval[k]
-                if i == j
-                    idiag[j] = k
-                    break
-                end
+    @inbounds for j = 1:n
+        @inbounds for k = colptr[j]:(colptr[j + 1] - 1)
+            i = rowval[k]
+            if i == j
+                idiag[j] = k
+                break
             end
         end
-        precon.phash = precon.A.phash
     end
-
+    
     @inbounds for j = 1:n
         xdiag[j] = one(Tv) / nzval[idiag[j]]
         @inbounds for k = (idiag[j] + 1):(colptr[j + 1] - 1)
@@ -77,24 +43,24 @@ function update!(precon::ParallelILU0Preconditioner{Tv, Ti}) where {Tv, Ti}
             end
         end
     end
-    precon
+    _ParallelILU0Preconditioner(A,xdiag,idiag, coloring, coloring_index,coloring_index_reverse)
 end
 
-function LinearAlgebra.ldiv!(u::AbstractArray{T, 1},
-                             precon::ParallelILU0Preconditioner,
-                             v::AbstractArray{T, 1}) where {T}
-    cscmatrix = precon.A.cscmatrix
-    colptr = cscmatrix.colptr
-    rowval = cscmatrix.rowval
-    n = cscmatrix.n
-    nzval = cscmatrix.nzval
+function LinearAlgebra.ldiv!(u::AbstractVector,
+                             precon::_ParallelILU0Preconditioner{Tv,Ti},
+                             v::AbstractVector) where {Tv,Ti}
+    A = precon.A
+    colptr = A.colptr
+    rowval = A.rowval
+    n = A.n
+    nzval = A.nzval
     xdiag = precon.xdiag
     idiag = precon.idiag
 
     coloring = precon.coloring
     coloring_index = precon.coloring_index
     coloring_index_reverse = precon.coloring_index_reverse
-
+    
     Threads.@threads for j = 1:n
         u[j] = xdiag[j] * v[j]
     end
@@ -117,14 +83,14 @@ function LinearAlgebra.ldiv!(u::AbstractArray{T, 1},
     end
 end
 
-function LinearAlgebra.ldiv!(precon::ParallelILU0Preconditioner,
-                             v::AbstractArray{T, 1} where {T})
+function LinearAlgebra.ldiv!(precon::_ParallelILU0Preconditioner{Tv,Ti},
+                             v::AbstractVector) where {Tv,Ti}
     ldiv!(v, precon, v)
 end
 
 # Returns an independent set of the graph of a matrix
 # Reference: https://research.nvidia.com/sites/default/files/pubs/2015-05_Parallel-Graph-Coloring/nvr-2015-001.pdf
-function indset(A::SparseMatrixCSC{Tv, Ti}, W::StridedVector{Ti}) where {Tv, Ti}
+function indset(A::SparseMatrixCSC{Tv,Ti}, W::StridedVector) where {Tv, Ti}
     # Random numbers for all vertices
     lenW = length(W)
     # r = sample(1:lenW, lenW, replace = false)
@@ -152,11 +118,11 @@ end
 
 # Returns coloring of the graph of a matrix
 # Reference: https://research.nvidia.com/sites/default/files/pubs/2015-05_Parallel-Graph-Coloring/nvr-2015-001.pdf
-function graphcol(A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
+function graphcol(A::SparseMatrixCSC{Tv,Ti}) where {Tv, Ti}
     # Empty list for coloring
-    C = []
+    C = Vector{Ti}[]
     # Array of vertices
-    W = [1:size(A)[1];]
+    W = Ti[1:size(A)[1];]
     # Get all independent sets of the graph of the matrix
     while any(W .!= 0)
         # Get independent set
@@ -173,15 +139,15 @@ end
 
 # Reorders a sparse matrix with provided coloring
 function reordermatrix(A::SparseMatrixCSC{Tv, Ti},
-                       coloring::Array{Array{Int64, 1}, 1}) where {Tv, Ti}
+                       coloring) where {Tv, Ti}
     c = collect(Iterators.flatten(coloring))
     return A[c, :][:, c]
 end
 
 # Reorders a linear system with provided coloring
 function reorderlinsys(A::SparseMatrixCSC{Tv, Ti},
-                       b::StridedVector{Tv},
-                       coloring::Array{Array{Int64, 1}, 1}) where {Tv, Ti}
+                       b::Vector{Tv} ,
+                       coloring) where {Tv, Ti}
     c = collect(Iterators.flatten(coloring))
     return A[c, :][:, c], b[c]
 end
@@ -189,7 +155,7 @@ end
 # Returns an array with the same structure of the input coloring and ordered 
 # entries 1:length(coloring) and an array with the structure of 
 # reverse(coloring) and ordered entries length(coloring):-1:1 
-function coloringindex(coloring::Array{Array{Int64, 1}, 1})
+function coloringindex(coloring)
     # First array
     c = deepcopy(coloring)
     cnt = 1
@@ -210,3 +176,43 @@ function coloringindex(coloring::Array{Array{Int64, 1}, 1})
     # Return both
     return c, cc
 end
+
+
+
+
+#################################################################
+mutable struct ParallelILU0Preconditioner <: AbstractPreconditioner
+    A::ExtendableSparseMatrix
+    phash::UInt64
+    factorization:: _ParallelILU0Preconditioner
+
+    function ParallelILU0Preconditioner()
+        p = new()
+        p.phash = 0
+        p
+    end
+end
+
+
+"""
+```
+ParallelILU0Preconditioner()
+ParallelILU0Preconditioner(matrix)
+```
+
+Parallel ILU preconditioner with zero fill-in.
+"""
+function ParallelILU0Preconditioner end
+
+function update!(p::ParallelILU0Preconditioner)
+    flush!(p.A)
+    Tv=eltype(p.A)
+    if p.A.phash!=p.phash
+        p.factorization=pilu0(p.A.cscmatrix)
+        p.phash=p.A.phash
+    else
+        pilu0!(p.factorization,p.A.cscmatrix)
+    end
+    p
+end
+

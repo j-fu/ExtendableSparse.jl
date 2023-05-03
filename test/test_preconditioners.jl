@@ -22,8 +22,9 @@ function test_precon2(precon, k, l, m; maxiter = 10000, symmetric = true)
     A = fdrand(k, l, m; matrixtype = ExtendableSparseMatrix, symmetric)
     b = ones(size(A, 2))
     exact = A \ b
+    @show typeof(precon)
     factorize!(precon, A)
-    it, hist = simple(A, b; Pl = precon, maxiter = maxiter, reltol = 1.0e-10, log = true)
+    @time it, hist = simple(A, b; Pl = precon, maxiter = maxiter, reltol = 1.0e-10, log = true)
     r = hist[:resnorm]
     nr = length(r)
     tail = min(100, length(r) ÷ 2)

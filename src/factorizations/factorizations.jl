@@ -1,39 +1,45 @@
 """
   $(TYPEDEF)
-  Abstract type for a factorization   with ExtandableSparseMatrix. 
-  
-  Any such preconditioner should have the following fields
+
+Abstract type for a factorization   with ExtandableSparseMatrix. 
+
+This type is meant to be a "type flexible" (with respect to the matrix element type)
+and lazily construcdet (can be constructed without knowing the matrix, and updated later)
+LU factorization or preconditioner. It wraps different concrete, type fixed factorizations
+which shall provide the usual `ldiv!` methods.
+
+Any such preconditioner/factorization `MyFact` should have the following fields
 ````
   A::ExtendableSparseMatrix
-  fact
+  factorization
   phash::UInt64
 ````
-and  provide a method
+and  provide methods
 ````
-  update!(precon)
+  MyFact(;kwargs...) 
+  update!(precon::MyFact)
 ````   
 
-  The idea is that, depending if the matrix pattern has changed, 
-  different steps are needed to update the preconditioner.
+The idea is that, depending if the matrix pattern has changed, 
+different steps are needed to update the preconditioner.
 
-  Moreover, they have the ExtendableSparseMatrix `A` as a field and an `update!` method, ensuring 
-  consistency after construction.
+    
 """
-abstract type AbstractFactorization{Tv, Ti} end
+abstract type AbstractFactorization end
 
 """
 $(TYPEDEF)
 
 Abstract subtype for preconditioners
 """
-abstract type AbstractPreconditioner{Tv, Ti} <: AbstractFactorization{Tv, Ti} end
+abstract type AbstractPreconditioner <: AbstractFactorization end
 
 """
 $(TYPEDEF)
 
 Abstract subtype for (full) LU factorizations
 """
-abstract type AbstractLUFactorization{Tv, Ti} <: AbstractFactorization{Tv, Ti} end
+abstract type AbstractLUFactorization <: AbstractFactorization end
 
 """
 ```
@@ -59,6 +65,8 @@ function factorize!(p::AbstractFactorization, A::ExtendableSparseMatrix)
     p
 end
 
+
+factorize!(p::AbstractFactorization, A::SparseMatrixCSC)=factorize!(p,ExtendableSparseMatrix(A))
 """
 ```
 lu!(factorization, matrix)
@@ -82,15 +90,15 @@ Create LU factorization. It calls the LU factorization form Sparspak.jl, unless 
 are allowed  in the Julia sysimage and the floating point type of the matrix is Float64 or Complex64.
 In that case, Julias standard `lu` is called, which is realized via UMFPACK.
 """
-function LinearAlgebra.lu(A::ExtendableSparseMatrix{Tv, Ti}) where {Tv, Ti}
-    factorize!(SparspakLU{Tv, Ti}(), A)
-end
+function lu  end
 
 if USE_GPL_LIBS
-    for (Tv) in (:Float64, :ComplexF64)
-        @eval begin function LinearAlgebra.lu(A::ExtendableSparseMatrix{$Tv, Ti}) where {Ti}
-            factorize!(LUFactorization{$Tv, Ti}(), A)
-        end end
+    function LinearAlgebra.lu(A::ExtendableSparseMatrix)
+        factorize!(LUFactorization(), A)
+    end
+else
+    function LinearAlgebra.lu(A::ExtendableSparseMatrix)
+        factorize!(SparspakLU(), A)
     end
 end # USE_GPL_LIBS
 
@@ -101,9 +109,8 @@ end # USE_GPL_LIBS
 
 Solve  LU factorization problem.
 """
-function Base.:\(lufact::AbstractLUFactorization{Tlu, Ti},
-                 v::AbstractArray{Tv, 1}) where {Tv, Tlu, Ti}
-    ldiv!(similar(v, Tlu), lufact, v)
+function Base.:\(lufact::AbstractLUFactorization,v)
+    ldiv!(similar(v), lufact, v)
 end
 
 """
@@ -122,15 +129,26 @@ ldiv!(factorization,v)
 
 Solve factorization.
 """
-LinearAlgebra.ldiv!(u, fact::AbstractFactorization, v) = ldiv!(u, fact.fact, v)
-LinearAlgebra.ldiv!(fact::AbstractFactorization, v) = ldiv!(fact.fact, v)
+LinearAlgebra.ldiv!(u, fact::AbstractFactorization, v) = ldiv!(u, fact.factorization, v)
+LinearAlgebra.ldiv!(fact::AbstractFactorization, v) = ldiv!(fact.factorization, v)
 
+
+
+""""
+    @makefrommatrix(fact)
+
+For an AbstractFactorization `MyFact`, provide methods
+```
+    MyFact(A::ExtendableSparseMatrix; kwargs...)
+    MyFact(A::SparseMatrixCSC; kwargs...)
+```
+"""
 macro makefrommatrix(fact)
     return quote
-        function $(esc(fact))(A::ExtendableSparseMatrix{Tv, Ti}; kwargs...) where {Tv, Ti}
-            factorize!($(esc(fact))(; valuetype = Tv, indextype = Ti, kwargs...), A)
+        function $(esc(fact))(A::ExtendableSparseMatrix; kwargs...)
+            factorize!($(esc(fact))(;kwargs...), A)
         end
-        function $(esc(fact))(A::SparseMatrixCSC{Tv, Ti}; kwargs...) where {Tv, Ti}
+        function $(esc(fact))(A::SparseMatrixCSC; kwargs...)
             $(esc(fact))(ExtendableSparseMatrix(A); kwargs...)
         end
     end
@@ -142,6 +160,7 @@ include("iluzero.jl")
 include("parallel_jacobi.jl")
 include("parallel_ilu0.jl")
 include("sparspak.jl")
+include("blockpreconditioner.jl")
 
 @eval begin
     @makefrommatrix ILU0Preconditioner
@@ -150,6 +169,8 @@ include("sparspak.jl")
     @makefrommatrix ParallelJacobiPreconditioner
     @makefrommatrix ParallelILU0Preconditioner
     @makefrommatrix SparspakLU
+    @makefrommatrix UpdateteableBlockpreconditioner
+    @makefrommatrix BlockPreconditioner
 end
 
 if USE_GPL_LIBS

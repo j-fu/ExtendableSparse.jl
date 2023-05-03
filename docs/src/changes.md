@@ -1,4 +1,10 @@
 # Changes
+## v1.1, May 3, 2023
+  - AbstractFactorization and subtypes are now without element and index type information.
+    They wrap more concretely typed info. This shall allow to construct a preconditioner
+    without knowing matrix and element type.
+  - First steps to block preconditioning
+  - src directory restructured
 
 ## v1.0.1, Jan 22, 2023
   - support of AbstractSparseMatrixCSC interface

@@ -38,11 +38,26 @@ Also, the iterative method interface works with ExtendableSparse.
 ```@example
 using ExtendableSparse # hide
 using LinearSolve # hide
+using SparseArrays # hide
 using ILUZero # hide
 A = fdrand(10, 10, 10; matrixtype = ExtendableSparseMatrix)
 x = ones(1000)
 b = A * x
 y = LinearSolve.solve(LinearProblem(A, b), KrylovJL_CG();
-                      Pl = ILUZero.ilu0(sparse(A))).u
+                      Pl = ILUZero.ilu0(SparseMatrixCSC(A))).u
+sum(y)
+```
+
+However, ExtendableSparse provides a number of wrappers around preconditioners
+from various Julia packages.
+```@example
+using ExtendableSparse # hide
+using LinearSolve # hide
+using ILUZero # hide
+A = fdrand(10, 10, 10; matrixtype = ExtendableSparseMatrix)
+x = ones(1000)
+b = A * x
+y = LinearSolve.solve(LinearProblem(A, b), KrylovJL_CG();
+                      Pl = ILUZeroPreconditioner(A)).u
 sum(y)
 ```

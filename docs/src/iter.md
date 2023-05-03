@@ -5,8 +5,8 @@ This functionality probably will be reduced in favor of LinearSolve.jl.
 ## Factorizations
 
 In this package, preconditioners and LU factorizations are both seen
-as complete or approximate _factorizations_. Correspondingly we provide a common  API for
-their creation.
+as complete or approximate _factorizations_. Correspondingly we provide a common  API for them.
+
 
 ```@autodocs
 Modules = [ExtendableSparse]
@@ -122,7 +122,15 @@ nm1, nm2
 
 ### API
 
+#### Recommended 
 ```@autodocs
 Modules = [ExtendableSparse]
-Pages = ["jacobi.jl","parallel_jacobi.jl","iluzero.jl","ilu0.jl","ilut.jl","amg.jl"]
+Pages = ["iluzero.jl","ilut.jl","amg.jl","blockpreconditioner.jl"]
+```
+
+
+#### Experimental
+```@autodocs
+Modules = [ExtendableSparse]
+Pages = ["jacobi.jl","parallel_jacobi.jl","ilu0.jl",]
 ```
