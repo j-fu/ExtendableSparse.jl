@@ -3,7 +3,6 @@ using SparseArrays
 using LinearAlgebra
 using Sparspak
 using ILUZero
-using ThreadedIterables
 
 # Define our own constant here in order to be able to
 # test things at least a little bit..

@@ -47,7 +47,8 @@ end
 
 
 function LinearAlgebra.ldiv!(p::BlockPreconditioner,v) 
-    (;parts,facts)=p
+    parts=p.parts
+    facts=p.facts
     np=length(parts)
 
     if allow_views(p.factorization)
@@ -65,7 +66,8 @@ function LinearAlgebra.ldiv!(p::BlockPreconditioner,v)
 end
 
 function LinearAlgebra.ldiv!(u,p::BlockPreconditioner,v)
-    (;parts,facts)=p
+    parts=p.parts
+    facts=p.facts
     np=length(parts)
     
     if allow_views(p.factorization)
