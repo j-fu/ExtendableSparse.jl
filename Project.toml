@@ -36,7 +36,7 @@ julia = "1.6"
 AlgebraicMultigrid = "0.4,0.5"
 IncompleteLU = "^0.2.1"
 Pardiso = "0.5.1"
-StaticArray = "1.5.24"
+StaticArrays = "1.5.24"
 
 [extras]
 AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
