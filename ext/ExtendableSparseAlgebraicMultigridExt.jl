@@ -1,3 +1,9 @@
+module ExtendableSparseAlgebraicMultigridExt
+using ExtendableSparse
+using ..AlgebraicMultigrid
+
+import ExtendableSparse: @makefrommatrix, AbstractPreconditioner, update!
+
 mutable struct AMGPreconditioner <: AbstractPreconditioner
     A::ExtendableSparseMatrix
     factorization::AlgebraicMultigrid.Preconditioner
@@ -32,3 +38,5 @@ end
 
 allow_views(::AMGPreconditioner)=true
 allow_views(::Type{AMGPreconditioner})=true
+
+end

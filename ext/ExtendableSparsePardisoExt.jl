@@ -1,3 +1,10 @@
+module ExtendableSparsePardisoExt
+using ExtendableSparse
+using LinearAlgebra
+using ..Pardiso
+
+import ExtendableSparse: @makefrommatrix, update!, AbstractLUFactorization
+
 abstract type AbstractPardisoLU <: AbstractLUFactorization end
 
 mutable struct PardisoLU <: AbstractPardisoLU
@@ -143,3 +150,6 @@ end
     @makefrommatrix PardisoLU
     @makefrommatrix MKLPardisoLU
 end
+
+end
+

@@ -165,6 +165,7 @@ include("blockpreconditioner.jl")
 @eval begin
     @makefrommatrix ILU0Preconditioner
     @makefrommatrix ILUZeroPreconditioner
+    @makefrommatrix PointBlockILUZeroPreconditioner
     @makefrommatrix JacobiPreconditioner
     @makefrommatrix ParallelJacobiPreconditioner
     @makefrommatrix ParallelILU0Preconditioner
