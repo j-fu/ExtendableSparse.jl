@@ -13,8 +13,4 @@ Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"
 Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 
 [compat]
-AlgebraicMultigrid = "0.4,0.5"
-IncompleteLU = "^0.2.1"
 IterativeSolvers = "0.9"
-Pardiso = "^0.5.1"
-StaticArrays = "1.5.24"
