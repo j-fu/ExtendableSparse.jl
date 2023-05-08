@@ -1,7 +1,7 @@
 name = "ExtendableSparse"
 uuid = "95c220a8-a1cf-11e9-0c77-dbfce5f500b3"
 authors = ["Juergen Fuhrmann <juergen.fuhrmann@wias-berlin.de>"]
-version = "1.1.0"
+version = "1.2.0"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
@@ -30,13 +30,13 @@ ExtendableSparseIncompleteLUExt = "IncompleteLU"
 [compat]
 DocStringExtensions = "0.8, 0.9"
 ILUZero = "0.2"
-Requires = "1.1.3"
+Requires ="1.1.3"
 Sparspak = "0.3.6"
 julia = "1.6"
 AlgebraicMultigrid = "0.4,0.5"
 IncompleteLU = "^0.2.1"
-Pardiso = "^0.5.1"
-
+Pardiso = "0.5.1"
+StaticArray = "1.5.24"
 
 [extras]
 AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
