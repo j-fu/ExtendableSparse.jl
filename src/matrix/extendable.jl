@@ -206,7 +206,7 @@ Find index in CSC matrix and set value if it exists. Otherwise,
 set index in extension if `v` is nonzero.
 """
 function Base.setindex!(ext::ExtendableSparseMatrix{Tv, Ti},
-                        v,
+                        v::Union{Number,AbstractVecOrMat},
                         i::Integer,
                         j::Integer) where {Tv, Ti}
     k = findindex(ext.cscmatrix, i, j)
@@ -562,3 +562,37 @@ function Base.copy(S::ExtendableSparseMatrix)
         ExtendableSparseMatrix(copy(S.cscmatrix), copy(S.lnkmatrix), S.phash)
     end
 end
+
+"""
+    pointblock(matrix,blocksize)
+
+Create a pointblock matrix.
+"""
+function pointblock(A0::ExtendableSparseMatrix{Tv,Ti},blocksize) where {Tv,Ti}
+    A=SparseMatrixCSC(A0)
+    colptr=A.colptr
+    rowval=A.rowval
+    nzval=A.nzval
+    n=A.n
+    block=zeros(Tv,blocksize,blocksize)
+    nblock=n÷blocksize
+    b=SMatrix{blocksize,blocksize}(block)
+    Tb=typeof(b)
+    Ab=ExtendableSparseMatrix{Tb,Ti}(nblock,nblock)
+    
+    
+    for i=1:n
+	for k=colptr[i]:colptr[i+1]-1
+	    j=rowval[k]
+	    iblock=(i-1)÷blocksize+1
+	    jblock=(j-1)÷blocksize+1
+	    ii=(i-1)%blocksize+1
+	    jj=(j-1)%blocksize+1
+	    block[ii,jj]=nzval[k]
+	    rawupdateindex!(Ab,+,SMatrix{blocksize,blocksize}(block),iblock,jblock)
+	    block[ii,jj]=zero(Tv)
+	end
+    end
+    flush!(Ab)
+end
+

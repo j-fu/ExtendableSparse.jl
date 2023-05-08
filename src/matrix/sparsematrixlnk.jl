@@ -316,7 +316,7 @@ function Base.:+(lnk::SparseMatrixLNK{Tv, Ti},
     end
 
     # pre-allocate column  data
-    col = [ColEntry{Tv, Ti}(0, 0) for i = 1:lnk_maxcol]
+    col = [ColEntry{Tv, Ti}(0, zero(Tv)) for i = 1:lnk_maxcol]
 
     inz = 1 # counts the nonzero entries in the new matrix
 

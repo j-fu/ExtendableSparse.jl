@@ -66,11 +66,18 @@ nm1, nm2
 ```
 
 ### API
-
+Available by default:
 ```@autodocs
 Modules = [ExtendableSparse]
-Pages = ["umfpack_lu.jl", "pardiso_lu.jl", "sparspak.jl"]
+Pages = ["umfpack_lu.jl",  "sparspak.jl"]
 ```
+
+Pardiso extension:
+```@docs
+PardisoLU
+MKLPardisoLU
+```
+
 
 ## Preconditioners
 
@@ -123,9 +130,16 @@ nm1, nm2
 ### API
 
 #### Recommended 
+Available by default:
 ```@autodocs
 Modules = [ExtendableSparse]
 Pages = ["iluzero.jl","ilut.jl","amg.jl","blockpreconditioner.jl"]
+```
+
+Extensions:
+```@docs
+ILUTPreconditioner
+AMGPreconditioner
 ```
 
 
@@ -134,3 +148,4 @@ Pages = ["iluzero.jl","ilut.jl","amg.jl","blockpreconditioner.jl"]
 Modules = [ExtendableSparse]
 Pages = ["jacobi.jl","parallel_jacobi.jl","ilu0.jl",]
 ```
+

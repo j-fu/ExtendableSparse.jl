@@ -1,7 +1,7 @@
 name = "ExtendableSparse"
 uuid = "95c220a8-a1cf-11e9-0c77-dbfce5f500b3"
 authors = ["Juergen Fuhrmann <juergen.fuhrmann@wias-berlin.de>"]
-version = "1.1.0"
+version = "1.2.0"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
@@ -11,16 +11,34 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[weakdeps]
+AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
+IncompleteLU = "40713840-3770-5561-ab4c-a76e7d0d7895"
+Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"
+
+
+
+[extensions]
+ExtendableSparseAlgebraicMultigridExt = "AlgebraicMultigrid"
+ExtendableSparsePardisoExt = "Pardiso"
+ExtendableSparseIncompleteLUExt = "IncompleteLU"
 
 [compat]
 DocStringExtensions = "0.8, 0.9"
 ILUZero = "0.2"
-Requires = "1.1.3"
+Requires ="1.1.3"
 Sparspak = "0.3.6"
 julia = "1.6"
+AlgebraicMultigrid = "0.4,0.5"
+IncompleteLU = "^0.2.1"
+Pardiso = "0.5.1"
+StaticArrays = "1.5.24"
 
 [extras]
-Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
+IncompleteLU = "40713840-3770-5561-ab4c-a76e7d0d7895"
+Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"

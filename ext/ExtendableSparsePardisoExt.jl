@@ -1,3 +1,11 @@
+module ExtendableSparsePardisoExt
+using ExtendableSparse
+using LinearAlgebra
+
+isdefined(Base, :get_extension) ? using Pardiso : using ..Pardiso
+
+import ExtendableSparse: @makefrommatrix, update!, AbstractLUFactorization
+
 abstract type AbstractPardisoLU <: AbstractLUFactorization end
 
 mutable struct PardisoLU <: AbstractPardisoLU
@@ -9,34 +17,10 @@ mutable struct PardisoLU <: AbstractPardisoLU
     mtype::Union{Int,Nothing}
 end
 
-function PardisoLU(; iparm = nothing, dparm = nothing,mtype = nothing)
+function ExtendableSparse.PardisoLU(; iparm = nothing, dparm = nothing,mtype = nothing)
     fact = PardisoLU(nothing, Pardiso.PardisoSolver(), 0,iparm,dparm,mtype)
 end
 
-"""
-```
-PardisoLU(;iparm::Vector, 
-           dparm::Vector, 
-           mtype::Int)
-
-PardisoLU(matrix; iparm,dparm,mtype)
-```
-
-LU factorization based on pardiso. For using this, you need to issue `using Pardiso`
-and have the pardiso library from  [pardiso-project.org](https://pardiso-project.org) 
-[installed](https://github.com/JuliaSparse/Pardiso.jl#pardiso-60).
-
-The optional keyword arguments `mtype`, `iparm`  and `dparm` are 
-[Pardiso internal parameters](https://github.com/JuliaSparse/Pardiso.jl#readme).
-
-Forsetting them, one can also access the `PardisoSolver` e.g. like
-```
-using Pardiso
-plu=PardisoLU()
-Pardiso.set_iparm!(plu.ps,5,13.0)
-```
-"""
-function PardisoLU end
 
 #############################################################################################
 mutable struct MKLPardisoLU <: AbstractPardisoLU
@@ -48,31 +32,10 @@ mutable struct MKLPardisoLU <: AbstractPardisoLU
     mtype::Union{Int,Nothing}
 end
 
-function MKLPardisoLU(; iparm = nothing, mtype = nothing)
+function ExtendableSparse.MKLPardisoLU(; iparm = nothing, mtype = nothing)
     fact = MKLPardisoLU(nothing, Pardiso.MKLPardisoSolver(), 0,iparm,nothing,mtype)
 end
 
-"""
-```
-MKLPardisoLU(;iparm::Vector, mtype::Int)
-
-MKLPardisoLU(matrix; iparm, mtype)
-```
-
-LU factorization based on pardiso. For using this, you need to issue `using Pardiso`.
-This version  uses the early 2000's fork in Intel's MKL library.
-
-The optional keyword arguments `mtype` and `iparm`  are  
-[Pardiso internal parameters](https://github.com/JuliaSparse/Pardiso.jl#readme).
-
-For setting them you can also access the `PardisoSolver` e.g. like
-```
-using Pardiso
-plu=MKLPardisoLU()
-Pardiso.set_iparm!(plu.ps,5,13.0)
-```
-"""
-function MKLPardisoLU end
 
 
 ##########################################################################################
@@ -140,6 +103,9 @@ function LinearAlgebra.ldiv!(fact::AbstractPardisoLU, v::AbstractVector)
 end
 
 @eval begin
-    @makefrommatrix PardisoLU
-    @makefrommatrix MKLPardisoLU
+    @makefrommatrix ExtendableSparse.PardisoLU
+    @makefrommatrix ExtendableSparse.MKLPardisoLU
 end
+
+end
+

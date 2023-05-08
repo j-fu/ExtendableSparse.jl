@@ -16,7 +16,4 @@ Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-AlgebraicMultigrid = "0.4,0.5"
-IncompleteLU = "^0.2.1"
 IterativeSolvers = "0.9"
-Pardiso = "^0.5.1"

@@ -1,9 +1,17 @@
+module ExtendableSparseAlgebraicMultigridExt
+
+using ExtendableSparse
+
+isdefined(Base, :get_extension) ? using AlgebraicMultigrid : using ..AlgebraicMultigrid
+
+import ExtendableSparse: @makefrommatrix, AbstractPreconditioner, update!
+
 mutable struct AMGPreconditioner <: AbstractPreconditioner
     A::ExtendableSparseMatrix
     factorization::AlgebraicMultigrid.Preconditioner
     max_levels::Int
     max_coarse::Int
-    function AMGPreconditioner(; max_levels = 10, max_coarse = 10)
+    function ExtendableSparse.AMGPreconditioner(; max_levels = 10, max_coarse = 10)
         precon = new()
         precon.max_levels = max_levels
         precon.max_coarse = max_coarse
@@ -11,18 +19,9 @@ mutable struct AMGPreconditioner <: AbstractPreconditioner
     end
 end
 
-"""
-```
-AMGPreconditioner(;max_levels=10, max_coarse=10)
-AMGPreconditioner(matrix;max_levels=10, max_coarse=10)
-```
-
-Create the  [`AMGPreconditioner`](@ref) wrapping the Ruge-Stüben AMG preconditioner from [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl)
-"""
-function AMGPreconditioner end
 
 @eval begin
-    @makefrommatrix AMGPreconditioner
+    @makefrommatrix  ExtendableSparse.AMGPreconditioner
 end
 
 function update!(precon::AMGPreconditioner)
@@ -32,3 +31,5 @@ end
 
 allow_views(::AMGPreconditioner)=true
 allow_views(::Type{AMGPreconditioner})=true
+
+end

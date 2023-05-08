@@ -83,3 +83,8 @@ This is generally faster than comparing hashes.
 function pattern_equal(a::SparseMatrixCSC, b::SparseMatrixCSC)
     a.colptr == b.colptr && a.rowval == b.rowval
 end
+
+
+function pointblock(A::SparseMatrixCSC,blocksize)
+    SparseMatrixCSC(pointblock(ExtendableSparseMatrix(A),blocksize))
+end
