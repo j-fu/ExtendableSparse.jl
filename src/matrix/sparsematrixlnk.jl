@@ -84,7 +84,7 @@ mutable struct SparseMatrixLNK{Tv, Ti <: Integer} <: AbstractSparseMatrix{Tv, Ti
 end
 
 
-global _flexsize::Bool=false
+global _flexsize=false
 
 flexsize!(b::Bool)=  global _flexsize=b
 
