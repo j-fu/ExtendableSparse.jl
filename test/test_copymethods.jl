@@ -21,7 +21,14 @@ function test(T)
     t2 = @elapsed copy(Xext)
     @test (t1 / t0 < 10 && t0 / t2 < 10)
 end
+
+
+for _flexsize in [true,false]
+    @info "flexsize=$_flexsize"
+    ExtendableSparse.flexsize!(_flexsize)
+
 test(Float64)
 test(Float64x2)
 test(Dual64)
+end
 end

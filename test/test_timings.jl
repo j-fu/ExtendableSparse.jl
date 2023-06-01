@@ -32,16 +32,20 @@ So we nevertheless count this as passing.
     true
 end
 
-@test test(Float64, 1000, 1, 1)
-@test test(Float64, 100, 100, 1)
-@test test(Float64, 20, 20, 20)
-
-@test test(Float64x2, 1000, 1, 1)
-@test test(Float64x2, 100, 100, 1)
-@test test(Float64x2, 20, 20, 20)
-
-@test test(Dual64, 1000, 1, 1)
-@test test(Dual64, 100, 100, 1)
-@test test(Dual64, 20, 20, 20)
+for _flexsize in [true,false]
+    @info "flexsize=$_flexsize"
+    ExtendableSparse.flexsize!(_flexsize)
+    @test test(Float64, 1000, 1, 1)
+    @test test(Float64, 100, 100, 1)
+    @test test(Float64, 20, 20, 20)
+    
+    @test test(Float64x2, 1000, 1, 1)
+    @test test(Float64x2, 100, 100, 1)
+    @test test(Float64x2, 20, 20, 20)
+    
+    @test test(Dual64, 1000, 1, 1)
+    @test test(Dual64, 100, 100, 1)
+    @test test(Dual64, 20, 20, 20)
+end
 
 end

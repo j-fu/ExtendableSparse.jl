@@ -46,11 +46,15 @@ end
 @test test(m = 100, n = 200, xnnz = 500, nsplice = 2)
 @test test(m = 1000, n = 2000, xnnz = 5000, nsplice = 3)
 
-for irun = 1:10
-    m = rand((1:10000))
-    n = rand((1:10000))
-    nnz = rand((1:10000))
-    nsplice = rand((1:5))
-    @test test(m = m, n = n, xnnz = nnz, nsplice = nsplice)
+for _flexsize in [true,false]
+    @info "flexsize=$_flexsize"
+    ExtendableSparse.flexsize!(_flexsize)
+    for irun = 1:10
+        m = rand((1:10000))
+        n = rand((1:10000))
+        nnz = rand((1:10000))
+        nsplice = rand((1:5))
+        @test test(m = m, n = n, xnnz = nnz, nsplice = nsplice)
+    end
 end
 end
