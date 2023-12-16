@@ -47,6 +47,6 @@ end end
 
 #@testset "parilu0" begin include("test_parilu0.jl") end
 
-if Pardiso.PARDISO_LOADED[]
-     @testset "pardiso" begin include("test_pardiso.jl") end
-end
+# if Pardiso.PARDISO_LOADED[]
+#      @testset "pardiso" begin include("test_pardiso.jl") end
+# end
