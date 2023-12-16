@@ -14,3 +14,4 @@ Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 
 [compat]
 IterativeSolvers = "0.9"
+Documenter = "1.0"
