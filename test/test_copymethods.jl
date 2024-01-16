@@ -21,10 +21,11 @@ function test(T)
     t2 = @elapsed copy(Xext)
 
     if !(t1 / t0 < 10 && t0 / t2 < 10)
-        @warn """timing test failed for $T $k x $l x $m.
+        @warn """timing test failed.
 If this occurs just once ot twice, it is probably due to CPU noise.
 So we nevertheless count this as passing.
 """
+    end
     true    
 end
 test(Float64)
