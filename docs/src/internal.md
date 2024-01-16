@@ -13,3 +13,9 @@ Pages = ["sparsematrixlnk.jl"]
 Modules = [ExtendableSparse]
 Pages = ["sparsematrixcsc.jl"]
 ```
+
+## Misc methods
+
+```@docs
+ExtendableSparse.@makefrommatrix :: Tuple{Any}
+```

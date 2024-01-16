@@ -1,4 +1,11 @@
 # Changes
+## v1.3, Jan 16, 2024
+- AMGCLWrap extension, renamed AMGPreconditioner to RS_AMGPreconditioner
+- muted Pardiso
+
+## v1.2, August 5, 2023
+- Introduced 1.9 extensions for Pardiso, AlgebraicMultigrid, IncompleteLU
+
 ## v1.1, May 3, 2023
   - AbstractFactorization and subtypes are now without element and index type information.
     They wrap more concretely typed info. This shall allow to construct a preconditioner

@@ -75,7 +75,7 @@ lu!(factorization, matrix)
 Update LU factorization, possibly reusing information from the current state.
 This method is aware of pattern changes.
 
-If `nothing` is passed as first parameter, [`factorize`](@ref) is called.
+If `nothing` is passed as first parameter, [`factorize!`](@ref) is called.
 """
 function LinearAlgebra.lu!(lufact::AbstractFactorization, A::ExtendableSparseMatrix)
     factorize!(lufact, A)

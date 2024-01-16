@@ -4,3 +4,8 @@ Markdown.parse("""
 $(read("../../README.md",String))
 """)
 ````
+
+
+## Index
+```@index
+```

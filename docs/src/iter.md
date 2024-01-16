@@ -7,7 +7,10 @@ This functionality probably will be reduced in favor of LinearSolve.jl.
 In this package, preconditioners and LU factorizations are both seen
 as complete or approximate _factorizations_. Correspondingly we provide a common  API for them.
 
+```docs
 
+```
+ExtendableSparse.AbstractLUFactorization
 ```@autodocs
 Modules = [ExtendableSparse]
 Pages = ["factorizations.jl"]
@@ -28,11 +31,10 @@ The support comes in two flavors.
 
 ```@example
 using ExtendableSparse, LinearAlgebra
-using Pardiso
 A = fdrand(20, 20, 1; matrixtype = ExtendableSparseMatrix)
 n = size(A, 1)
 b = rand(n)
-factorization = MKLPardisoLU()
+factorization = SparspakLU()
 factorize!(factorization, A)
 nm1 = norm(factorization \ b)
 
@@ -71,6 +73,13 @@ Available by default:
 Modules = [ExtendableSparse]
 Pages = ["umfpack_lu.jl",  "sparspak.jl"]
 ```
+
+```@docs
+ExtendableSparse.AbstractLUFactorization
+ExtendableSparse.CholeskyFactorization
+Base.:\
+```
+
 
 Pardiso extension:
 ```@docs
@@ -131,6 +140,10 @@ nm1, nm2
 
 #### Recommended 
 Available by default:
+
+```@docs
+ExtendableSparse.AbstractPreconditioner
+```
 ```@autodocs
 Modules = [ExtendableSparse]
 Pages = ["iluzero.jl","ilut.jl","amg.jl","blockpreconditioner.jl"]
@@ -139,7 +152,11 @@ Pages = ["iluzero.jl","ilut.jl","amg.jl","blockpreconditioner.jl"]
 Extensions:
 ```@docs
 ILUTPreconditioner
-AMGPreconditioner
+ExtendableSparse.AMGCL_AMGPreconditioner
+ExtendableSparse.AMGCL_RLXPreconditioner
+ExtendableSparse.RS_AMGPreconditioner
+ExtendableSparse.SA_AMGPreconditioner
+ExtendableSparse.AMGPreconditioner
 ```
 
 
@@ -149,3 +166,7 @@ Modules = [ExtendableSparse]
 Pages = ["jacobi.jl","parallel_jacobi.jl","ilu0.jl",]
 ```
 
+### Iteration schemes
+```@docs
+ExtendableSparse.simple!
+```

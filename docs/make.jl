@@ -1,11 +1,10 @@
 push!(LOAD_PATH, "../src/")
-using Documenter, ExtendableSparse, Pardiso, AlgebraicMultigrid, IncompleteLU, Sparspak
+using Documenter, ExtendableSparse, AlgebraicMultigrid, IncompleteLU, Sparspak, LinearAlgebra
 
 function mkdocs()
     makedocs(; sitename = "ExtendableSparse.jl",
              modules = [ExtendableSparse],
-             doctest = true,
-             warnonly = true, 
+             doctest = false,
              clean = false,
              authors = "J. Fuhrmann",
              repo = "https://github.com/j-fu/ExtendableSparse.jl",
