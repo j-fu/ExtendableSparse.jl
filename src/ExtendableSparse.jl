@@ -61,6 +61,9 @@ export sprand!, sprand_sdd!, fdrand, fdrand!, fdrand_coo, solverbenchmark
         @require AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c" begin
             include("../ext/ExtendableSparseAlgebraicMultigridExt.jl")
         end
+        @require AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288" begin
+            include("../ext/ExtendableSparseAMGCLWrapExt.jl")
+        end
     end
 end
 
@@ -84,9 +87,70 @@ AMGPreconditioner(matrix;max_levels=10, max_coarse=10)
 ```
 
 Create the  [`AMGPreconditioner`](@ref) wrapping the Ruge-Stüben AMG preconditioner from [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl)
+
+!!! warning
+   Deprecated in favor of [`RS_AMGPreconditioner`](@ref)
+
 """
-function AMGPreconditioner end
+function AMGPreconditioner end 
 export AMGPreconditioner
+
+@deprecate AMGPreconditioner() RS_AMGPreconditioner()
+@deprecate AMGPreconditioner(A) RS_AMGPreconditioner(A)
+
+"""
+```
+RS_AMGPreconditioner(;kwargs...)
+RS_AMGPreconditioner(matrix;kwargs...)
+```
+
+Create the  [`RS_AMGPreconditioner`](@ref) wrapping the Ruge-Stüben AMG preconditioner from [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl)
+For `kwargs` see there.
+"""
+function RS_AMGPreconditioner end 
+export RS_AMGPreconditioner
+
+
+"""
+```
+SA_AMGPreconditioner(;kwargs...)
+SA_AMGPreconditioner(matrix;kwargs...)
+```
+
+Create the  [`SA_AMGPreconditioner`](@ref) wrapping the smoothed aggregation AMG preconditioner from [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl)
+For `kwargs` see there.
+"""
+function SA_AMGPreconditioner end 
+export SA_AMGPreconditioner
+
+
+
+
+"""
+```
+AMGCL_AMGPreconditioner(;kwargs...)
+AMGCL_AMGPreconditioner(matrix;kwargs...)
+```
+
+Create the  [`AMGCL_AMGPreconditioner`](@ref) wrapping AMG preconditioner from [AMGCLWrap.jl](https://github.com/j-fu/AMGCLWrap.jl)
+For `kwargs` see there.
+"""
+function AMGCL_AMGPreconditioner end
+export AMGCL_AMGPreconditioner
+
+
+"""
+```
+AMGCL_RLXPreconditioner(;kwargs...)
+AMGCL_RLXPreconditioner(matrix;kwargs...)
+```
+
+Create the  [`AMGCL_RLXPreconditioner`](@ref) wrapping RLX preconditioner from [AMGCLWrap.jl](https://github.com/j-fu/AMGCLWrap.jl)
+"""
+function AMGCL_RLXPreconditioner end
+export AMGCL_RLXPreconditioner
+
+
 
 
 """

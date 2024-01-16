@@ -8,20 +8,22 @@ import ExtendableSparse: @makefrommatrix, update!, AbstractLUFactorization
 
 abstract type AbstractPardisoLU <: AbstractLUFactorization end
 
-mutable struct PardisoLU <: AbstractPardisoLU
-    A::Union{ExtendableSparseMatrix, Nothing}
-    ps::Pardiso.PardisoSolver
-    phash::UInt64
-    iparm::Union{Vector{Int},Nothing}
-    dparm::Union{Vector{Float64},Nothing}
-    mtype::Union{Int,Nothing}
+if Pardiso.PARDISO_LOADED[]
+    mutable struct PardisoLU <: AbstractPardisoLU
+        A::Union{ExtendableSparseMatrix, Nothing}
+        ps::Pardiso.PardisoSolver
+        phash::UInt64
+        iparm::Union{Vector{Int},Nothing}
+        dparm::Union{Vector{Float64},Nothing}
+        mtype::Union{Int,Nothing}
+    end
+    
+    function ExtendableSparse.PardisoLU(; iparm = nothing, dparm = nothing,mtype = nothing)
+        fact = PardisoLU(nothing, Pardiso.PardisoSolver(), 0,iparm,dparm,mtype)
+    end
+
 end
-
-function ExtendableSparse.PardisoLU(; iparm = nothing, dparm = nothing,mtype = nothing)
-    fact = PardisoLU(nothing, Pardiso.PardisoSolver(), 0,iparm,dparm,mtype)
-end
-
-
+    
 #############################################################################################
 mutable struct MKLPardisoLU <: AbstractPardisoLU
     A::Union{ExtendableSparseMatrix, Nothing}
