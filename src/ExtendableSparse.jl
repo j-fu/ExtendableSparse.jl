@@ -84,9 +84,44 @@ AMGPreconditioner(matrix;max_levels=10, max_coarse=10)
 ```
 
 Create the  [`AMGPreconditioner`](@ref) wrapping the Ruge-Stüben AMG preconditioner from [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl)
+
+!!! warning
+   Deprecated in favor of [`RS_AMGPreconditioner`](@ref)
+
 """
-function AMGPreconditioner end
+function AMGPreconditioner end 
 export AMGPreconditioner
+
+@deprecate AMGPreconditioner() RS_AMGPreconditioner()
+@deprecate AMGPreconditioner(A) RS_AMGPreconditioner(A)
+
+"""
+```
+RS_AMGPreconditioner(;kwargs...)
+RS_AMGPreconditioner(matrix;kwargs...)
+```
+
+Create the  [`RS_AMGPreconditioner`](@ref) wrapping the Ruge-Stüben AMG preconditioner from [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl)
+For `kwargs` see there.
+"""
+function RS_AMGPreconditioner end 
+export RS_AMGPreconditioner
+
+
+"""
+```
+SA_AMGPreconditioner(;kwargs...)
+SA_AMGPreconditioner(matrix;kwargs...)
+```
+
+Create the  [`SA_AMGPreconditioner`](@ref) wrapping the smoothed aggregation AMG preconditioner from [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl)
+For `kwargs` see there.
+"""
+function SA_AMGPreconditioner end 
+export SA_AMGPreconditioner
+
+
+
 
 """
 ```
@@ -95,6 +130,7 @@ AMGCL_AMGPreconditioner(matrix;kwargs...)
 ```
 
 Create the  [`AMGCL_AMGPreconditioner`](@ref) wrapping AMG preconditioner from [AMGCLWrap.jl](https://github.com/j-fu/AMGCLWrap.jl)
+For `kwargs` see there.
 """
 function AMGCL_AMGPreconditioner end
 export AMGCL_AMGPreconditioner

@@ -37,7 +37,8 @@ end
 @test all(test_precon(JacobiPreconditioner, 20, 20, 20) .≤ (true, 3e-4))
 @test all(test_precon(ParallelJacobiPreconditioner, 20, 20, 20) .≤ (true, 3e-4))
 @test all(test_precon(ILUTPreconditioner, 20, 20, 20) .≤ (true, 5e-5))
-@test all(test_precon(AMGPreconditioner, 20, 20, 20) .≤ (true, 1e-5))
+@test all(test_precon(RS_AMGPreconditioner, 20, 20, 20) .≤ (true, 1e-5))
+@test all(test_precon(SA_AMGPreconditioner, 20, 20, 20) .≤ (true, 1e-5))
 @test all(test_precon(AMGCL_AMGPreconditioner, 20, 20, 20) .≤ (true, 1e-5))
 @test all(test_precon(AMGCL_RLXPreconditioner, 20, 20, 20) .≤ (true, 4e-5))
 
@@ -56,7 +57,8 @@ end
 @test all(test_precon2(JacobiPreconditioner(), 20, 20, 20) .≤ (true, 3e-4))
 @test all(test_precon2(ParallelJacobiPreconditioner(), 20, 20, 20) .≤ (true, 3e-4))
 @test all(test_precon2(ILUTPreconditioner(), 20, 20, 20) .≤ (true, 5e-5))
-@test all(test_precon2(AMGPreconditioner(), 20, 20, 20) .≤ (true, 1e-5))
+@test all(test_precon2(RS_AMGPreconditioner(), 20, 20, 20) .≤ (true, 1e-5))
+@test all(test_precon2(SA_AMGPreconditioner(), 20, 20, 20) .≤ (true, 1e-5))
 @test all(test_precon2(AMGCL_AMGPreconditioner(), 20, 20, 20) .≤ (true, 1e-5))
 @test all(test_precon2(AMGCL_RLXPreconditioner(), 20, 20, 20) .≤ (true, 4e-5))
 
