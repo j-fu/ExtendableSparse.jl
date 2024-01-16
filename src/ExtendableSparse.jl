@@ -88,6 +88,31 @@ Create the  [`AMGPreconditioner`](@ref) wrapping the Ruge-Stüben AMG preconditi
 function AMGPreconditioner end
 export AMGPreconditioner
 
+"""
+```
+AMGCL_AMGPreconditioner(;kwargs...)
+AMGCL_AMGPreconditioner(matrix;kwargs...)
+```
+
+Create the  [`AMGCL_AMGPreconditioner`](@ref) wrapping AMG preconditioner from [AMGCLWrap.jl](https://github.com/j-fu/AMGCLWrap.jl)
+"""
+function AMGCL_AMGPreconditioner end
+export AMGCL_AMGPreconditioner
+
+
+"""
+```
+AMGCL_RLXPreconditioner(;kwargs...)
+AMGCL_RLXPreconditioner(matrix;kwargs...)
+```
+
+Create the  [`AMGCL_RLXPreconditioner`](@ref) wrapping RLX preconditioner from [AMGCLWrap.jl](https://github.com/j-fu/AMGCLWrap.jl)
+"""
+function AMGCL_RLXPreconditioner end
+export AMGCL_RLXPreconditioner
+
+
+
 
 """
 ```

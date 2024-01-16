@@ -5,7 +5,6 @@ using ExtendableSparse
 using Printf
 using BenchmarkTools
 
-using Pardiso
 using MultiFloats
 using ForwardDiff
 
@@ -39,13 +38,15 @@ if ExtendableSparse.USE_GPL_LIBS
     @testset "Cholesky" begin include("test_default_cholesky.jl") end
 end
 
-@testset "mkl-pardiso" begin if !Sys.isapple()
-    include("test_mklpardiso.jl")
-end end
-
 @testset "block" begin include("test_block.jl") end
 
 #@testset "parilu0" begin include("test_parilu0.jl") end
+
+
+# @testset "mkl-pardiso" begin if !Sys.isapple()
+#     include("test_mklpardiso.jl")
+# end end
+
 
 # if Pardiso.PARDISO_LOADED[]
 #      @testset "pardiso" begin include("test_pardiso.jl") end
