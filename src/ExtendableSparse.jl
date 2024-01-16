@@ -61,6 +61,9 @@ export sprand!, sprand_sdd!, fdrand, fdrand!, fdrand_coo, solverbenchmark
         @require AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c" begin
             include("../ext/ExtendableSparseAlgebraicMultigridExt.jl")
         end
+        @require AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288" begin
+            include("../ext/ExtendableSparseAMGCLWrapExt.jl")
+        end
     end
 end
 
