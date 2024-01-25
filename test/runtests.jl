@@ -24,6 +24,8 @@ using ForwardDiff
 
 @testset "Backslash" begin include("test_backslash.jl") end
 
+@testset "Dirichlet" begin include("test_dirichlet.jl") end
+
 @testset "LinearSolve" begin include("test_linearsolve.jl") end
 
 @testset "Preconditioners" begin include("test_preconditioners.jl") end

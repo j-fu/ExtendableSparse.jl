@@ -596,3 +596,20 @@ function pointblock(A0::ExtendableSparseMatrix{Tv,Ti},blocksize) where {Tv,Ti}
     flush!(Ab)
 end
 
+
+function mark_dirichlet(A::ExtendableSparseMatrix;penalty=1.0e20)
+    flush!(A)
+    mark_dirichlet(A.cscmatrix;penalty)
+end
+
+function eliminate_dirichlet(A::ExtendableSparseMatrix,dirichlet)
+    flush!(A)
+    ExtendableSparseMatrix(eliminate_dirichlet(A.cscmatrix,dirichlet))
+end
+
+function eliminate_dirichlet!(A::ExtendableSparseMatrix,dirichlet)
+    flush!(A)
+    eliminate_dirichlet!(A.cscmatrix,dirichlet)
+    A
+end
+

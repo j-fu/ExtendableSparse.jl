@@ -28,6 +28,8 @@ include("matrix/extendable.jl")
 export SparseMatrixLNK,
        ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse
 
+export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
+
 include("factorizations/factorizations.jl")
 
 export JacobiPreconditioner,

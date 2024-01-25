@@ -88,3 +88,73 @@ end
 function pointblock(A::SparseMatrixCSC,blocksize)
     SparseMatrixCSC(pointblock(ExtendableSparseMatrix(A),blocksize))
 end
+
+"""
+   mark_dirichlet(A; penalty=1.0e20)
+
+Return boolean vector marking Dirichlet nodes, known by `A[i,i]>=penalty`
+"""
+function mark_dirichlet(A::SparseMatrixCSC; penalty=1.0e20)
+    (;colptr,rowval,nzval,n)=A
+    dirichlet=zeros(Bool,n)
+    for i=1:n
+        for j=colptr[i]:colptr[i+1]-1
+            if rowval[j]==i && nzval[j]>=penalty
+                dirichlet[i]=true
+            end
+        end
+    end
+    dirichlet
+end
+
+"""
+    eliminate_dirichlet!(A,dirichlet_marker)
+
+Eliminate dirichlet nodes in matrix by setting 
+```julia
+    A[:,i]=0; A[i,:]=0; A[i,i]=1
+```
+for a node `i` marked as Dirichlet.
+
+Returns A.
+"""
+function eliminate_dirichlet!(A::SparseMatrixCSC,dirichlet)
+    (;colptr,rowval,nzval,n)=A
+    for i=1:n
+        # set off-diagonal column indiced to zero
+        if !iszero(dirichlet[i])
+            for j=colptr[i]:colptr[i+1]-1
+                if rowval[j]==i
+                    nzval[j]=1
+                else
+                    nzval[j]=0
+                end
+            end
+        end
+        # set off-diagonal row indices to zero
+        for j=colptr[i]:colptr[i+1]-1
+            if rowval[j]!=i && !iszero(dirichlet[rowval[j]])
+                nzval[j]=0
+            end
+        end
+    end
+    A
+end
+
+"""
+    eliminate_dirichlet(A,dirichlet_marker)
+
+Create a copy B of A sharing the sparsity pattern.
+Eliminate dirichlet nodes in B by setting 
+```julia
+    B[:,i]=0; B[i,:]=0; B[i,i]=1
+```
+for a node `i` marked as Dirichlet.
+
+Returns B.
+"""
+function eliminate_dirichlet(A::SparseMatrixCSC,dirichlet)
+    (;m,n,colptr,rowval,nzval)=A
+    B=SparseMatrixCSC(m,n,colptr,rowval,copy(nzval))
+    eliminate_dirichlet!(B,dirichlet)
+end
