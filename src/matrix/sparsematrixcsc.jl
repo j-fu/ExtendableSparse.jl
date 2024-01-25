@@ -95,7 +95,10 @@ end
 Return boolean vector marking Dirichlet nodes, known by `A[i,i]>=penalty`
 """
 function mark_dirichlet(A::SparseMatrixCSC; penalty=1.0e20)
-    (;colptr,rowval,nzval,n)=A
+    colptr=A.colptr
+    rowval=A.rowval
+    nzval=A.nzval
+    n=A.n
     dirichlet=zeros(Bool,n)
     for i=1:n
         for j=colptr[i]:colptr[i+1]-1
@@ -119,7 +122,10 @@ for a node `i` marked as Dirichlet.
 Returns A.
 """
 function eliminate_dirichlet!(A::SparseMatrixCSC,dirichlet)
-    (;colptr,rowval,nzval,n)=A
+    colptr=A.colptr
+    rowval=A.rowval
+    nzval=A.nzval
+    n=A.n
     for i=1:n
         # set off-diagonal column indiced to zero
         if !iszero(dirichlet[i])
@@ -154,7 +160,6 @@ for a node `i` marked as Dirichlet.
 Returns B.
 """
 function eliminate_dirichlet(A::SparseMatrixCSC,dirichlet)
-    (;m,n,colptr,rowval,nzval)=A
-    B=SparseMatrixCSC(m,n,colptr,rowval,copy(nzval))
+    B=SparseMatrixCSC(A.m,A.n,A.colptr,A.rowval,copy(A.nzval))
     eliminate_dirichlet!(B,dirichlet)
 end
