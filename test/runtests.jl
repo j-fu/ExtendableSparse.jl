@@ -4,9 +4,15 @@ using SparseArrays
 using ExtendableSparse
 using Printf
 using BenchmarkTools
-
 using MultiFloats
 using ForwardDiff
+using Random
+
+
+function Random.rand(rng::AbstractRNG,
+                     ::Random.SamplerType{ForwardDiff.Dual{T, V, N}}) where {T, V, N}
+    ForwardDiff.Dual{T, V, N}(rand(rng, T))
+end
 
 @testset "Constructors" begin include("test_constructors.jl") end
 
@@ -44,12 +50,13 @@ end
 
 #@testset "parilu0" begin include("test_parilu0.jl") end
 
+#=
+if !Sys.isapple()
+    using Pardiso
+    @testset "mkl-pardiso" begin   include("test_mklpardiso.jl") end
 
-# @testset "mkl-pardiso" begin if !Sys.isapple()
-#     include("test_mklpardiso.jl")
-# end end
-
-
-# if Pardiso.PARDISO_LOADED[]
-#      @testset "pardiso" begin include("test_pardiso.jl") end
-# end
+    if Pardiso.PARDISO_LOADED[]
+     @testset "pardiso" begin include("test_pardiso.jl") end
+    end
+end
+=#

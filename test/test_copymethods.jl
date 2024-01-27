@@ -7,10 +7,6 @@ using MultiFloats
 using ForwardDiff
 
 const Dual64 = ForwardDiff.Dual{Float64, Float64, 1}
-function Random.rand(rng::AbstractRNG,
-                     ::Random.SamplerType{ForwardDiff.Dual{T, V, N}}) where {T, V, N}
-    ForwardDiff.Dual{T, V, N}(rand(rng, T))
-end
 
 function test(T)
     Xcsc = sprand(T, 10_000, 10_000, 0.01)
