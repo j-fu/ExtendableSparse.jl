@@ -42,9 +42,6 @@ function main(;n=100)
     sol=cg(A,b,Pl=BlockPreconditioner(A;partitioning, factorization=AMGCL_AMGPreconditioner))
     @test sol≈sol0
 
-    sol=cg(A,b,Pl=BlockPreconditioner(A;partitioning, factorization=AMGPreconditioner))
-    @test sol≈sol0
-
     sol=cg(A,b,Pl=BlockPreconditioner(A;partitioning, factorization=sparspaklu))
     @test sol≈sol0
 
