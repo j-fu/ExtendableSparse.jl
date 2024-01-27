@@ -5,7 +5,7 @@ using ILUZero, AlgebraicMultigrid
 using IterativeSolvers
 using LinearAlgebra
 using Sparspak
-
+using AMGCLWrap
 
 ExtendableSparse.allow_views(::typeof(ilu0))=true
 
@@ -35,6 +35,12 @@ function main(;n=100)
     sol=cg(A,b,Pl=BlockPreconditioner(A;partitioning, factorization=JacobiPreconditioner))
     @test sol≈sol0
 
+
+    sol=cg(A,b,Pl=BlockPreconditioner(A;partitioning, factorization=RS_AMGPreconditioner))
+    @test sol≈sol0
+
+    sol=cg(A,b,Pl=BlockPreconditioner(A;partitioning, factorization=AMGCL_AMGPreconditioner))
+    @test sol≈sol0
 
     sol=cg(A,b,Pl=BlockPreconditioner(A;partitioning, factorization=AMGPreconditioner))
     @test sol≈sol0

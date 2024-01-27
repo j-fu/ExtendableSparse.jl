@@ -4,6 +4,7 @@ using SparseArrays
 using ExtendableSparse
 using Printf
 using BenchmarkTools
+using Pardiso
 
 using MultiFloats
 using ForwardDiff
@@ -44,12 +45,10 @@ end
 
 #@testset "parilu0" begin include("test_parilu0.jl") end
 
+if !Sys.isapple()
+    @testset "mkl-pardiso" begin   include("test_mklpardiso.jl") end
+end
 
-# @testset "mkl-pardiso" begin if !Sys.isapple()
-#     include("test_mklpardiso.jl")
-# end end
-
-
-# if Pardiso.PARDISO_LOADED[]
-#      @testset "pardiso" begin include("test_pardiso.jl") end
-# end
+if Pardiso.PARDISO_LOADED[]
+     @testset "pardiso" begin include("test_pardiso.jl") end
+end
