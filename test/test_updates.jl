@@ -24,7 +24,11 @@ function test(T)
     @test nnz(A) == 3
 end
 
-test(Float64)
-test(Float64x2)
-test(Dual64)
+for _flexsize in [true,false]
+    @info "flexsize=$_flexsize"
+    ExtendableSparse.flexsize!(_flexsize)
+    test(Float64)
+    test(Float64x2)
+    test(Dual64)
+end
 end

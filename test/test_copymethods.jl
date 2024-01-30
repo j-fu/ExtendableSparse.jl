@@ -28,7 +28,14 @@ So we nevertheless count this as passing.
     end
     true    
 end
+
+
+for _flexsize in [true,false]
+    @info "flexsize=$_flexsize"
+    ExtendableSparse.flexsize!(_flexsize)
+
 test(Float64)
 test(Float64x2)
 test(Dual64)
+end
 end

@@ -63,5 +63,9 @@ function test()
         @test test_transient_construction(m = m, n = n, d = d)
     end
 end
-test()
+for _flexsize in [true,false]
+    @info "flexsize=$_flexsize"
+    ExtendableSparse.flexsize!(_flexsize)
+    test()
+end
 end

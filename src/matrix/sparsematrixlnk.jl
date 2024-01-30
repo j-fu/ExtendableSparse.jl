@@ -1,5 +1,15 @@
 
 """
+    $(TYPEDEF)
+Trivial dictionary for fixed size, single threaded case.
+"""
+struct TrivialDict{Ti} end
+Base.getindex(::TrivialDict,i)=i
+Base.haskey(::TrivialDict,k)=true
+Base.setindex!(::TrivialDict,v,i)=nothing
+Base.copy(::TrivialDict{Ti}) where Ti=TrivialDict{Ti}()
+
+"""
 $(TYPEDEF)
 
 Struct to hold sparse matrix in the linked list format.
@@ -15,6 +25,7 @@ is also available in the debian/science gitlab.
 The advantage of the linked list structure is the fact that upon insertion
 of a new entry, the arrays describing the structure can grow at their respective ends and
 can be conveniently updated via `push!`.  No copying of existing data is necessary.
+
 
 $(TYPEDFIELDS)
 """
@@ -35,10 +46,15 @@ mutable struct SparseMatrixLNK{Tv, Ti <: Integer} <: AbstractSparseMatrix{Tv, Ti
     nnz::Ti
 
     """
-    Length of arrays
+    Number of entry storage locations
     """
-    nentries::Ti
+    nstored::Ti
 
+    """
+    coldict[n] points to the index in colptr where column n starts.
+    """
+    coldict::Union{Dict{Ti,Ti},TrivialDict{Ti}}
+    
     """
     Linked list of column entries. Initial length is n,
     it grows with each new entry.
@@ -67,13 +83,23 @@ mutable struct SparseMatrixLNK{Tv, Ti <: Integer} <: AbstractSparseMatrix{Tv, Ti
     nzval::Vector{Tv}
 end
 
+
+global _flexsize=false
+
+flexsize!(b::Bool)=  global _flexsize=b
+
 """
 $(SIGNATURES)
     
 Constructor of empty matrix.
 """
 function SparseMatrixLNK{Tv, Ti}(m, n) where {Tv, Ti <: Integer}
-    SparseMatrixLNK{Tv, Ti}(m, n, 0, n, zeros(Ti, n), zeros(Ti, n), zeros(Tv, n))
+    global _flexsize
+    if _flexsize
+        SparseMatrixLNK{Tv, Ti}(m, n, 0, 0, Dict{Ti,Ti}(), zeros(Ti, 0), zeros(Ti, 0), zeros(Tv, 0))
+    else
+        SparseMatrixLNK{Tv, Ti}(m, n, 0, n, TrivialDict{Ti}(), zeros(Ti, n), zeros(Ti,n), zeros(Tv, n))
+    end
 end
 
 """
@@ -122,16 +148,20 @@ function findindex(lnk::SparseMatrixLNK, i, j)
         throw(BoundsError(lnk, (i, j)))
     end
 
-    k = j
-    k0 = j
-    while k > 0
-        if lnk.rowval[k] == i
-            return k, 0
-        end
+    if haskey(lnk.coldict,j)
+        k = lnk.coldict[j]
         k0 = k
-        k = lnk.colptr[k]
+        while k > 0
+            if lnk.rowval[k] == i
+                return k, 0
+            end
+            k0 = k
+            k = lnk.colptr[k]
+        end
+        return 0, k0
+    else
+        return 0,0
     end
-    return 0, k0
 end
 
 """
@@ -148,26 +178,54 @@ function Base.getindex(lnk::SparseMatrixLNK{Tv, Ti}, i, j) where {Tv, Ti}
     end
 end
 
-function addentry!(lnk::SparseMatrixLNK, i, j, k, k0)
-    # increase number of entries
-    lnk.nentries += 1
-    if length(lnk.nzval) < lnk.nentries
-        newsize = Int(ceil(5.0 * lnk.nentries / 4.0))
+function increase_storage!(lnk::SparseMatrixLNK)
+    lnk.nstored+=1
+    if length(lnk.nzval) < lnk.nstored
+        newsize = Int(ceil(5.0 * lnk.nstored / 4.0))
         resize!(lnk.nzval, newsize)
         resize!(lnk.rowval, newsize)
         resize!(lnk.colptr, newsize)
     end
+end
+
+
+function addentry!(lnk::SparseMatrixLNK, coldict::TrivialDict, i, j, k0)
+    # increase number of entries
+    lnk.nnz += 1
+    # Append entry if not found
+    if lnk.rowval[j]==0
+        lnk.rowval[j] = i
+        return j
+    else
+        increase_storage!(lnk)
+
+        # Shift the end of the list
+        lnk.rowval[lnk.nstored]=i
+        lnk.colptr[lnk.nstored] = 0
+        lnk.colptr[k0] = lnk.nstored
+        return lnk.nstored
+    end
+end
+
+function addentry!(lnk::SparseMatrixLNK, coldict::Dict, i, j, k0)
+    # increase number of entries
+
+    increase_storage!(lnk)
+
+    lnk.nnz+=1
 
     # Append entry if not found
-    lnk.rowval[lnk.nentries] = i
+    lnk.rowval[lnk.nstored] = i
 
-    # Shift the end of the list
-    lnk.colptr[lnk.nentries] = 0
-    lnk.colptr[k0] = lnk.nentries
-
-    # Update number of nonzero entries
-    lnk.nnz += 1
-    return lnk.nentries
+    if k0==0
+        coldict[j]=lnk.nstored
+        lnk.colptr[lnk.nstored] = 0
+    else
+        # Shift the end of the list
+        lnk.colptr[lnk.nstored] = 0
+        lnk.colptr[k0] = lnk.nstored
+    end
+    return lnk.nstored
 end
 
 """
@@ -179,22 +237,13 @@ function Base.setindex!(lnk::SparseMatrixLNK, v, i, j)
     if !((1 <= i <= lnk.m) & (1 <= j <= lnk.n))
         throw(BoundsError(lnk, (i, j)))
     end
-
-    # Set the first  column entry if it was not yet set.
-    if lnk.rowval[j] == 0 && !iszero(v)
-        lnk.rowval[j] = i
-        lnk.nzval[j] = v
-        lnk.nnz += 1
-        return lnk
-    end
-
     k, k0 = findindex(lnk, i, j)
     if k > 0
         lnk.nzval[k] = v
         return lnk
     end
     if !iszero(v)
-        k = addentry!(lnk, i, j, k, k0)
+        k = addentry!(lnk,lnk.coldict, i, j, k0)
         lnk.nzval[k] = v
     end
     return lnk
@@ -208,20 +257,13 @@ It assumes that `op(0,0)==0`. If `v` is zero, no new
 entry is created.
 """
 function updateindex!(lnk::SparseMatrixLNK{Tv, Ti}, op, v, i, j) where {Tv, Ti}
-    # Set the first  column entry if it was not yet set.
-    if lnk.rowval[j] == 0 && !iszero(v)
-        lnk.rowval[j] = i
-        lnk.nzval[j] = op(lnk.nzval[j], v)
-        lnk.nnz += 1
-        return lnk
-    end
     k, k0 = findindex(lnk, i, j)
     if k > 0
         lnk.nzval[k] = op(lnk.nzval[k], v)
         return lnk
     end
     if !iszero(v)
-        k = addentry!(lnk, i, j, k, k0)
+        k = addentry!(lnk,lnk.coldict, i, j, k0)
         lnk.nzval[k] = op(zero(Tv), v)
     end
     lnk
@@ -235,18 +277,11 @@ It assumes that `op(0,0)==0`. If `v` is zero a new entry
 is created nevertheless.
 """
 function rawupdateindex!(lnk::SparseMatrixLNK{Tv, Ti}, op, v, i, j) where {Tv, Ti}
-    # Set the first  column entry if it was not yet set.
-    if lnk.rowval[j] == 0
-        lnk.rowval[j] = i
-        lnk.nzval[j] = op(lnk.nzval[j], v)
-        lnk.nnz += 1
-        return lnk
-    end
     k, k0 = findindex(lnk, i, j)
     if k > 0
         lnk.nzval[k] = op(lnk.nzval[k], v)
     else
-        k = addentry!(lnk, i, j, k, k0)
+        k = addentry!(lnk,lnk.coldict, i, j, k0)
         lnk.nzval[k] = op(zero(Tv), v)
     end
     lnk
@@ -295,7 +330,10 @@ function Base.:+(lnk::SparseMatrixLNK{Tv, Ti},
                  csc::SparseMatrixCSC)::SparseMatrixCSC where {Tv, Ti <: Integer}
     @assert(csc.m==lnk.m)
     @assert(csc.n==lnk.n)
-
+    if nnz(lnk)==0
+        return copy(csc)
+    end
+    
     # overallocate arrays in order to avoid
     # presumably slower push!
     xnnz = nnz(csc) + nnz(lnk)
@@ -307,12 +345,14 @@ function Base.:+(lnk::SparseMatrixLNK{Tv, Ti},
     lnk_maxcol = 0
     for j = 1:(csc.n)
         lcol = zero(Ti)
-        k = j
-        while k > 0
-            lcol += 1
-            k = lnk.colptr[k]
+        if haskey(lnk.coldict,j)
+            k = lnk.coldict[j]
+            while k > 0
+                lcol += 1
+                k = lnk.colptr[k]
+            end
+            lnk_maxcol = max(lcol, lnk_maxcol)
         end
-        lnk_maxcol = max(lcol, lnk_maxcol)
     end
 
     # pre-allocate column  data
@@ -327,37 +367,38 @@ function Base.:+(lnk::SparseMatrixLNK{Tv, Ti},
     # loop over all columns
     for j = 1:(csc.n)
         # Copy extension entries into col and sort them
-        k = j
         l_lnk_col = 0
-        while k > 0
-            if lnk.rowval[k] > 0
-                l_lnk_col += 1
-                col[l_lnk_col] = ColEntry(lnk.rowval[k], lnk.nzval[k])
+        if haskey(lnk.coldict,j)
+            k = lnk.coldict[j]
+            while k > 0
+                if lnk.rowval[k] > 0
+                    l_lnk_col += 1
+                    col[l_lnk_col] = ColEntry(lnk.rowval[k], lnk.nzval[k])
+                end
+                k = lnk.colptr[k]
             end
-            k = lnk.colptr[k]
+            sort!(col, 1, l_lnk_col, Base.QuickSort, Base.Forward)
         end
-        sort!(col, 1, l_lnk_col, Base.QuickSort, Base.Forward)
-
+        
         # jointly sort lnk and csc entries  into new matrix data
         # this could be replaced in a more transparent manner by joint sorting:
         # make a joint array for csc and lnk col, sort them.
         # Will this be faster? 
-
         colptr[j] = inz
         jlnk = one(Ti) # counts the entries in col
         jcsc = csc.colptr[j]  # counts entries in csc
-
+        
         while true
             if in_csc_col(jcsc, j) &&
-               (in_lnk_col(jlnk, l_lnk_col) && csc.rowval[jcsc] < col[jlnk].rowval ||
-                !in_lnk_col(jlnk, l_lnk_col))
+                (in_lnk_col(jlnk, l_lnk_col) && csc.rowval[jcsc] < col[jlnk].rowval ||
+                 !in_lnk_col(jlnk, l_lnk_col))
                 # Insert entries from csc into new structure
                 rowval[inz] = csc.rowval[jcsc]
                 nzval[inz] = csc.nzval[jcsc]
                 jcsc += 1
                 inz += 1
             elseif in_csc_col(jcsc, j) &&
-                   (in_lnk_col(jlnk, l_lnk_col) && csc.rowval[jcsc] == col[jlnk].rowval)
+                (in_lnk_col(jlnk, l_lnk_col) && csc.rowval[jcsc] == col[jlnk].rowval)
                 # Add up entries from csc and lnk
                 rowval[inz] = csc.rowval[jcsc]
                 nzval[inz] = csc.nzval[jcsc] + col[jlnk].nzval
@@ -403,7 +444,8 @@ function Base.copy(S::SparseMatrixLNK)
     SparseMatrixLNK(size(S, 1),
                     size(S, 2),
                     S.nnz,
-                    S.nentries,
+                    S.nstored,
+                    copy(S.coldict),
                     copy(getcolptr(S)),
                     copy(rowvals(S)),
                     copy(nonzeros(S)))
