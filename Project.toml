@@ -15,6 +15,8 @@ Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Metis = "2679e427-3c69-5b7f-982b-ece356f1e94b"
+ExtendableGrids = "cfc395e8-590f-11e8-1f13-43a2532b2fa8"
 
 [weakdeps]
 AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288"
