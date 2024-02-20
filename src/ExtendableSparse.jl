@@ -30,8 +30,6 @@ export SparseMatrixLNK,
 
 export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
-@info "test"
-
 include("factorizations/factorizations.jl")
 
 export JacobiPreconditioner,
