@@ -16,6 +16,7 @@ if USE_GPL_LIBS
     using SuiteSparse
 end
 
+@info "test2"
 
 using DocStringExtensions
 
