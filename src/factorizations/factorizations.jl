@@ -157,6 +157,7 @@ end
 include("jacobi.jl")
 include("ilu0.jl")
 include("iluzero.jl")
+include("iluam.jl")
 include("parallel_jacobi.jl")
 include("parallel_ilu0.jl")
 include("sparspak.jl")
@@ -165,6 +166,7 @@ include("blockpreconditioner.jl")
 @eval begin
     @makefrommatrix ILU0Preconditioner
     @makefrommatrix ILUZeroPreconditioner
+    @makefrommatrix ILUAMPreconditioner
     @makefrommatrix PointBlockILUZeroPreconditioner
     @makefrommatrix JacobiPreconditioner
     @makefrommatrix ParallelJacobiPreconditioner

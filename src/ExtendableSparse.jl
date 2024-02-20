@@ -39,6 +39,8 @@ include("matrix/ExtendableSparseMatrixParallel/ExtendableSparseParallel.jl")
 export ExtendableSparseMatrixParallel, SuperSparseMatrixLNK
 export addtoentry!, reset!, dummy_assembly!, preparatory_multi_ps_less_reverse, fr, addtoentry!, rawupdateindex!, updateindex!, compare_matrices_light
 
+include("factorizations/ilu_Al-Kurdi_Mittal.jl")
+using .ILUAM
 
 include("factorizations/factorizations.jl")
 
