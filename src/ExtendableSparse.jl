@@ -4,6 +4,10 @@ using LinearAlgebra
 using Sparspak
 using ILUZero
 
+using Metis
+using Base.Threads
+using ExtendableGrids
+
 if  !isdefined(Base, :get_extension)
     using Requires
 end
@@ -15,8 +19,6 @@ const USE_GPL_LIBS = Base.USE_GPL_LIBS
 if USE_GPL_LIBS
     using SuiteSparse
 end
-
-@info "test2"
 
 using DocStringExtensions
 
@@ -30,6 +32,13 @@ export SparseMatrixLNK,
        ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse
 
 export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
+
+
+include("matrix/ExtendableSparseMatrixParallel/ExtendableSparseParallel.jl")
+
+export ExtendableSparseMatrixParallel, SuperSparseMatrixLNK
+export addtoentry!, reset!, dummy_assembly!, preparatory_multi_ps_less_reverse, fr, addtoentry!, rawupdateindex!, updateindex!, compare_matrices_light
+
 
 include("factorizations/factorizations.jl")
 
