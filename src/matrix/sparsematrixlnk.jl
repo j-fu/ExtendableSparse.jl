@@ -278,7 +278,7 @@ end
 
 # Struct holding pair of value and row
 # number, for sorting
-struct ColEntry{Tv, Ti <: Integer}
+mutable struct ColEntry{Tv, Ti <: Integer}
     rowval::Ti
     nzval::Tv
 end
