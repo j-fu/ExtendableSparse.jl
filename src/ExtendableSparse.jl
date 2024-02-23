@@ -28,25 +28,39 @@ include("matrix/sparsematrixcsc.jl")
 include("matrix/sparsematrixlnk.jl")
 include("matrix/extendable.jl")
 
-export SparseMatrixLNK,
-       ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse
+export SparseMatrixLNK, ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse
 
 export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
 
+@warn "ESMP!"
 include("matrix/ExtendableSparseMatrixParallel/ExtendableSparseParallel.jl")
+
+
+include("factorizations/ilu_Al-Kurdi_Mittal.jl")
+#using .ILUAM
+include("factorizations/pilu_Al-Kurdi_Mittal.jl")
+#using .PILUAM
+include("factorizations/factorizations.jl")
+
+include("factorizations/simple_iteration.jl")
+export simple, simple!
+
+include("matrix/sprand.jl")
+export sprand!, sprand_sdd!, fdrand, fdrand!, fdrand_coo, solverbenchmark
+
+
+
 
 export ExtendableSparseMatrixParallel, SuperSparseMatrixLNK
 export addtoentry!, reset!, dummy_assembly!, preparatory_multi_ps_less_reverse, fr, addtoentry!, rawupdateindex!, updateindex!, compare_matrices_light
 
-include("factorizations/ilu_Al-Kurdi_Mittal.jl")
-using .ILUAM
-
-include("factorizations/factorizations.jl")
 
 export JacobiPreconditioner,
     ILU0Preconditioner,
     ILUZeroPreconditioner,
+    ILUAMPreconditioner,
+    PILUAMPreconditioner,
     PointBlockILUZeroPreconditioner,
     ParallelJacobiPreconditioner,
     ParallelILU0Preconditioner,
@@ -56,13 +70,6 @@ export JacobiPreconditioner,
 export AbstractFactorization, LUFactorization, CholeskyFactorization, SparspakLU
 export issolver
 export factorize!, update!
-
-include("factorizations/simple_iteration.jl")
-export simple, simple!
-
-include("matrix/sprand.jl")
-export sprand!, sprand_sdd!, fdrand, fdrand!, fdrand_coo, solverbenchmark
-
 
 @static if  !isdefined(Base, :get_extension)
     function __init__()

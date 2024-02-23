@@ -1,8 +1,8 @@
-mutable struct ILUAMPreconditioner <: AbstractPreconditioner
-    A::ExtendableSparseMatrix
-    factorization::ILUAMPrecon
+mutable struct PILUAMPreconditioner <: AbstractPreconditioner
+    A::ExtendableSparseMatrixParallel
+    factorization::PILUAMPrecon
     phash::UInt64
-    function ILUAMPreconditioner()
+    function PILUAMPreconditioner()
         p = new()
         p.phash = 0
         p
@@ -11,18 +11,18 @@ end
 
 """
 ```
-ILUAMPreconditioner()
-ILUAMPreconditioner(matrix)
+PILUAMPreconditioner()
+PILUAMPreconditioner(matrix)
 ```
 Incomplete LU preconditioner with zero fill-in using ... . This preconditioner
 also calculates and stores updates to the off-diagonal entries and thus delivers better convergence than  the [`ILU0Preconditioner`](@ref).
 """
-function ILUAMPreconditioner end
+function PILUAMPreconditioner end
 
-function update!(p::ILUAMPreconditioner)
+function update!(p::PILUAMPreconditioner)
     flush!(p.A)
     if p.A.phash != p.phash
-        p.factorization = iluAM(p.A.cscmatrix)
+        p.factorization = piluAM(p.A)
         p.phash=p.A.phash
     else
         @warn "fuck?"
@@ -31,6 +31,6 @@ function update!(p::ILUAMPreconditioner)
     p
 end
 
-allow_views(::ILUAMPreconditioner)=true
-allow_views(::Type{ILUAMPreconditioner})=true
+allow_views(::PILUAMPreconditioner)=true
+allow_views(::Type{PILUAMPreconditioner})=true
 

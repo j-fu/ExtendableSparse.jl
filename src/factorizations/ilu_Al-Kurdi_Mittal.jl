@@ -1,34 +1,27 @@
-module ILUAM
-using LinearAlgebra, SparseArrays
+#module ILUAM
+#using LinearAlgebra, SparseArrays
 
 import LinearAlgebra.ldiv!, LinearAlgebra.\, SparseArrays.nnz 
 
+@info "ILUAM"
 
 mutable struct ILUAMPrecon{T,N}
 
 	diag::AbstractVector
     nzval::AbstractVector
-	rowval::AbstractVector
-	colptr::AbstractVector
+	A::AbstractMatrix
 	
 end
 
-function ILUAMPrecon(A::SparseMatrixCSC{T,N}, b_type=T) where {T,N<:Integer}
-    n      = A.n # number of columns
-	nzval  = copy(A.nzval)
-	diag   = Vector{N}(undef, n)
-	
-    ILUAMPrecon{T, N}(diag, copy(A.nzval), copy(A.rowval), copy(A.colptr))
-end
-
-function iluAM!(LU::ILUAMPrecon{T,N}, A::SparseMatrixCSC{T,N}) where {T,N<:Integer}
-    nzval  = LU.nzval
-    diag   = LU.diag
-    
-    colptr = LU.colptr
-	rowval = LU.rowval
-	n      = A.n # number of columns
-	point  = zeros(N, n) #Vector{N}(undef, n)
+function iluAM(A::SparseMatrixCSC{Tv,Ti}) where {Tv, Ti <:Integer}
+	@info "iluAM"
+	nzval = copy(A.nzval)
+	colptr = A.colptr
+	rowval = A.rowval
+	#nzval  = ILU.nzval
+	n = A.n # number of columns
+	point = zeros(Ti, n) #Vector{Ti}(undef, n)
+	diag  = Vector{Ti}(undef, n)
 	
 	# find diagonal entries
 	for j=1:n
@@ -64,25 +57,23 @@ function iluAM!(LU::ILUAMPrecon{T,N}, A::SparseMatrixCSC{T,N}) where {T,N<:Integ
 		
 		
 		for v=colptr[j]:colptr[j+1]-1
-			point[rowval[v]] = zero(N)
+			point[rowval[v]] = zero(Ti)
 		end
 	end
+	#nzval, diag
+	ILUAMPrecon{Tv,Ti}(diag, nzval, A)
 end
 
-function iluAM(A::SparseMatrixCSC{T,N}) where {T,N<:Integer}
-    LU = ILUAMPrecon(A::SparseMatrixCSC{T,N})
-    iluAM!(LU, A)
-    LU
-end
+function forward_subst_old!(y, v, nzval, diag, A)
+	n      = A.n
+	colptr = A.colptr
+	rowval = A.rowval
+	
+	for i in eachindex(y)
+        y[i] = zero(Float64)
+    end
 
-
-function forward_substitution!(y, ilu::ILUAMPrecon{T,N}, v) where {T,N<:Integer}
-	n = ilu.A.n
-	nzval = ilu.nzval
-	colptr = ilu.colptr
-	rowval = ilu.rowval
-	diag = ilu.diag
-	y .= 0
+	#y .= 0
 	@inbounds for j=1:n
 		y[j] += v[j]
 		for v=diag[j]+1:colptr[j+1]-1
@@ -93,44 +84,119 @@ function forward_substitution!(y, ilu::ILUAMPrecon{T,N}, v) where {T,N<:Integer}
 end
 
 
-function backward_substitution!(x, ilu::ILUAMPrecon{T,N}, y) where {T,N<:Integer}
-    n = ilu.A.n
-	nzval = ilu.nzval
-	colptr = ilu.colptr
-	rowval = ilu.rowval
-	diag = ilu.diag
-	wrk = copy(y)
+function backward_subst_old!(x, y, nzval, diag, A)
+	n      = A.n
+	colptr = A.colptr
+	rowval = A.rowval
 	@inbounds for j=n:-1:1
-		x[j] = wrk[j] / nzval[diag[j]]		
+		x[j] = y[j] / nzval[diag[j]] 
+		
 		for i=colptr[j]:diag[j]-1
-			wrk[rowval[i]] -= nzval[i]*x[j]
+			y[rowval[i]] -= nzval[i]*x[j]
 		end
+		
 	end
-    x
+	x
 end
 
-function ldiv!(x, ilu::ILUAMPrecon{T,N}, b) where {T,N<:Integer}
-    y = copy(b)
-    forward_substitution!(y, ilu, b)
-    backward_substitution!(x, ilu, y)
-    x
+function ldiv!(x, ILU::ILUAMPrecon, b)
+	nzval = ILU.nzval
+	diag  = ILU.diag
+	A     = ILU.A
+	y = copy(b)
+	#forward_subst!(y, b, ILU)
+	forward_subst_old!(y, b, nzval, diag, A)
+	backward_subst_old!(x, y, nzval, diag, A)
+	x
 end
 
-function ldiv!(ilu::ILUAMPrecon{T,N}, b) where {T,N<:Integer}
-    y = copy(b)
-    forward_substitution!(y, ilu, b)
-    backward_substitution!(b, ilu, y)
-    b
+function ldiv!(ILU::ILUAMPrecon, b)
+	nzval = ILU.nzval
+	diag  = ILU.diag
+	A     = ILU.A
+	y = copy(b)
+	#forward_subst!(y, b, ILU)
+	forward_subst_old!(y, b, nzval, diag, A)
+	backward_subst_old!(b, y, nzval, diag, A)
+	b
 end
 
 function \(ilu::ILUAMPrecon{T,N}, b) where {T,N<:Integer}
     x = copy(b)
     ldiv!(x, ilu, b)
+	x
 end
 
 function nnz(ilu::ILUAMPrecon{T,N}) where {T,N<:Integer}
     length(ilu.nzval)
 end
 
+#=
+function forward_subst!(y, v, ilu) #::ILUAMPrecon{T,N}) where {T,N<:Integer}
+	@info "fw"
+	n = ilu.A.n
+	nzval  = ilu.nzval
+	diag   = ilu.diag
+	colptr = ilu.A.colptr
+	rowval = ilu.A.rowval
+	
+	for i in eachindex(y)
+        y[i] = zero(Float64)
+    end
 
+	#y .= 0
+	@inbounds for j=1:n
+		y[j] += v[j]
+		for v=diag[j]+1:colptr[j+1]-1
+			y[rowval[v]] -= nzval[v]*y[j]
+		end
+	end
+	y
 end
+
+function backward_subst!(x, y, ilu) #::ILUAMPrecon{T,N}) where {T,N<:Integer}
+    @info "bw"
+	n = ilu.A.n
+	nzval = ilu.nzval
+	diag = ilu.diag
+	colptr = ilu.A.colptr
+	rowval = ilu.A.rowval
+	#wrk = copy(y)
+	@inbounds for j=n:-1:1
+		x[j] = y[j] / nzval[diag[j]] 
+		
+		for i=colptr[j]:diag[j]-1
+			y[rowval[i]] -= nzval[i]*x[j]
+		end
+		
+	end
+	x
+end
+
+function iluam_subst(ILU::ILUAMPrecon, b)
+	y = copy(b)
+	forward_subst!(y, b, ILU)
+	z = copy(b)
+	backward_subst!(z, y, ILU)
+	z
+end
+
+
+
+function iluam_subst_old(ILU::ILUAMPrecon, b)
+	nzval = ILU.nzval
+	diag  = ILU.diag
+	A     = ILU.A
+	y = copy(b)
+	#forward_subst!(y, b, ILU)
+	forward_subst_old!(y, b, nzval, diag, A)
+	z = copy(b)
+	backward_subst_old!(z, y, nzval, diag, A)
+	#backward_subst!(z, y, ILU)
+	z
+end
+=#
+
+
+
+#end
