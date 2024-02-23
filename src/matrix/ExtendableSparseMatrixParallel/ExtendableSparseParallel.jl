@@ -36,6 +36,12 @@ mutable struct ExtendableSparseMatrixParallel{Tv, Ti <: Integer} <: AbstractSpar
     nt::Ti
     
     depth::Ti
+
+    phash::UInt64
+
+    n::Ti
+
+    m::Ti
     
     
 end
@@ -46,7 +52,7 @@ function ExtendableSparseMatrixParallel{Tv, Ti}(nm, nt, depth; x0=0.0, x1=1.0) w
 	grid, nnts, s, onr, cfp, gi, gc, ni, rni, starts, cellparts = preparatory_multi_ps_less_reverse(nm, nt, depth, Ti; x0, x1)
 	csc = spzeros(Tv, Ti, num_nodes(grid), num_nodes(grid))
 	lnk = [SuperSparseMatrixLNK{Tv, Ti}(num_nodes(grid), nnts[tid]) for tid=1:nt]
-	ExtendableSparseMatrixParallel{Tv, Ti}(csc, lnk, grid, nnts, s, onr, cfp, gi, ni, rni, starts, cellparts, nt, depth)
+	ExtendableSparseMatrixParallel{Tv, Ti}(csc, lnk, grid, nnts, s, onr, cfp, gi, ni, rni, starts, cellparts, nt, depth, phash(csc), csc.n, csc.m)
 end
 
 
@@ -251,6 +257,32 @@ function Base.show(io::IO, ::MIME"text/plain", ext::ExtendableSparseMatrixParall
         print(io, ":\n")
         Base.print_array(IOContext(io), ext.cscmatrix)
     end
+end
+
+"""
+`function entryexists2(CSC, i, j)`
+
+Find out if CSC already has an nonzero entry at i,j without any allocations
+"""
+function entryexists2(CSC, i, j) #find out if CSC already has an nonzero entry at i,j
+	#vals = 
+	#ids = CSC.colptr[j]:(CSC.colptr[j+1]-1)
+	i in view(CSC.rowval, CSC.colptr[j]:(CSC.colptr[j+1]-1))
+end
+
+
+function updatentryCSC2!(CSC::SparseArrays.SparseMatrixCSC{Tv, Ti}, i::Integer, j::Integer, v) where {Tv, Ti <: Integer}
+	p1 = CSC.colptr[j]
+	p2 = CSC.colptr[j+1]-1
+
+	searchk = searchsortedfirst(view(CSC.rowval, p1:p2), i) + p1 - 1
+	
+	if (searchk <= p2) && (CSC.rowval[searchk] == i)
+		CSC.nzval[searchk] += v
+		return true
+	else
+		return false
+	end
 end
 
 Base.size(A::ExtendableSparseMatrixParallel) = (A.cscmatrix.m, A.cscmatrix.n)

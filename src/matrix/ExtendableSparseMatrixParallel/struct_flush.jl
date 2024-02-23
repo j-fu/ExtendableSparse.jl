@@ -11,7 +11,7 @@ function flush!(A::ExtendableSparseMatrixParallel; do_dense=false, keep_zeros=tr
 			A.cscmatrix = dense_flush_removezeros!(A.lnkmatrices, A.old_noderegions, A.sortednodesperthread, A.nt, A.rev_new_indices)
 		end
 	end
-	
+	A.phash = phash(A.cscmatrix)
 	A.lnkmatrices = [SuperSparseMatrixLNK{matrixvaluetype(A), matrixindextype(A)}(num_nodes(A.grid), A.nnts[tid]) for tid=1:A.nt]
 
 end
