@@ -22,6 +22,7 @@ function ILUAMPreconditioner end
 function update!(p::ILUAMPreconditioner)
     flush!(p.A)
     if p.A.phash != p.phash
+        @warn "p.A.phash != p.phash"
         p.factorization = iluAM(p.A.cscmatrix)
         p.phash=p.A.phash
     else

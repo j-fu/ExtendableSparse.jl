@@ -6,23 +6,36 @@
 `depth` is the number of partition layers, for depth=1, there are nt parts and 1 separator, for depth=2, the separator is partitioned again, leading to 2*nt+1 submatrices...
 To assemble the system matrix parallely, things such as `cellsforpart` (= which thread takes which cells) need to be computed in advance. This is done here.
 """
-function preparatory_multi_ps_less_reverse(nm, nt, depth, Ti; sequential=false, x0=0.0, x1=1.0)
+function preparatory_multi_ps_less_reverse(nm, nt, depth, Ti; sequential=false, x0=0.0, x1=1.0, minsize_sepa=10, do_print=false, check_partition=false)
 	grid = getgrid(nm; x0, x1)
-	
+	adepth = 0
 	if sequential
-		(allcells, start, cellparts) = grid_to_graph_ps_multi!(grid, nt, depth)#)
+		(allcells, start, cellparts, adepth) = grid_to_graph_ps_multi!(grid, nt, depth; minsize_sepa, do_print)#)
 	else
-		(allcells, start, cellparts) = grid_to_graph_ps_multi_par!(grid, nt, depth)
+		(allcells, start, cellparts, adepth) = grid_to_graph_ps_multi_par!(grid, nt, depth; minsize_sepa, do_print)
 	end
 
+	if (adepth != depth) && do_print
+		@info "The requested depth of partitioning is too high. The depth is set to $adepth."
+	end
+
+	depth = adepth
+	cfp = bettercellsforpart(cellparts, depth*nt+1)
+
+	if check_partition
+		validate_partition(grid, cellparts, start, allcells, nt, depth)
+	end
+
+	@info length.(cfp)
+	@info minimum(cellparts), maximum(cellparts), nt, depth
+
 	(nnts, s, onr, gi, gc, ni, rni, starts) = get_nnnts_and_sortednodesperthread_and_noderegs_from_cellregs_ps_less_reverse_nopush(
-		cellparts, allcells, start, num_nodes(grid), Ti, nt
+		cellparts, allcells, start, num_nodes(grid), Ti, nt, depth
 	)
 	
-	cfp = bettercellsforpart(cellparts, depth*nt+1)
-	return grid, nnts, s, onr, cfp, gi, gc, ni, rni, starts, cellparts
-end
 
+	return grid, nnts, s, onr, cfp, gi, gc, ni, rni, starts, cellparts, adepth
+end
 
 """
 `function get_nnnts_and_sortednodesperthread_and_noderegs_from_cellregs_ps_less_reverse_nopush(cellregs, allcells, start, nn, Ti, nt)`
@@ -35,10 +48,10 @@ Furthermore, `nnts` (number of nodes of the threads) is computed, which contain 
 `Ti` is the type (Int64,...) of the elements in the created arrays.
 `nt` is the number of threads.
 """
-function get_nnnts_and_sortednodesperthread_and_noderegs_from_cellregs_ps_less_reverse_nopush(cellregs, allcells, start, nn, Ti, nt)
+function get_nnnts_and_sortednodesperthread_and_noderegs_from_cellregs_ps_less_reverse_nopush(cellregs, allcells, start, nn, Ti, nt, depth)
 		
-	num_matrices = maximum(cellregs)
-	depth = Int(floor((num_matrices-1)/nt))
+	#num_matrices = maximum(cellregs)
+	#depth = Int(floor((num_matrices-1)/nt))
 
 	#loop over each node, get the cellregion of the cell (the one not in the separator) write the position of that node inside the cellregions sorted ranking into a long vector
 	#nnts = [zeros(Ti, nt+1) for i=1:depth+1]
@@ -62,6 +75,11 @@ function get_nnnts_and_sortednodesperthread_and_noderegs_from_cellregs_ps_less_r
 				nnts[crmod] += 1
 				#sortednodesperthread[crmod,j] = nnts[crmod] #nnts[i][cr]
 				#push!(tmp, crmod)
+				if tmpctr > depth+1
+					@info "Cellregs: ", sortedcellregs
+					@info "Levels  : ", Int.(ceil.(sortedcellregs/nt))
+					@info "PartsMod: ", ((sortedcellregs.-1).%nt).+1
+				end
 				tmp[tmpctr] = crmod
 				tmpctr += 1
 			end
@@ -127,9 +145,6 @@ end
 
 
 
-
-
-
 """
 `function separate!(cellregs, nc, ACSC, nt, level0, ctr_sepanodes)`
 
@@ -141,45 +156,75 @@ This function partitons the separator, which is done if `depth`>1 (see `grid_to_
 `level0` is the separator-partitoning level, if the (first) separator is partitioned, level0 = 1, in the next iteration, level0 = 2...
 `preparatory_multi_ps` is the number of separator-cells.
 """
-function separate!(cellregs, nc, ACSC, nt, level0, ctr_sepanodes)
-	sepanodes = findall(x->x==nt+1, cellregs)
+function separate!(cellregs, nc, ACSC, nt, level0, ctr_sepanodes, ri, gi, do_print)
+	# current number of cells treated
+    nc2 = size(ACSC, 1)
 
-	indptr = collect(1:nc+1)
-	indices = zeros(Int64, nc)
-	rowval = zeros(Int64, nc)
+	indptr  = collect(1:nc2+1)
+	indices = zeros(Int64, nc2)
+	rowval  = zeros(Int64, nc2)
 
 	indptrT = collect(1:ctr_sepanodes+1)
 	indicesT = zeros(Int64, ctr_sepanodes)
 	rowvalT = zeros(Int64, ctr_sepanodes)
 
-	for (i,j) in enumerate(sepanodes)
-		indices[j] = i
+	for i=1:ctr_sepanodes
+	    j = ri[i]
+        indices[j] = i
 		indicesT[i] = j
 		rowval[j]  = 1
 		rowvalT[i] = 1
 	end
 
-	R = SparseMatrixCSC(ctr_sepanodes, nc, indptr, indices, rowval)
-	RT = SparseMatrixCSC(nc, ctr_sepanodes, indptrT, indicesT, rowvalT)
-	prod = ACSC*dropzeros(RT)
+    
+
+	R = SparseMatrixCSC(ctr_sepanodes, nc2, indptr, indices, rowval)
+	RT = SparseMatrixCSC(nc2, ctr_sepanodes, indptrT, indicesT, rowvalT)
+	# current adjacency matrix, taken as a part of the given one ACSC
 	RART = dropzeros(R)*ACSC*dropzeros(RT)
 	
-	partition2 = Metis.partition(RART, nt)
-	cellregs2 = copy(partition2)
+	cellregs2 = Metis.partition(RART, nt)
+	
+    
+    for i=1:ctr_sepanodes
+        if cellregs[gi[i]] < level0*nt+1
+            @warn "cell treated in this iteration was not a separator-cell last iteration"
+        end
+        cellregs[gi[i]] = level0*nt + cellregs2[i]
+    end
 
-	ctr_sepanodes = 0
-	for (i,j) in enumerate(sepanodes)
-		rows = RART.rowval[RART.colptr[i]:(RART.colptr[i+1]-1)]
-		cellregs[j] = level0*nt + cellregs2[i]
-		if minimum(partition2[rows]) != maximum(partition2[rows])
-			cellregs[j] = (level0+1)*nt+1
-			ctr_sepanodes += 1
-		end
-	end
+	# how many cells are in the separator of the new partiton (which is only computed on the separator of the old partition)
+    new_ctr_sepanodes = 0
+    ri2 = Vector{Int64}(undef, ctr_sepanodes)
+    gi2 = Vector{Int64}(undef, ctr_sepanodes)
+    
+    for tid=1:nt
+        for i=1:ctr_sepanodes
+            if cellregs2[i] == tid
+				neighbors = RART.rowval[RART.colptr[i]:(RART.colptr[i+1]-1)]
+                rows = gi[vcat(neighbors, [i])]
+				#counts how many different regions (besides) the separator are adjacent to the current cell
+                x = how_many_different_below(cellregs[rows], (level0+1)*nt+1)
+                if x > 1
+                    cellregs[gi[i]] = (level0+1)*nt+1
+                    new_ctr_sepanodes += 1
+                    gi2[new_ctr_sepanodes] = gi[i]
+                    ri2[new_ctr_sepanodes] = i
+                end
+            end
+        end
+    end
 
-	RART, ctr_sepanodes
+
+    ri2 = ri2[1:new_ctr_sepanodes]
+    gi2 = gi2[1:new_ctr_sepanodes]
+
+    if do_print
+    	@info "At level $(level0+1), we found $new_ctr_sepanodes cells that have to be treated in the next iteration!"
+    end
+
+	RART, new_ctr_sepanodes, ri2, gi2
 end
-
 
 
 """
@@ -190,7 +235,7 @@ The function assigns colors/partitons to each cell in the `grid`. First, the gri
 `nt` is the number of threads.
 `depth` is the number of partition layers, for depth=1, there are nt parts and 1 separator, for depth=2, the separator is partitioned again, leading to 2*nt+1 submatrices...
 """
-function grid_to_graph_ps_multi!(grid, nt, depth)
+function grid_to_graph_ps_multi!(grid, nt, depth; minsize_sepa=10, do_print=false)
 	A = SparseMatrixLNK{Int64, Int64}(num_cells(grid), num_cells(grid))
 	number_cells_per_node = zeros(Int64, num_nodes(grid))
 	for j=1:num_cells(grid)
@@ -224,27 +269,46 @@ function grid_to_graph_ps_multi!(grid, nt, depth)
 	partition = Metis.partition(ACSC, nt)
 	cellregs  = copy(partition)
 	
+	sn = Vector{Int64}(undef, num_cells(grid))
+	gi = Vector{Int64}(undef, num_cells(grid))
 	ctr_sepanodes = 0
-	for j=1:num_cells(grid)
-		rows = ACSC.rowval[ACSC.colptr[j]:(ACSC.colptr[j+1]-1)]
-		if minimum(partition[rows]) != maximum(partition[rows])
-			cellregs[j] = nt+1
-			ctr_sepanodes += 1
-		end
-	end
-	RART = ACSC
-	for level=1:depth-1
-		RART, ctr_sepanodes = separate!(cellregs, num_cells(grid), RART, nt, level, ctr_sepanodes)
+    
+    for tid=1:nt
+        for j=1:num_cells(grid)
+            if cellregs[j] == tid
+                rows = vcat(ACSC.rowval[ACSC.colptr[j]:(ACSC.colptr[j+1]-1)], [j])
+                if how_many_different_below(cellregs[rows], nt+1) > 1 
+                    cellregs[j] = nt+1 #+ctr_sepanodes
+                    ctr_sepanodes += 1
+                    sn[ctr_sepanodes] = j
+                    gi[ctr_sepanodes] = j
+                end
+            end
+        end
 	end
 
-			
-	return allcells, start, cellregs
+    sn = sn[1:ctr_sepanodes]
+    gi = gi[1:ctr_sepanodes]
+    
+    if do_print
+        @info "At level $(1), we found $ctr_sepanodes cells that have to be treated in the next iteration!"
+    end
+
+    RART = copy(ACSC)
+    actual_depth = 1
+	for level=1:depth-1
+		RART, ctr_sepanodes, sn, gi = separate!(cellregs, num_cells(grid), RART, nt, level, ctr_sepanodes, sn, gi, do_print)
+        actual_depth += 1
+		if ctr_sepanodes < minsize_sepa
+			break
+		end
+	end
+        
+    return allcells, start, cellregs, actual_depth, ACSC
 end
 
 
-
-function grid_to_graph_ps_multi_par!(grid, nt, depth)
-	time = zeros(12)
+function grid_to_graph_ps_multi_par!(grid, nt, depth; minsize_sepa=10, do_print=false)
 	As = [ExtendableSparseMatrix{Int64, Int64}(num_cells(grid), num_cells(grid)) for tid=1:nt]
 	number_cells_per_node = zeros(Int64, num_nodes(grid))
 	
@@ -288,54 +352,64 @@ function grid_to_graph_ps_multi_par!(grid, nt, depth)
 	end
 	
 	ACSC = add_all_par!(As).cscmatrix
-		
-	#SparseArrays.SparseMatrixCSC(A))
 	
+	cellregs = Metis.partition(ACSC, nt)
 	
-	partition = Metis.partition(ACSC, nt)
-	cellregs  = copy(partition)
-	
-	ctr_sepanodes_a = zeros(Int64, nt)
-	
-	cell_range = get_starts(num_cells(grid), nt)
-	Threads.@threads :static for tid=1:nt
-		for j in cell_range[tid]:cell_range[tid+1]-1
-			rows = @view ACSC.rowval[ACSC.colptr[j]:(ACSC.colptr[j+1]-1)]
-			if minimum(partition[rows]) != maximum(partition[rows])
-				cellregs[j] = nt+1
-				ctr_sepanodes_a[tid] += 1
-			end
-		end
-	end
-	
-	ctr_sepanodes = sum(ctr_sepanodes_a)
-			
-	#=
-	time[10] = @elapsed for j=1:num_cells(grid)
-		rows = ACSC.rowval[ACSC.colptr[j]:(ACSC.colptr[j+1]-1)]
-		if minimum(partition[rows]) != maximum(partition[rows])
-			cellregs[j] = nt+1
-			ctr_sepanodes += 1
-		end
-	end
-	=#
-	RART = ACSC
-	for level=1:depth-1
-		RART, ctr_sepanodes = separate!(cellregs, num_cells(grid), RART, nt, level, ctr_sepanodes)
+	sn = [Vector{Int64}(undef, Int(ceil(num_cells(grid)/nt))) for tid=1:nt]
+	ctr_sepanodess = zeros(Int64, nt)
+    
+    @threads for tid=1:nt
+        for j=1:num_cells(grid)
+            if cellregs[j] == tid
+                rows = vcat(ACSC.rowval[ACSC.colptr[j]:(ACSC.colptr[j+1]-1)], [j])
+                if how_many_different_below(cellregs[rows], nt+1) > 1 
+                    cellregs[j] = nt+1 #+ctr_sepanodes
+                    ctr_sepanodess[tid] += 1
+                    sn[tid][ctr_sepanodess[tid]] = j
+                end
+            end
+        end
 	end
 
-			
-	return allcells, start, cellregs
+    for tid=1:nt
+        sn[tid] = sn[tid][1:ctr_sepanodess[tid]]
+    end
+    ctr_sepanodes = sum(ctr_sepanodess)
+    sn = vcat(sn...)
+    gi = copy(sn)
+
+    if do_print
+        @info "At level $(1), we found $ctr_sepanodes cells that have to be treated in the next iteration!"
+    end
+
+    RART = ACSC
+    actual_depth = 1
+	for level=1:depth-1
+		RART, ctr_sepanodes, sn, gi = separate!(cellregs, num_cells(grid), RART, nt, level, ctr_sepanodes, sn, gi, do_print)
+        actual_depth += 1
+		if ctr_sepanodes < minsize_sepa
+			break
+		end
+	end
+    
+    #grid[CellRegions] = cellregs
+    #grid
+    return allcells, start, cellregs, actual_depth
 end
 
+"""
+`function add_all_par!(As)`
 
+Add LNK matrices (stored in a vector) parallely (tree structure).
+The result is stored in the first LNK matrix.
+"""
 function add_all_par!(As)
 	nt = length(As)
 	depth = Int(floor(log2(nt)))
 	ende = nt
 	for level=1:depth
 		
-		@threads :static for tid=1:2^(depth-level)
+		@threads for tid=1:2^(depth-level)
 			#@info "$level, $tid"
 			start = tid+2^(depth-level)
 			while start <= ende
@@ -425,3 +499,169 @@ function last_nz(x)
 	end
 end
 
+
+function how_many_different_below(x0, y; u=0)
+    x = copy(x0)
+    z = unique(x)
+    t = findall(w->w<y,z)
+    t = findall(w->w>u,z[t])
+    length(t)
+end
+
+
+
+function lookat_grid_to_graph_ps_multi!(nm, nt, depth)
+	grid = getgrid(nm)
+	A = SparseMatrixLNK{Int64, Int64}(num_cells(grid), num_cells(grid))
+	number_cells_per_node = zeros(Int64, num_nodes(grid))
+	for j=1:num_cells(grid)
+		for node_id in grid[CellNodes][:,j]
+			number_cells_per_node[node_id] += 1
+		end
+	end
+	allcells = zeros(Int64, sum(number_cells_per_node))
+	start = ones(Int64, num_nodes(grid)+1)
+	start[2:end] += cumsum(number_cells_per_node)
+	number_cells_per_node .= 0
+	for j=1:num_cells(grid)
+		for node_id in grid[CellNodes][:,j]
+			allcells[start[node_id] + number_cells_per_node[node_id]] = j
+			number_cells_per_node[node_id] += 1
+		end
+	end
+
+	for j=1:num_nodes(grid)
+		cells = @view allcells[start[j]:start[j+1]-1]
+		for (i,id1) in enumerate(cells)
+			for id2 in cells[i+1:end]
+				A[id1,id2] = 1
+				A[id2,id1] = 1
+			end
+		end	
+	end
+
+	ACSC = SparseArrays.SparseMatrixCSC(A)
+	
+	partition = Metis.partition(ACSC, nt)
+	cellregs  = copy(partition)
+	
+	sn = []
+	gi = []
+	ctr_sepanodes = 0
+	for j=1:num_cells(grid)
+		rows = ACSC.rowval[ACSC.colptr[j]:(ACSC.colptr[j+1]-1)]
+		if minimum(partition[rows]) != maximum(partition[rows])
+			cellregs[j] = nt+1
+			ctr_sepanodes += 1
+			push!(sn, j)
+			push!(gi, j)
+		end
+	end
+	RART = ACSC
+	#sn = 1:num_cells(grid)
+	#gi = 1:num_cells(grid)
+	for level=1:depth-1
+		RART, ctr_sepanodes, sn, gi = separate_careful!(cellregs, num_cells(grid), RART, nt, level, ctr_sepanodes, sn, gi)
+		if ctr_sepanodes == 0
+			return RART
+		end
+	end
+
+			
+	#return allcells, start, cellregs
+	RART
+end
+
+
+function adjacencies(grid)
+	A = SparseMatrixLNK{Int64, Int64}(num_cells(grid), num_cells(grid))
+	number_cells_per_node = zeros(Int64, num_nodes(grid))
+	for j=1:num_cells(grid)
+		for node_id in grid[CellNodes][:,j]
+			number_cells_per_node[node_id] += 1
+		end
+	end
+	allcells = zeros(Int64, sum(number_cells_per_node))
+	start = ones(Int64, num_nodes(grid)+1)
+	start[2:end] += cumsum(number_cells_per_node)
+	number_cells_per_node .= 0
+	for j=1:num_cells(grid)
+		for node_id in grid[CellNodes][:,j]
+			allcells[start[node_id] + number_cells_per_node[node_id]] = j
+			number_cells_per_node[node_id] += 1
+		end
+	end
+
+	for j=1:num_nodes(grid)
+		cells = @view allcells[start[j]:start[j+1]-1]
+		for (i,id1) in enumerate(cells)
+			for id2 in cells[i+1:end]
+				A[id1,id2] = 1
+				A[id2,id1] = 1
+			end
+		end	
+	end
+
+	allcells, start, SparseArrays.SparseMatrixCSC(A)
+end
+
+function check_adjacencies(nm)
+	grid = getgrid(nm)
+	allcells, start, A = adjacencies(grid)
+
+	i = 1
+	cells1 = sort(vcat([i], A.rowval[A.colptr[i]:(A.colptr[i+1]-1)])) #adjacent cells
+	nodes2 = grid[CellNodes][:,i]
+	cells2 = sort(unique(vcat([allcells[start[j]:start[j+1]-1] for j in nodes2]...)))
+
+	@info cells1
+	@info cells2
+	@info maximum(abs.(cells1-cells2))
+
+
+end
+
+#=
+function check_partition(nm, nt, depth)
+	grid = getgrid(nm)
+	
+	(allcells, start, cellregs, adepth, ACSC) = grid_to_graph_ps_multi!(grid, nt, depth; minsize_sepa=10, do_print=true)#)
+	
+	if (adepth != depth)
+		@info "The requested depth of partitioning is too high. The depth is set to $adepth."
+	end
+	depth = adepth
+
+	validate_partition(num_nodes(grid), num_cells(grid), grid, cellregs, start, allcells, nt, depth, ACSC)
+end
+=#
+
+function validate_partition(grid, cellregs, start, allcells, nt, depth)
+	@info "Node based validation"
+	violation_ctr = 0
+
+	for j=1:num_nodes(grid)
+		cells = @view allcells[start[j]:start[j+1]-1]
+		sortedcellregs = unique(sort(cellregs[cells]))
+		levels         = Int.(ceil.(sortedcellregs/nt))
+		
+		for i=1:depth+1
+			ids_lev = findall(x->x==i, levels)
+			if length(ids_lev) > 1
+				violation_ctr += 1
+
+				if violation_ctr == 1
+					@info "Node Id : ", j
+					@info "Cellregs: ", sortedcellregs
+					@info "Levels  : ", levels
+					
+					loc = findall(x->x==4, Int.(ceil.(cellregs[allcells[start[j]:start[j+1]-1]]/nt)))
+					cells_at_level4 = allcells[loc.+(start[j]-1)]
+					@info cells_at_level4, cellregs[cells_at_level4]
+					@info grid[CellNodes][:,cells_at_level4[1]], grid[CellNodes][:,cells_at_level4[2]]
+				end
+			end
+		end
+	end
+	@info "We found $violation_ctr violation(s)"
+end

@@ -49,7 +49,7 @@ end
 
 
 function ExtendableSparseMatrixParallel{Tv, Ti}(nm, nt, depth; x0=0.0, x1=1.0) where {Tv, Ti <: Integer}
-	grid, nnts, s, onr, cfp, gi, gc, ni, rni, starts, cellparts = preparatory_multi_ps_less_reverse(nm, nt, depth, Ti; x0, x1)
+	grid, nnts, s, onr, cfp, gi, gc, ni, rni, starts, cellparts, depth = preparatory_multi_ps_less_reverse(nm, nt, depth, Ti; x0, x1)
 	csc = spzeros(Tv, Ti, num_nodes(grid), num_nodes(grid))
 	lnk = [SuperSparseMatrixLNK{Tv, Ti}(num_nodes(grid), nnts[tid]) for tid=1:nt]
 	ExtendableSparseMatrixParallel{Tv, Ti}(csc, lnk, grid, nnts, s, onr, cfp, gi, ni, rni, starts, cellparts, nt, depth, phash(csc), csc.n, csc.m)
