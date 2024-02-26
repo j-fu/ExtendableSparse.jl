@@ -14,7 +14,7 @@ mutable struct ILUAMPrecon{T,N}
 end
 
 function iluAM(A::SparseMatrixCSC{Tv,Ti}) where {Tv, Ti <:Integer}
-	@info "iluAM"
+	#@info "iluAM"
 	nzval = copy(A.nzval)
 	colptr = A.colptr
 	rowval = A.rowval
@@ -100,6 +100,7 @@ function backward_subst_old!(x, y, nzval, diag, A)
 end
 
 function ldiv!(x, ILU::ILUAMPrecon, b)
+	#@info "iluam ldiv 1"
 	nzval = ILU.nzval
 	diag  = ILU.diag
 	A     = ILU.A
@@ -111,6 +112,7 @@ function ldiv!(x, ILU::ILUAMPrecon, b)
 end
 
 function ldiv!(ILU::ILUAMPrecon, b)
+	#@info "iluam ldiv 2"
 	nzval = ILU.nzval
 	diag  = ILU.diag
 	A     = ILU.A

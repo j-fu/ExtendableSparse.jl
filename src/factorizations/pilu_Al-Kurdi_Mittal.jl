@@ -230,6 +230,7 @@ function backward_subst_old!(x, y, nzval, diag, start, nt, depth, A)
 end
 
 function ldiv!(x, ILU::PILUAMPrecon, b)
+	#@info "piluam ldiv 1"
 	nzval = ILU.nzval
 	diag  = ILU.diag
 	A     = ILU.A
@@ -244,6 +245,7 @@ function ldiv!(x, ILU::PILUAMPrecon, b)
 end
 
 function ldiv!(ILU::PILUAMPrecon, b)
+	#@info "piluam ldiv 2"
 	nzval = ILU.nzval
 	diag  = ILU.diag
 	A     = ILU.A

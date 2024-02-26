@@ -22,6 +22,7 @@ function PILUAMPreconditioner end
 function update!(p::PILUAMPreconditioner)
     flush!(p.A)
     if p.A.phash != p.phash
+        @warn "p.A.phash != p.phash"
         p.factorization = piluAM(p.A)
         p.phash=p.A.phash
     else
