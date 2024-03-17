@@ -26,8 +26,8 @@ function preparatory_multi_ps_less_reverse(nm, nt, depth, Ti; sequential=false, 
 		validate_partition(grid, cellparts, start, allcells, nt, depth)
 	end
 
-	@info length.(cfp)
-	@info minimum(cellparts), maximum(cellparts), nt, depth
+	#@info length.(cfp)
+	#@info minimum(cellparts), maximum(cellparts), nt, depth
 
 	(nnts, s, onr, gi, gc, ni, rni, starts) = get_nnnts_and_sortednodesperthread_and_noderegs_from_cellregs_ps_less_reverse_nopush(
 		cellparts, allcells, start, num_nodes(grid), Ti, nt, depth

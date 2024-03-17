@@ -20,14 +20,13 @@ also calculates and stores updates to the off-diagonal entries and thus delivers
 function PILUAMPreconditioner end
 
 function update!(p::PILUAMPreconditioner)
+    #@warn "Should flush now", nnz_noflush(p.A)
     flush!(p.A)
     if p.A.phash != p.phash
-        @warn "p.A.phash != p.phash"
         p.factorization = piluAM(p.A)
         p.phash=p.A.phash
     else
-        @warn "fuck?"
-        ilu0!(p.factorization, p.A.cscmatrix)
+        piluAM!(p.factorization, p.A)
     end
     p
 end

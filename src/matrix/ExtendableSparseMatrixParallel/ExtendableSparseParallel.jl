@@ -285,6 +285,67 @@ function updatentryCSC2!(CSC::SparseArrays.SparseMatrixCSC{Tv, Ti}, i::Integer, 
 	end
 end
 
-Base.size(A::ExtendableSparseMatrixParallel) = (A.cscmatrix.m, A.cscmatrix.n)
 
+
+
+Base.size(A::ExtendableSparseMatrixParallel) = (A.cscmatrix.m, A.cscmatrix.n)
 include("struct_flush.jl")
+
+
+
+import LinearAlgebra.mul!
+
+"""
+```function LinearAlgebra.mul!(y, A, x)```
+
+This overwrites the mul! function for A::ExtendableSparseMatrixParallel
+"""
+function LinearAlgebra.mul!(y::AbstractVector{Tv}, A::ExtendableSparseMatrixParallel{Tv, Ti}, x::AbstractVector{Tv}) where {Tv, Ti<:Integer}
+    #@info "my matvec"
+    _, nnzLNK = nnz_noflush(A)
+    @assert nnzLNK == 0
+    #mul!(y, A.cscmatrix, x)
+    matvec!(y, A, x)
+end
+
+
+"""
+```function matvec!(y, A, x)```
+
+y <- A*x, where y and x are vectors and A is an ExtendableSparseMatrixParallel
+this computation is done in parallel, it has the same result as y = A.cscmatrix*x
+"""
+function matvec!(y::AbstractVector{Tv}, A::ExtendableSparseMatrixParallel{Tv,Ti}, x::AbstractVector{Tv}) where {Tv, Ti<:Integer}
+    #a1 = @allocated begin
+    nt = A.nt
+    depth = A.depth
+    colptr = A.cscmatrix.colptr
+    nzv = A.cscmatrix.nzval
+    rv  = A.cscmatrix.rowval
+
+    LinearAlgebra._rmul_or_fill!(y, 0.0)
+    
+    #end
+    #a2 = @allocated 
+    for level=1:depth
+        @threads for tid::Int64=1:nt
+            for col::Int64=A.start[(level-1)*nt+tid]:A.start[(level-1)*nt+tid+1]-1
+                for row::Int64=colptr[col]:colptr[col+1]-1 # in nzrange(A, col)
+                    y[rv[row]] += nzv[row]*x[col]
+                end
+            end
+        end
+    end
+
+    @threads for tid=1:1
+        #a3 = @allocated 
+        for col::Int64=A.start[depth*nt+1]:A.start[depth*nt+2]-1
+            for row::Int64=colptr[col]:colptr[col+1]-1 #nzrange(A, col)
+                y[rv[row]] += nzv[row]*x[col]
+            end
+        end
+    end
+    
+    #println(a1,a2,a3)
+    y
+end

@@ -1,5 +1,9 @@
 function flush!(A::ExtendableSparseMatrixParallel; do_dense=false, keep_zeros=true)
+	_, nnzLNK = nnz_noflush(A)
 
+	if nnzLNK == 0
+		return
+	end
 
 	if !do_dense
 		A.cscmatrix = A.cscmatrix+sparse_flush!(A; keep_zeros)
