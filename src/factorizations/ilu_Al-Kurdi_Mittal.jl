@@ -3,7 +3,7 @@
 
 import LinearAlgebra.ldiv!, LinearAlgebra.\, SparseArrays.nnz 
 
-@info "ILUAM"
+#@info "ILUAM"
 
 mutable struct ILUAMPrecon{T,N}
 
@@ -13,17 +13,19 @@ mutable struct ILUAMPrecon{T,N}
 	
 end
 
-function iluAM(A::SparseMatrixCSC{Tv,Ti}) where {Tv, Ti <:Integer}
-	#@info "iluAM"
+
+function iluAM!(ILU::ILUAMPrecon{Tv,Ti}, A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti <:Integer}
+	diag = ILU.diag
+	nzval = ILU.nzval
+
 	nzval = copy(A.nzval)
+	diag  = Vector{Ti}(undef, n)
+	ILU.A = A
 	colptr = A.colptr
 	rowval = A.rowval
-	#nzval  = ILU.nzval
-	n = A.n # number of columns
-	point = zeros(Ti, n) #Vector{Ti}(undef, n)
-	diag  = Vector{Ti}(undef, n)
-	
-	# find diagonal entries
+	n = A.n
+	point = zeros(Ti, n)
+
 	for j=1:n
 		for v=colptr[j]:colptr[j+1]-1
 			if rowval[v] == j
@@ -60,11 +62,65 @@ function iluAM(A::SparseMatrixCSC{Tv,Ti}) where {Tv, Ti <:Integer}
 			point[rowval[v]] = zero(Ti)
 		end
 	end
+
+end
+
+function iluAM(A::SparseMatrixCSC{Tv,Ti}) where {Tv, Ti <:Integer}
+	#@info "iluAM"
+	nzval = copy(A.nzval)
+	colptr = A.colptr
+	rowval = A.rowval
+	#nzval  = ILU.nzval
+	n = A.n # number of columns
+	point = zeros(Ti, n) #Vector{Ti}(undef, n)
+	diag  = Vector{Ti}(undef, n)
+	
+	# find diagonal entries
+	for j=1:n
+		for v=colptr[j]:colptr[j+1]-1
+			if rowval[v] == j
+				diag[j] = v
+				break
+			end
+			#elseif rowval[v] 
+		end
+	end
+
+	#@info diag[1:20]'
+	#@info diag[end-20:end]'
+	
+	# compute L and U
+	for j=1:n
+		for v=colptr[j]:colptr[j+1]-1  ## start at colptr[j]+1 ??
+			point[rowval[v]] = v
+		end
+		
+		for v=colptr[j]:diag[j]-1
+			i = rowval[v]
+			#nzval[v] /= nzval[diag[i]]
+			for w=diag[i]+1:colptr[i+1]-1
+				k = point[rowval[w]]
+				if k>0
+					nzval[k] -= nzval[v]*nzval[w]
+				end
+			end
+		end
+		
+		for v=diag[j]+1:colptr[j+1]-1
+			nzval[v] /= nzval[diag[j]]
+		end
+		
+		
+		for v=colptr[j]:colptr[j+1]-1
+			point[rowval[v]] = zero(Ti)
+		end
+	end
 	#nzval, diag
 	ILUAMPrecon{Tv,Ti}(diag, nzval, A)
 end
 
 function forward_subst_old!(y, v, nzval, diag, A)
+	#@info "fso, $(sum(nzval)), $(sum(nzval.^2)), $(sum(diag)), $(A[1,1])"
 	n      = A.n
 	colptr = A.colptr
 	rowval = A.rowval
@@ -85,6 +141,7 @@ end
 
 
 function backward_subst_old!(x, y, nzval, diag, A)
+	#@info "bso, $(sum(nzval)), $(sum(nzval.^2)), $(sum(diag)), $(A[1,1])"
 	n      = A.n
 	colptr = A.colptr
 	rowval = A.rowval
@@ -99,7 +156,9 @@ function backward_subst_old!(x, y, nzval, diag, A)
 	x
 end
 
+
 function ldiv!(x, ILU::ILUAMPrecon, b)
+	#t = @elapsed begin
 	#@info "iluam ldiv 1"
 	nzval = ILU.nzval
 	diag  = ILU.diag
@@ -108,6 +167,10 @@ function ldiv!(x, ILU::ILUAMPrecon, b)
 	#forward_subst!(y, b, ILU)
 	forward_subst_old!(y, b, nzval, diag, A)
 	backward_subst_old!(x, y, nzval, diag, A)
+	#@info "ILUAM:", b[1], y[1], x[1], maximum(abs.(b-A*x)), nnz(A) #, A[10,10]
+	#, b[1], x[1], y[1]#maximum(abs.(b)), maximum(abs.(x))
+	#end
+	#println("$t") #@info t
 	x
 end
 

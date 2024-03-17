@@ -4,7 +4,7 @@
 
 import LinearAlgebra.ldiv!, LinearAlgebra.\, SparseArrays.nnz 
 
-@info "PILUAM"
+#@info "PILUAM"
 
 mutable struct PILUAMPrecon{T,N}
 
@@ -51,6 +51,95 @@ function compute_lu!(nzval, point, j0, j1, tid, rowval, colptr, diag, Ti)
     end
 end
 
+function piluAM!(ILU::PILUAMPrecon{Tv,Ti}, A::ExtendableSparseMatrixParallel{Tv,Ti}) where {Tv, Ti <:Integer}
+	@info "piluAM!"
+	diag = ILU.diag
+	nzval = ILU.nzval
+	ILU.A = A
+	start = ILU.start
+	
+	ILU.nt = A.nt
+	nt = A.nt
+	
+	ILU.depth = A.depth
+	depth = A.depth
+	
+	
+	colptr = A.cscmatrix.colptr
+	rowval = A.cscmatrix.rowval
+	n = A.cscmatrix.n # number of columns
+	diag  = Vector{Ti}(undef, n)
+	nzval  = Vector{Tv}(undef, length(rowval)) #copy(A.nzval)
+	point = use_vector_par(n, A.nt, Int32)
+
+
+	@threads for tid=1:depth*nt+1
+		for j=start[tid]:start[tid+1]-1
+			for v=colptr[j]:colptr[j+1]-1
+				nzval[v] = A.cscmatrix.nzval[v]
+				if rowval[v] == j
+					diag[j] = v
+				end
+				#elseif rowval[v] 
+			end
+		end
+	end
+
+	for level=1:depth
+		@threads for tid=1:nt
+			for j=start[(level-1)*nt+tid]:start[(level-1)*nt+tid+1]-1
+				for v=colptr[j]:colptr[j+1]-1
+					point[tid][rowval[v]] = v
+				end
+				
+				for v=colptr[j]:diag[j]-1
+					i = rowval[v]
+					for w=diag[i]+1:colptr[i+1]-1
+						k = point[tid][rowval[w]]
+						if k>0
+							nzval[k] -= nzval[v]*nzval[w]
+						end
+					end
+				end
+				
+				for v=diag[j]+1:colptr[j+1]-1
+					nzval[v] /= nzval[diag[j]]
+				end
+				
+				for v=colptr[j]:colptr[j+1]-1
+					point[tid][rowval[v]] = zero(Ti)
+				end
+			end
+		end
+	end
+	
+	#point = zeros(Ti, n) #Vector{Ti}(undef, n)
+	for j=start[depth*nt+1]:start[depth*nt+2]-1
+		for v=colptr[j]:colptr[j+1]-1
+			point[1][rowval[v]] = v
+		end
+		
+		for v=colptr[j]:diag[j]-1
+			i = rowval[v]
+			for w=diag[i]+1:colptr[i+1]-1
+				k = point[1][rowval[w]]
+				if k>0
+					nzval[k] -= nzval[v]*nzval[w]
+				end
+			end
+		end
+		
+		for v=diag[j]+1:colptr[j+1]-1
+			nzval[v] /= nzval[diag[j]]
+		end
+		
+		for v=colptr[j]:colptr[j+1]-1
+			point[1][rowval[v]] = zero(Ti)
+		end
+	end
+
+end
+
 function piluAM(A::ExtendableSparseMatrixParallel{Tv,Ti}) where {Tv, Ti <:Integer}
 	start = A.start
 	nt = A.nt
@@ -65,6 +154,22 @@ function piluAM(A::ExtendableSparseMatrixParallel{Tv,Ti}) where {Tv, Ti <:Intege
 	
 	# find diagonal entries
 	#
+	
+	#=
+	for j=1:n
+		for v=colptr[j]:colptr[j+1]-1
+			nzval[v] = A.cscmatrix.nzval[v]
+			if rowval[v] == j
+				diag[j] = v
+				#break
+			end
+			#elseif rowval[v] 
+		end
+	end
+	=#
+
+
+
 	@threads for tid=1:depth*nt+1
 		for j=start[tid]:start[tid+1]-1
 			for v=colptr[j]:colptr[j+1]-1
@@ -77,41 +182,9 @@ function piluAM(A::ExtendableSparseMatrixParallel{Tv,Ti}) where {Tv, Ti <:Intege
 		end
 	end
 
-	#=
-	@info "piluAM"
-	nzval = copy(A.cscmatrix.nzval)
-	colptr = A.cscmatrix.colptr
-	rowval = A.cscmatrix.rowval
-	#nzval  = ILU.nzval
-	n = A.n # number of columns
-	diag  = Vector{Ti}(undef, n)
-	start = A.start
-    nt    = A.nt
-    depth = A.depth
-    point = use_vector_par(n, nt, Ti)
 
-	# find diagonal entries
-    @threads for tid=1:depth*nt+1
-        for j=start[tid]:start[tid+1]-1
-            for v=colptr[j]:colptr[j+1]-1
-                if rowval[v] == j
-                    diag[j] = v
-                    break
-                end
-                #elseif rowval[v] 
-            end
-        end
-    end
-	
-	# compute L and U
-    for level=1:depth
-        @threads for tid=1:nt
-            compute_lu!(nzval, point, start[(level-1)*nt+tid], start[(level-1)*nt+tid+1], tid, rowval, colptr, diag, Ti)
-        end
-    end
-
-    compute_lu!(nzval, point, start[depth*nt+1], start[depth*nt+2], 1, rowval, colptr, diag, Ti)
-	=#
+	#@info diag[1:20]'
+	#@info diag[end-20:end]'	
 
 	for level=1:depth
 		@threads for tid=1:nt
@@ -171,6 +244,7 @@ function piluAM(A::ExtendableSparseMatrixParallel{Tv,Ti}) where {Tv, Ti <:Intege
 end
 
 function forward_subst_old!(y, v, nzval, diag, start, nt, depth, A)
+	#@info "pfso, $(sum(nzval)), $(sum(nzval.^2)), $(sum(diag)), $(A[1,1])"
 	#@info "fwo"
 	n = A.n
 	colptr = A.colptr
@@ -200,6 +274,8 @@ end
 
 
 function backward_subst_old!(x, y, nzval, diag, start, nt, depth, A)
+	#@info "pbso, $(sum(nzval)), $(sum(nzval.^2)), $(sum(diag)), $(A[1,1])"
+	
 	#@info "bwo"
 	n = A.n
 	colptr = A.colptr
@@ -229,6 +305,7 @@ function backward_subst_old!(x, y, nzval, diag, start, nt, depth, A)
 
 end
 
+
 function ldiv!(x, ILU::PILUAMPrecon, b)
 	#@info "piluam ldiv 1"
 	nzval = ILU.nzval
@@ -241,6 +318,8 @@ function ldiv!(x, ILU::PILUAMPrecon, b)
 	#forward_subst!(y, b, ILU)
 	forward_subst_old!(y, b, nzval, diag, start, nt, depth, A)
 	backward_subst_old!(x, y, nzval, diag, start, nt, depth, A)
+	#@info "PILUAM:", b[1], y[1], x[1], maximum(abs.(b-A*x)), nnz(A) #, A[10,10]
+	#@info "PILUAM:", maximum(abs.(b-A*x)), b[1], x[1], maximum(abs.(b)), maximum(abs.(x))
 	x
 end
 
