@@ -103,7 +103,7 @@ function addtoentry!(A::ExtendableSparseMatrixParallel{Tv, Ti}, i, j, v; known_t
 	
 	if updatentryCSC2!(A.cscmatrix, i, j, v)
 	else
-		level, tid = last_nz(A.old_noderegions[:, A.rev_new_indices[j]])
+		_, tid = last_nz(A.old_noderegions[:, A.rev_new_indices[j]])
 		A.lnkmatrices[tid][i, A.sortednodesperthread[tid, j]] += v
 	end
 end
@@ -316,7 +316,6 @@ y <- A*x, where y and x are vectors and A is an ExtendableSparseMatrixParallel
 this computation is done in parallel, it has the same result as y = A.cscmatrix*x
 """
 function matvec!(y::AbstractVector{Tv}, A::ExtendableSparseMatrixParallel{Tv,Ti}, x::AbstractVector{Tv}) where {Tv, Ti<:Integer}
-    #a1 = @allocated begin
     nt = A.nt
     depth = A.depth
     colptr = A.cscmatrix.colptr
@@ -325,8 +324,6 @@ function matvec!(y::AbstractVector{Tv}, A::ExtendableSparseMatrixParallel{Tv,Ti}
 
     LinearAlgebra._rmul_or_fill!(y, 0.0)
     
-    #end
-    #a2 = @allocated 
     for level=1:depth
         @threads for tid::Int64=1:nt
             for col::Int64=A.start[(level-1)*nt+tid]:A.start[(level-1)*nt+tid+1]-1
@@ -337,8 +334,9 @@ function matvec!(y::AbstractVector{Tv}, A::ExtendableSparseMatrixParallel{Tv,Ti}
         end
     end
 
+
+
     @threads for tid=1:1
-        #a3 = @allocated 
         for col::Int64=A.start[depth*nt+1]:A.start[depth*nt+2]-1
             for row::Int64=colptr[col]:colptr[col+1]-1 #nzrange(A, col)
                 y[rv[row]] += nzv[row]*x[col]
@@ -346,6 +344,5 @@ function matvec!(y::AbstractVector{Tv}, A::ExtendableSparseMatrixParallel{Tv,Ti}
         end
     end
     
-    #println(a1,a2,a3)
     y
 end

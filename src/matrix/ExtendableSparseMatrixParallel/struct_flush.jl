@@ -49,6 +49,9 @@ function dense_flush_keepzeros!(
 	eqctr = 0
 	tmp = zeros(Ti, size(onr)[1])
 	
+	#@warn [As[i].nnz for i=1:nt], [As[i].n for i=1:nt], [As[i].m for i=1:nt]
+	#@info maximum.([As[i].colptr for i=1:nt])
+
 	for nj=1:As[1].m
 		indptr[nj] = ctr
 		oj = rni[nj]
@@ -62,7 +65,10 @@ function dense_flush_keepzeros!(
 				k = s[regmod, nj]
 				if regionctr == 1
 					while k>0
-						#if As[regmod].nzval[k] != 0.0
+						if As[regmod].rowval[k] != 0
+							if ctr > nnz
+								@info "ctr > nnz, $nj, $oj"
+							end
 							indices[ctr] = As[regmod].rowval[k]
 							data[ctr]    = As[regmod].nzval[k]
 							
@@ -82,12 +88,12 @@ function dense_flush_keepzeros!(
 							
 							ctr += 1
 							jc += 1
-						#end
+						end
 						k = As[regmod].colptr[k]
 					end
 				else
 					while k>0
-						#if As[regmod].nzval[k] != 0.0
+						if As[regmod].rowval[k] != 0
 							indices[ctr] = As[regmod].rowval[k]
 							data[ctr]    = As[regmod].nzval[k]
 							
@@ -120,7 +126,7 @@ function dense_flush_keepzeros!(
 							
 							ctr += 1
 							jc += 1
-						#end
+						end
 						k = As[regmod].colptr[k]
 					end
 					

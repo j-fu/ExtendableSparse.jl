@@ -52,7 +52,7 @@ function compute_lu!(nzval, point, j0, j1, tid, rowval, colptr, diag, Ti)
 end
 
 function piluAM!(ILU::PILUAMPrecon{Tv,Ti}, A::ExtendableSparseMatrixParallel{Tv,Ti}) where {Tv, Ti <:Integer}
-	@info "piluAM!"
+	#@info "piluAM!"
 	diag = ILU.diag
 	nzval = ILU.nzval
 	ILU.A = A
