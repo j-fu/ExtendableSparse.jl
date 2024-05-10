@@ -5,6 +5,8 @@
 `nt` is the number of threads.
 `depth` is the number of partition layers, for depth=1, there are nt parts and 1 separator, for depth=2, the separator is partitioned again, leading to 2*nt+1 submatrices...
 To assemble the system matrix parallely, things such as `cellsforpart` (= which thread takes which cells) need to be computed in advance. This is done here.
+
+This should be somewhere else, longterm
 """
 function preparatory_multi_ps_less_reverse(nm, nt, depth, Ti; sequential=false, assembly=:cellwise, x0=0.0, x1=1.0, minsize_sepa=10, do_print=false, check_partition=false)
 	grid = getgrid(nm; x0, x1)
