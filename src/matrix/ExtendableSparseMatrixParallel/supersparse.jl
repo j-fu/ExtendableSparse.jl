@@ -43,16 +43,17 @@ mutable struct SuperSparseMatrixLNK{Tv, Ti <: Integer} <: AbstractSparseMatrix{T
     rowval::Vector{Ti}
 
     """
-    Nonzero entry values correspondin to each pair
+    Nonzero entry values corresponding to each pair
     (colptr[index],rowval[index])
 
-    Initial length is n,  it grows with each new entry.
+    Initial length is n, it grows with each new entry.
     """
     nzval::Vector{Tv}
     
-    
+	
     collnk::Vector{Ti}
     
+	# counts the number of columns in use
     colctr::Ti
 end
 

@@ -9,38 +9,89 @@ mutable struct ExtendableSparseMatrixParallel{Tv, Ti <: Integer} <: AbstractSpar
     cscmatrix::SparseMatrixCSC{Tv, Ti}
 
     """
-    Linked list structure holding data of extension
+    Linked list structures holding data of extension, one for each thread
     """
     lnkmatrices::Vector{SuperSparseMatrixLNK{Tv, Ti}}
 
-	grid::ExtendableGrid
+    """
+    this is the grid on which the pde lives
+    (We do not want this dependency)
+    """
+    #grid::ExtendableGrid
 
+    """
+    Number of Nodes per Threads
+    """
 	nnts::Vector{Ti}
     
+    """
+    sortednodesperthread[i,j] = local index of the j-th global column in the i-th LNK matrix
+    (this is used e.g. when assembling the matrix)
+    """
     sortednodesperthread::Matrix{Ti}
     
+    """
+    depth+1 x nn matrix,
+    old_noderegions[i,j] = region in which node j is, in level i 
+    old refers to the fact that j is the 'old index' (i.e. grid index, not matrix index, see 'new_indices')
+    """
     old_noderegions::Matrix{Ti}
     
+    """
+    cellsforpart[i] is a vector containing all cells in the i-th region
+    cellsforpart has length nt*depth + 1
+    """
     cellsforpart::Vector{Vector{Ti}}
     
+    """
+    globalindices[i][j] = index in the global (ESMP & CSC) matrix of the j-th column of the i-th LNK matrix
+    (this maps the local indices (in the LNKs) to the global indices (ESMP & CSC)) 
+    """
     globalindices::Vector{Vector{Ti}}
     
+    """
+    For some applications such as the parallel ILU preconditioner, a block form is necessary.
+    Thus, the columns are reordered and the A[i,i] does not correspond to the i-th node of the grid,
+    but A[new_indices[i], new_indices[i]] does
+    """
     new_indices::Vector{Ti}
     
+    """
+    Reverse: rev_new_indices[new_indices[i]] = i, for all i
+    """
     rev_new_indices::Vector{Ti}
     
+    """
+    starts[i] gives the first column of the i-th region, i.e. starts[1] = 1
+    starts has length nt*depth + 1
+    """
     start::Vector{Ti}
-    
+
+    """
+    cellparts[i] = region of the i-th cell
+    """
     cellparts::Vector{Ti}
     
+    """
+    Number of threads
+    """
     nt::Ti
     
+    """
+    How often is the separator partitioned? (if never: depth = 1)
+    """
     depth::Ti
 
     phash::UInt64
 
+    """
+    Number of rows / number of nodes in grid 
+    """
     n::Ti
 
+    """
+    Number of columns / number of nodes in grid (only works for square matrices)
+    """
     m::Ti
     
     
@@ -52,7 +103,7 @@ function ExtendableSparseMatrixParallel{Tv, Ti}(nm, nt, depth; x0=0.0, x1=1.0) w
 	grid, nnts, s, onr, cfp, gi, gc, ni, rni, starts, cellparts, depth = preparatory_multi_ps_less_reverse(nm, nt, depth, Ti; x0, x1)
 	csc = spzeros(Tv, Ti, num_nodes(grid), num_nodes(grid))
 	lnk = [SuperSparseMatrixLNK{Tv, Ti}(num_nodes(grid), nnts[tid]) for tid=1:nt]
-	ExtendableSparseMatrixParallel{Tv, Ti}(csc, lnk, grid, nnts, s, onr, cfp, gi, ni, rni, starts, cellparts, nt, depth, phash(csc), csc.n, csc.m)
+	ExtendableSparseMatrixParallel{Tv, Ti}(csc, lnk, nnts, s, onr, cfp, gi, ni, rni, starts, cellparts, nt, depth, phash(csc), csc.n, csc.m)
 end
 
 
@@ -206,8 +257,8 @@ end
 #------------------------------------
 
 function reset!(A::ExtendableSparseMatrixParallel{Tv, Ti}) where {Tv, Ti <: Integer}
-	A.cscmatrix = spzeros(Tv, Ti, num_nodes(A.grid), num_nodes(A.grid))
-	A.lnkmatrices = [SuperSparseMatrixLNK{Tv, Ti}(num_nodes(A.grid), A.nnts[tid]) for tid=1:A.nt]
+	A.cscmatrix = spzeros(Tv, Ti, A.n, A.m)
+	A.lnkmatrices = [SuperSparseMatrixLNK{Tv, Ti}(A.n, A.nnts[tid]) for tid=1:A.nt]
 end
 
 function nnz_flush(ext::ExtendableSparseMatrixParallel)
