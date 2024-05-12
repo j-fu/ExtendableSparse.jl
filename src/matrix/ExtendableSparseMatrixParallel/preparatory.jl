@@ -43,7 +43,7 @@ function preparatory_multi_ps_less_reverse(nm, nt, depth, Ti; sequential=false, 
 	)
 	
 
-	return grid, nnts, s, onr, cfp, gi, gc, ni, rni, starts, cellparts, adepth
+	return grid, nnts, s, onr, cfp, gi, ni, rni, starts, cellparts, adepth
 end
 
 """
