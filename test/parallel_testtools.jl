@@ -1,4 +1,4 @@
-using ChunkSplitters
+import ChunkSplitters
 # Methods to test parallel assembly
 # Will eventually become part of the package.
 
@@ -9,12 +9,12 @@ Return colored partitioing of grid made up by `X` and `Y`  for work with `max(nt
 as a vector `p` of a vector pairs of index ranges such that `p[i]` containes partions
 of color i which can be assembled independently.
 
-The current algorithm 
+The current algorithm  creates `nt^2` partitions with `nt` colors.
 """
 function part2d(X,Y, nt)
     nt=max(4,nt)
-    XP=collect(chunks(1:length(X)-1,n=nt))
-    YP=collect(chunks(1:length(Y)-1,n=nt))
+    XP=collect(ChunkSplitters.chunks(1:length(X)-1,n=nt))
+    YP=collect(ChunkSplitters.chunks(1:length(Y)-1,n=nt))
     partitions = [Tuple{StepRange{Int64}, StepRange{Int64}}[] for i = 1:nt]
     ipart=1
     col=1
@@ -28,7 +28,12 @@ function part2d(X,Y, nt)
     partitions
 end
 
+"""
+    showgrid(Makie, ColorSchemes, X,Y,nt)
 
+Show grid partitioned according to [`part2d`](@ref). Needs a makie variant and ColorSchemes
+to be passed as modules.
+"""
 function showgrid(Makie, ColorSchemes, X,Y,nt)
     f = Makie.Figure()
     ax = Makie.Axis(f[1, 1]; aspect = 1)
@@ -109,7 +114,7 @@ function assemblepartition!(A,lindexes,X,Y,xp,yp,d)
 end
 
 """
-    partassemble!(A,N,np=1;xrange=(0,1),yrange=(0,1), d=0.1)
+    partassemble!(A,N,nt=1;xrange=(0,1),yrange=(0,1), d=0.1)
 
 Partitioned, cellwise, multithreaded assembly of finite difference matrix for
 ` -Δu + d*u=f` with homogeneous Neumann bc on grid  set up by coordinate vectors
