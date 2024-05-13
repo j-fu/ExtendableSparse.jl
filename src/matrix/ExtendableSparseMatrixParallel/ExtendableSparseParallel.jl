@@ -14,12 +14,6 @@ mutable struct ExtendableSparseMatrixParallel{Tv, Ti <: Integer} <: AbstractSpar
     lnkmatrices::Vector{SuperSparseMatrixLNK{Tv, Ti}}
 
     """
-    this is the grid on which the pde lives
-    (We do not want this dependency)
-    """
-    #grid::ExtendableGrid
-
-    """
     Number of Nodes per Threads
     """
 	nnts::Vector{Ti}
@@ -98,16 +92,36 @@ mutable struct ExtendableSparseMatrixParallel{Tv, Ti <: Integer} <: AbstractSpar
 end
 
 
+"""
+$(SIGNATURES)
 
-function ExtendableSparseMatrixParallel{Tv, Ti}(nm, nt, depth; x0=0.0, x1=1.0) where {Tv, Ti <: Integer}
-	grid, nnts, s, onr, cfp, gi, ni, rni, starts, cellparts, depth = preparatory_multi_ps_less_reverse(nm, nt, depth, Ti; x0, x1)
-	csc = spzeros(Tv, Ti, num_nodes(grid), num_nodes(grid))
-	lnk = [SuperSparseMatrixLNK{Tv, Ti}(num_nodes(grid), nnts[tid]) for tid=1:nt]
+`ExtendableSparseMatrixParallel{Tv, Ti}(mat_cell_node, nc, nn, nt, depth; block_struct = true) where {Tv, Ti <: Integer}`
+
+Create an ExtendableSparseMatrixParallel based on a grid.
+The grid is specified by nc (number of cells), nn (number of nodes) and the `mat_cell_node` (i.e. grid[CellNodes] if ExtendableGrids is used). 
+Here, `mat_cell_node[k,i]` is the i-th node in the k-th cell.
+The matrix structure is made for parallel computations with `nt` threads.
+`depth` is the number of partition layers, for depth=1, there are nt parts and 1 separator, for depth=2, the separator is partitioned again
+`block_struct=true` means, the matrix should be reordered two have a block structure, this is necessary for parallel ILU, for `false`, the matrix is not reordered 
+"""
+function ExtendableSparseMatrixParallel{Tv, Ti}(mat_cell_node, nc, nn, nt, depth; block_struct = true) where {Tv, Ti <: Integer}
+	nnts, s, onr, cfp, gi, ni, rni, starts, cellparts, depth = preparatory_multi_ps_less_reverse(mat_cell_node, nc, nn, nt, depth, Ti; block_struct)
+	csc = spzeros(Tv, Ti, nn, nn)
+	lnk = [SuperSparseMatrixLNK{Tv, Ti}(nn, nnts[tid]) for tid=1:nt]
 	ExtendableSparseMatrixParallel{Tv, Ti}(csc, lnk, nnts, s, onr, cfp, gi, ni, rni, starts, cellparts, nt, depth, phash(csc), csc.n, csc.m)
 end
 
 
+"""
+$(SIGNATURES)
 
+`addtoentry!(A::ExtendableSparseMatrixParallel{Tv, Ti}, i, j, tid, v; known_that_unknown=false) where {Tv, Ti <: Integer}`
+
+`A[i,j] += v`
+This function should be used, if the thread in which the entry appears is known (`tid`).
+If the thread is not known, use `addtoentry!(A::ExtendableSparseMatrixParallel{Tv, Ti}, i, j, v; known_that_unknown=false)`, this function calculates `tid`.
+If you know that the entry is not yet known to the CSC structure, set `known_that_unknown=true`.
+"""
 function addtoentry!(A::ExtendableSparseMatrixParallel{Tv, Ti}, i, j, tid, v; known_that_unknown=false) where {Tv, Ti <: Integer}
 	if known_that_unknown
 		A.lnkmatrices[tid][i, A.sortednodesperthread[tid, j]] += v
@@ -121,29 +135,14 @@ function addtoentry!(A::ExtendableSparseMatrixParallel{Tv, Ti}, i, j, tid, v; kn
 end
 
 
-#=
-function addtoentry!(A::ExtendableSparseMatrixParallel{Tv, Ti}, i, j, v; known_that_unknown=false) where {Tv, Ti <: Integer}
-	if known_that_unknown
-		level, tid = last_nz(ext.old_noderegions[:, ext.rev_new_indices[j]])
-		A.lnkmatrices[tid][i, A.sortednodesperthread[tid, j]] += v
-		return
-	end
-	
-	if updatentryCSC2!(A.cscmatrix, i, j, v)
-	else
-		level, tid = last_nz(ext.old_noderegions[:, ext.rev_new_indices[j]])
-		A.lnkmatrices[tid][i, A.sortednodesperthread[tid, j]] += v
-	end
-end
-=#
-
-
 """
-`function addtoentry!(A::ExtendableSparseMatrixParallel{Tv, Ti}, i, j, v; known_that_unknown=true) where {Tv, Ti <: Integer}`
+$(SIGNATURES)
+
+`addtoentry!(A::ExtendableSparseMatrixParallel{Tv, Ti}, i, j, v; known_that_unknown=false) where {Tv, Ti <: Integer}`
 
 A[i,j] += v, using any partition.
 If the partition should be specified (for parallel use), use 
-`function addtoentry!(A::ExtendableSparseMatrixParallel{Tv, Ti}, i, j, tid, v; known_that_unknown=true) where {Tv, Ti <: Integer}`.
+`function addtoentry!(A::ExtendableSparseMatrixParallel{Tv, Ti}, i, j, tid, v; known_that_unknown=false) where {Tv, Ti <: Integer}`.
 """
 function addtoentry!(A::ExtendableSparseMatrixParallel{Tv, Ti}, i, j, v; known_that_unknown=false) where {Tv, Ti <: Integer}
 	if known_that_unknown
@@ -161,7 +160,13 @@ end
 
 #---------------------------------
 
+"""
+$(SIGNATURES)
+`updateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti}, op, v, i, j) where {Tv, Ti <: Integer`
 
+Update element of the matrix  with operation `op`.
+Use this method if the 'thread of the element' is not known, otherwise use `updateindex!(ext, op, v, i, j, tid)`. 
+"""
 function updateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti},
                       op,
                       v,
@@ -178,6 +183,13 @@ function updateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti},
     ext
 end
 
+"""
+$(SIGNATURES)
+`updateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti}, op, v, i, j, tid) where {Tv, Ti <: Integer`
+
+Update element of the matrix  with operation `op`.
+Use this method if the 'thread of the element' is known, otherwise use `updateindex!(ext, op, v, i, j)`. 
+"""
 function updateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti},
                       op,
                       v,
@@ -194,6 +206,13 @@ function updateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti},
     ext
 end
 
+"""
+$(SIGNATURES)
+`rawupdateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti}, op, v, i, j) where {Tv, Ti <: Integer}`
+
+Like [`updateindex!`](@ref) but without checking if v is zero.
+Use this method if the 'thread of the element' is not known.
+"""
 function rawupdateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti},
                          op,
                          v,
@@ -209,6 +228,13 @@ function rawupdateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti},
     ext
 end
 
+"""
+$(SIGNATURES)
+`rawupdateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti}, op, v, i, j, tid) where {Tv, Ti <: Integer}`
+
+Like [`updateindex!`](@ref) but without checking if v is zero.
+Use this method if the 'thread of the element' is known
+"""
 function rawupdateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti},
                          op,
                          v,
@@ -224,6 +250,13 @@ function rawupdateindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti},
     ext
 end
 
+"""
+$(SIGNATURES)
+``Base.getindex(ext::ExtendableSparseMatrixParallel{Tv, Ti}, i::Integer, j::Integer) where {Tv, Ti <: Integer`
+
+Find index in CSC matrix and return value, if it exists.
+Otherwise, return value from extension.
+"""
 function Base.getindex(ext::ExtendableSparseMatrixParallel{Tv, Ti},
                        i::Integer,
                        j::Integer) where {Tv, Ti <: Integer}
@@ -237,6 +270,13 @@ function Base.getindex(ext::ExtendableSparseMatrixParallel{Tv, Ti},
     
 end
 
+"""
+$(SIGNATURES)
+`Base.setindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti}, v::Union{Number,AbstractVecOrMat}, i::Integer, j::Integer) where {Tv, Ti}`
+
+Find index in CSC matrix and set value if it exists. Otherwise,
+set index in extension if `v` is nonzero.
+"""
 function Base.setindex!(ext::ExtendableSparseMatrixParallel{Tv, Ti},
                         v::Union{Number,AbstractVecOrMat},
                         i::Integer,
@@ -256,16 +296,31 @@ end
 
 #------------------------------------
 
+"""
+$(SIGNATURES)
+
+Reset matrix, such that CSC and LNK have no non-zero entries.
+"""
 function reset!(A::ExtendableSparseMatrixParallel{Tv, Ti}) where {Tv, Ti <: Integer}
 	A.cscmatrix = spzeros(Tv, Ti, A.n, A.m)
 	A.lnkmatrices = [SuperSparseMatrixLNK{Tv, Ti}(A.n, A.nnts[tid]) for tid=1:A.nt]
 end
 
+"""
+$(SIGNATURES)
+
+Compute number of non-zero elements, after flush.
+"""
 function nnz_flush(ext::ExtendableSparseMatrixParallel)
     flush!(ext)
     return nnz(ext.cscmatrix)
 end
 
+"""
+$(SIGNATURES)
+
+Compute number of non-zero elements, without flush.
+"""
 function nnz_noflush(ext::ExtendableSparseMatrixParallel)
     return nnz(ext.cscmatrix), sum([ext.lnkmatrices[i].nnz for i=1:ext.nt])
 end
@@ -279,7 +334,11 @@ function matrixvaluetype(A::ExtendableSparseMatrixParallel{Tv, Ti}) where {Tv, T
 end
 
 
+"""
+$(SIGNATURES)
 
+Show matrix, without flushing
+"""
 function Base.show(io::IO, ::MIME"text/plain", ext::ExtendableSparseMatrixParallel)
     #flush!(ext)
     xnnzCSC, xnnzLNK = nnz_noflush(ext)
@@ -321,7 +380,11 @@ function entryexists2(CSC, i, j) #find out if CSC already has an nonzero entry a
 	i in view(CSC.rowval, CSC.colptr[j]:(CSC.colptr[j+1]-1))
 end
 
+"""
+$(SIGNATURES)
 
+Find out if i,j is non-zero entry in CSC, if yes, update entry with += v and return `true`, if not return `false`
+"""
 function updatentryCSC2!(CSC::SparseArrays.SparseMatrixCSC{Tv, Ti}, i::Integer, j::Integer, v) where {Tv, Ti <: Integer}
 	p1 = CSC.colptr[j]
 	p2 = CSC.colptr[j+1]-1
@@ -347,6 +410,7 @@ include("struct_flush.jl")
 import LinearAlgebra.mul!
 
 """
+$(SIGNATURES)
 ```function LinearAlgebra.mul!(y, A, x)```
 
 This overwrites the mul! function for A::ExtendableSparseMatrixParallel
@@ -361,6 +425,7 @@ end
 
 
 """
+$(SIGNATURES)
 ```function matvec!(y, A, x)```
 
 y <- A*x, where y and x are vectors and A is an ExtendableSparseMatrixParallel

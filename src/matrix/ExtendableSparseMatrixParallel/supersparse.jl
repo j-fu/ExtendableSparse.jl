@@ -399,103 +399,13 @@ function print_col(col, coll)
 	@info v
 end
 
-function plus(lnk::SparseMatrixLNK{Tv, Ti}, csc::SparseArrays.SparseMatrixCSC) where {Tv, Ti <: Integer}
-	if lnk.nnz == 0
-		return csc
-	elseif length(csc.rowval) == 0
-		return SparseMatrixCSC(lnk)
-	else
-		return lnk + csc
-	end
-end
 
-function plus(lnk::SuperSparseMatrixLNK{Tv, Ti}, csc::SparseArrays.SparseMatrixCSC) where {Tv, Ti <: Integer}
-	gi = collect(1:csc.n)
-	
-	
-	supersparsecolumns = gi[lnk.collnk[1:lnk.colctr]]
-	sortedcolumnids    = sortperm(supersparsecolumns)
-	sortedcolumns      = supersparsecolumns[sortedcolumnids]
-	#sortedcolumns      = vcat([1], sortedcolumns)
-	sortedcolumns      = vcat(sortedcolumns, [csc.n+1])
-	
-	col = [ColEntry{Tv, Ti}(0, zero(Tv)) for i=1:csc.m]
-	
-	#@info sortedcolumnids 
-	
-	nnz_sum   = length(csc.rowval) + lnk.nnz
-	colptr    = Vector{Ti}(undef, csc.n+1)
-	rowval    = Vector{Ti}(undef, nnz_sum)
-	nzval     = Vector{Tv}(undef, nnz_sum)
-	colptr[1] = one(Ti)
-	
-	#first part: columns between 1 and first column of lnk
-	
-	colptr[1:sortedcolumns[1]] = view(csc.colptr, 1:sortedcolumns[1])
-	rowval[1:csc.colptr[sortedcolumns[1]]-1] = view(csc.rowval, 1:csc.colptr[sortedcolumns[1]]-1)
-	nzval[1:csc.colptr[sortedcolumns[1]]-1]  = view(csc.nzval, 1:csc.colptr[sortedcolumns[1]]-1)
-	
-	numshifts = 0
-	
-	for J=1:length(sortedcolumns)-1
-		#@info ">>>>>>> $J <<<<<<<<<<<<<<<"
-		# insert new added column here / dummy
-		i = sortedcolumns[J]
-		coll = get_column!(col, lnk, i)
-		#print_col(col, coll)
-		
-		nns       = merge_into!(rowval, nzval, csc, col, i, coll, colptr[i]-1)
-		
-		numshifts += nns
-		#j = colptr[i] #sortedcolumns[J]] 
-		#rowval[j] = J
-		#nzval[j]  = J
-		# insertion end
-		
-		#colptr[i+1] = colptr[i] + csc.colptr[i+1]-csc.colptr[i] + numshifts
-		
-		#a = i+1
-		#b = sortedcolumns[J+1]
-		#@info a, b
-		
-		
-		#colptr[i+1:sortedcolumns[J+1]] = (csc.colptr[i+1:sortedcolumns[J+1]]-csc.colptr[i:sortedcolumns[J+1]-1]).+(colptr[i] + nns)
-		
-		colptr[i+1:sortedcolumns[J+1]] = csc.colptr[i+1:sortedcolumns[J+1]].+(-csc.colptr[i]+colptr[i] + nns)
-		
-		
-		rowval[colptr[i+1]:colptr[sortedcolumns[J+1]]-1] = view(csc.rowval, csc.colptr[i+1]:csc.colptr[sortedcolumns[J+1]]-1)
-		nzval[colptr[i+1]:colptr[sortedcolumns[J+1]]-1]  = view(csc.nzval, csc.colptr[i+1]:csc.colptr[sortedcolumns[J+1]]-1)
-		
-		
-		#=
-		
-		@info csc.colptr[a:b]
-		
-		colptr[a:b] = csc.colptr[a:b].+numshifts
-		
-		#colptr[i+2:sortedcolumns[J+1]] = csc.colptr[i+2:sortedcolumns[J+1]].+numshifts
-		@info i, J, colptr[i+2], colptr[sortedcolumns[J+1]], csc.colptr[i+2], csc.colptr[sortedcolumns[J+1]]
-		@info i, J, colptr[a], colptr[b], csc.colptr[a], csc.colptr[b]
-		rowval[colptr[i+2]:colptr[sortedcolumns[J+1]]] = view(csc.rowval, csc.colptr[i+2]:csc.colptr[sortedcolumns[J+1]])
-		nzval[colptr[i+2]:colptr[sortedcolumns[J+1]]]  = view(csc.nzval, csc.colptr[i+2]:csc.colptr[sortedcolumns[J+1]])
-		#rowval[colptrsortedcolumns[J+1]]
-		=#
-	end
-	
-	#@info colptr
-	
-	resize!(rowval, length(csc.rowval)+numshifts)
-	resize!(nzval, length(csc.rowval)+numshifts)
-	
-	
-	SparseMatrixCSC(csc.m, csc.n, colptr, rowval, nzval)
+"""
+$(SIGNATURES)
 
-		
-
-end
-
-
+Add the matrices `lnks` of type SuperSparseMatrixLNK onto the SparseMatrixCSC `csc`.
+`gi[i]` maps the indices in `lnks[i]` to the indices of `csc`.
+"""
 function plus_remap(lnks::Vector{SuperSparseMatrixLNK{Tv, Ti}}, csc::SparseArrays.SparseMatrixCSC, gi::Vector{Vector{Ti}}; keep_zeros=true) where {Tv, Ti <: Integer}
 	nt = length(lnks)
 
@@ -605,7 +515,12 @@ function plus_remap(lnks::Vector{SuperSparseMatrixLNK{Tv, Ti}}, csc::SparseArray
 end
 
 
+"""
+$(SIGNATURES)
 
+Add the SuperSparseMatrixLNK `lnk` onto the SparseMatrixCSC `csc`.
+`gi` maps the indices in `lnk` to the indices of `csc`.
+"""
 function plus_remap(lnk::SuperSparseMatrixLNK{Tv, Ti}, csc::SparseArrays.SparseMatrixCSC, gi::Vector{Ti}) where {Tv, Ti <: Integer}
 
 	#@info lnk.collnk[1:lnk.colctr]
@@ -677,7 +592,103 @@ function plus_remap(lnk::SuperSparseMatrixLNK{Tv, Ti}, csc::SparseArrays.SparseM
 end
 
 
+"""
 
+function plus(lnk::SparseMatrixLNK{Tv, Ti}, csc::SparseArrays.SparseMatrixCSC) where {Tv, Ti <: Integer}
+	if lnk.nnz == 0
+		return csc
+	elseif length(csc.rowval) == 0
+		return SparseMatrixCSC(lnk)
+	else
+		return lnk + csc
+	end
+end
+
+function plus(lnk::SuperSparseMatrixLNK{Tv, Ti}, csc::SparseArrays.SparseMatrixCSC) where {Tv, Ti <: Integer}
+	gi = collect(1:csc.n)
+	
+	
+	supersparsecolumns = gi[lnk.collnk[1:lnk.colctr]]
+	sortedcolumnids    = sortperm(supersparsecolumns)
+	sortedcolumns      = supersparsecolumns[sortedcolumnids]
+	#sortedcolumns      = vcat([1], sortedcolumns)
+	sortedcolumns      = vcat(sortedcolumns, [csc.n+1])
+	
+	col = [ColEntry{Tv, Ti}(0, zero(Tv)) for i=1:csc.m]
+	
+	#@info sortedcolumnids 
+	
+	nnz_sum   = length(csc.rowval) + lnk.nnz
+	colptr    = Vector{Ti}(undef, csc.n+1)
+	rowval    = Vector{Ti}(undef, nnz_sum)
+	nzval     = Vector{Tv}(undef, nnz_sum)
+	colptr[1] = one(Ti)
+	
+	#first part: columns between 1 and first column of lnk
+	
+	colptr[1:sortedcolumns[1]] = view(csc.colptr, 1:sortedcolumns[1])
+	rowval[1:csc.colptr[sortedcolumns[1]]-1] = view(csc.rowval, 1:csc.colptr[sortedcolumns[1]]-1)
+	nzval[1:csc.colptr[sortedcolumns[1]]-1]  = view(csc.nzval, 1:csc.colptr[sortedcolumns[1]]-1)
+	
+	numshifts = 0
+	
+	for J=1:length(sortedcolumns)-1
+		#@info ">>>>>>> J <<<<<<<<<<<<<<<"
+		# insert new added column here / dummy
+		i = sortedcolumns[J]
+		coll = get_column!(col, lnk, i)
+		#print_col(col, coll)
+		
+		nns       = merge_into!(rowval, nzval, csc, col, i, coll, colptr[i]-1)
+		
+		numshifts += nns
+		#j = colptr[i] #sortedcolumns[J]] 
+		#rowval[j] = J
+		#nzval[j]  = J
+		# insertion end
+		
+		#colptr[i+1] = colptr[i] + csc.colptr[i+1]-csc.colptr[i] + numshifts
+		
+		#a = i+1
+		#b = sortedcolumns[J+1]
+		#@info a, b
+		
+		
+		#colptr[i+1:sortedcolumns[J+1]] = (csc.colptr[i+1:sortedcolumns[J+1]]-csc.colptr[i:sortedcolumns[J+1]-1]).+(colptr[i] + nns)
+		
+		colptr[i+1:sortedcolumns[J+1]] = csc.colptr[i+1:sortedcolumns[J+1]].+(-csc.colptr[i]+colptr[i] + nns)
+		
+		
+		rowval[colptr[i+1]:colptr[sortedcolumns[J+1]]-1] = view(csc.rowval, csc.colptr[i+1]:csc.colptr[sortedcolumns[J+1]]-1)
+		nzval[colptr[i+1]:colptr[sortedcolumns[J+1]]-1]  = view(csc.nzval, csc.colptr[i+1]:csc.colptr[sortedcolumns[J+1]]-1)
+		
+		
+		#=
+		
+		@info csc.colptr[a:b]
+		
+		colptr[a:b] = csc.colptr[a:b].+numshifts
+		
+		#colptr[i+2:sortedcolumns[J+1]] = csc.colptr[i+2:sortedcolumns[J+1]].+numshifts
+		@info i, J, colptr[i+2], colptr[sortedcolumns[J+1]], csc.colptr[i+2], csc.colptr[sortedcolumns[J+1]]
+		@info i, J, colptr[a], colptr[b], csc.colptr[a], csc.colptr[b]
+		rowval[colptr[i+2]:colptr[sortedcolumns[J+1]]] = view(csc.rowval, csc.colptr[i+2]:csc.colptr[sortedcolumns[J+1]])
+		nzval[colptr[i+2]:colptr[sortedcolumns[J+1]]]  = view(csc.nzval, csc.colptr[i+2]:csc.colptr[sortedcolumns[J+1]])
+		#rowval[colptrsortedcolumns[J+1]]
+		=#
+	end
+	
+	#@info colptr
+	
+	resize!(rowval, length(csc.rowval)+numshifts)
+	resize!(nzval, length(csc.rowval)+numshifts)
+	
+	
+	SparseMatrixCSC(csc.m, csc.n, colptr, rowval, nzval)
+
+		
+
+end
 
 function plus_loop(lnk::SuperSparseMatrixLNK{Tv, Ti}, csc::SparseArrays.SparseMatrixCSC) where {Tv, Ti <: Integer}
 	gi = collect(1:csc.n)
@@ -738,7 +749,6 @@ function plus_loop(lnk::SuperSparseMatrixLNK{Tv, Ti}, csc::SparseArrays.SparseMa
 end
 
 
-
 function twodisjointsets(n, k)
 	A = rand(1:n, k)
 	B = zeros(Int64, k)
@@ -767,7 +777,7 @@ function distinct(x, n)
 	end
 	y
 end 
-
+"""
 
 function mean(x)
 	sum(x)/length(x)

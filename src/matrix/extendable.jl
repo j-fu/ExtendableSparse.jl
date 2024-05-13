@@ -313,6 +313,15 @@ function flush!(ext::ExtendableSparseMatrix)
     end
     return ext
 end
+"""
+$(SIGNATURES)
+
+Reset ExtenableSparseMatrix into state similar to that after creation.
+"""
+function reset!(A::ExtendableSparseMatrix)
+    A.cscmatrix=spzeros(size(A)...)
+    A.lnkmatrix=nothing
+end
 
 """
 $(SIGNATURES)

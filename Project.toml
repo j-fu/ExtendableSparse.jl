@@ -6,7 +6,6 @@ version = "1.4.0"
 [deps]
 AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
-ExtendableGrids = "cfc395e8-590f-11e8-1f13-43a2532b2fa8"
 ILUZero = "88f59080-6952-5380-9ea5-54057fb9a43f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Metis = "2679e427-3c69-5b7f-982b-ece356f1e94b"
