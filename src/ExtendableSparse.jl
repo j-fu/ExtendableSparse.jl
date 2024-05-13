@@ -6,7 +6,6 @@ using ILUZero
 
 using Metis
 using Base.Threads
-using ExtendableGrids
 
 if  !isdefined(Base, :get_extension)
     using Requires
@@ -28,7 +27,7 @@ include("matrix/sparsematrixcsc.jl")
 include("matrix/sparsematrixlnk.jl")
 include("matrix/extendable.jl")
 
-export SparseMatrixLNK, ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse
+export SparseMatrixLNK, ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse, reset!
 
 export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
