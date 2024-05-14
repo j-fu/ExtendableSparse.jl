@@ -50,7 +50,9 @@ mutable struct SuperSparseMatrixLNK{Tv, Ti <: Integer} <: AbstractSparseMatrix{T
     """
     nzval::Vector{Tv}
     
-	
+	"""
+	(Unsorted) list of all columns with non-zero entries
+	"""
     collnk::Vector{Ti}
     
 	# counts the number of columns in use
