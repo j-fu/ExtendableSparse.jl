@@ -1,9 +1,8 @@
 using ExtendableSparse,SparseArrays
+using ExtendableSparse.Experimental
 using DocStringExtensions
 using BenchmarkTools
 using Test
-
-include("parallel_testtools.jl")
 
 """
     test_correctness_update(N)
@@ -99,7 +98,7 @@ end
 
 Reset ExtenableSparseMatrix into state similar to that after creation.
 """
-function reset!(A)
+function ExtendableSparse.reset!(A::ExtendableSparseMatrix)
     A.cscmatrix=spzeros(size(A)...)
     A.lnkmatrix=nothing
 end

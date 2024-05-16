@@ -5,6 +5,7 @@ version = "1.4.0"
 
 [deps]
 AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288"
+ChunkSplitters = "ae650224-84b6-46f8-82ea-d812ca08434e"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 ILUZero = "88f59080-6952-5380-9ea5-54057fb9a43f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"

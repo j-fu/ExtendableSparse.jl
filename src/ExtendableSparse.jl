@@ -4,8 +4,6 @@ using LinearAlgebra
 using Sparspak
 using ILUZero
 
-using Metis
-using Base.Threads
 
 if  !isdefined(Base, :get_extension)
     using Requires
@@ -31,17 +29,9 @@ export SparseMatrixLNK, ExtendableSparseMatrix, flush!, nnz, updateindex!, rawup
 
 export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
-
-#@warn "ESMP!"
-include("matrix/ExtendableSparseMatrixParallel/ExtendableSparseParallel.jl")
-
-
-
-include("factorizations/ilu_Al-Kurdi_Mittal.jl")
-#using .ILUAM
-include("factorizations/pilu_Al-Kurdi_Mittal.jl")
-#using .PILUAM
 include("factorizations/factorizations.jl")
+
+include("experimental/Experimental.jl")
 
 include("factorizations/simple_iteration.jl")
 export simple, simple!
@@ -49,23 +39,18 @@ export simple, simple!
 include("matrix/sprand.jl")
 export sprand!, sprand_sdd!, fdrand, fdrand!, fdrand_coo, solverbenchmark
 
+export rawupdateindex!, updateindex!
 
 
-
-export ExtendableSparseMatrixParallel, SuperSparseMatrixLNK
-export addtoentry!, reset!, dummy_assembly!, preparatory_multi_ps_less_reverse, fr, addtoentry!, rawupdateindex!, updateindex!, compare_matrices_light
 
 
 export JacobiPreconditioner,
     ILU0Preconditioner,
     ILUZeroPreconditioner,
-    ILUAMPreconditioner,
-    PILUAMPreconditioner,
     PointBlockILUZeroPreconditioner,
     ParallelJacobiPreconditioner,
     ParallelILU0Preconditioner,
-    BlockPreconditioner,allow_views,
-    reorderlinsys
+    BlockPreconditioner,allow_views
 
 export AbstractFactorization, LUFactorization, CholeskyFactorization, SparspakLU
 export issolver

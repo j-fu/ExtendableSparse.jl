@@ -1,3 +1,10 @@
+using ExtendableSparse,SparseArrays
+using ExtendableSparse.Experimental
+using DocStringExtensions
+using BenchmarkTools
+using Test
+
+
 """
 `test_ESMP(n, nt; depth=1, Tv=Float64, Ti=Int64, k=10)`
 
@@ -38,6 +45,41 @@ function test_ESMP(n, nt; depth=1, Tv=Float64, Ti=Int64, k=10)
     info_minmax(times_update, "update")
     
     A
+end
+
+
+function speedup_build_ESMP(n, depth=1, Tv=Float64, Ti=Int64, allnp=[4,5,6,7,8,9,10])
+    m = n
+    lindexes = LinearIndices((1:n,1:m))
+    X = collect(1:n) #LinRange(0,1,n)
+    Y = collect(1:n) #LinRange(0,1,m)
+
+
+    ExtendableSparse.with_locking!(false)
+    A = ExtendableSparseMatrix{Tv, Ti}(n*m, n*m)
+    t0=@belapsed partassemble!($A,$X,$Y) seconds=1 setup=(reset!($A))
+    ExtendableSparse.with_locking!(true)
+
+    mat_cell_node, nc, nn = generate_rectangle_grid(lindexes, Ti)
+    result=[]
+
+    for nt in allnp
+        A = ExtendableSparseMatrixParallel{Tv, Ti}(mat_cell_node, nc, nn, nt, depth; block_struct=false)
+        t=@belapsed assemble_ESMP($A, $n-1, $m-1, $mat_cell_node, $X, $Y; set_CSC_zero=false) setup=(ExtendableSparse.reset!($A)) seconds=1
+        push!(result,(nt,round(t0/t,digits=2)))
+    end
+
+    # #update
+    # times_update = zeros(k)
+    # for i=1:k
+    #     times_update[i] = @elapsed assemble_ESMP(A, n-1, m-1, mat_cell_node, X, Y; set_CSC_zero=true)
+    # end
+
+    # @info "TIMES:  MIN,  AVG,  MAX"
+    # info_minmax(times_build, "build ")
+    # info_minmax(times_update, "update")
+    result
+    
 end
 
 """
@@ -95,7 +137,7 @@ function assemble_ESMP(A::ExtendableSparseMatrixParallel{Tv, Ti}, n, m, mat_cell
         assemblecell!(A, n, m, mat_cell_node, X, Y, d, cell, 1)
     end
 
-    nnzCSC, nnzLNK = ExtendableSparse.nnz_noflush(A)
+    nnzCSC, nnzLNK = nnz_noflush(A)
     if nnzCSC > 0 && nnzLNK > 0	
         flush!(A; do_dense=false)
         #sparse flush
@@ -106,10 +148,10 @@ function assemble_ESMP(A::ExtendableSparseMatrixParallel{Tv, Ti}, n, m, mat_cell
 end
 
 function assembleedge!(A::ExtendableSparseMatrixParallel{Tv, Ti},v,k,l,tid) where {Tv, Ti <: Integer}
-    ExtendableSparse.addtoentry!(A, k, k, tid, +v)
-    ExtendableSparse.addtoentry!(A, k, l, tid, -v)
-    ExtendableSparse.addtoentry!(A, l, k, tid, -v)
-    ExtendableSparse.addtoentry!(A, l, l, tid, +v)
+    addtoentry!(A, k, k, tid, +v)
+    addtoentry!(A, k, l, tid, -v)
+    addtoentry!(A, l, k, tid, -v)
+    addtoentry!(A, l, l, tid, +v)
 end
 
 function assemblecell!(A::ExtendableSparseMatrixParallel{Tv, Ti},n,m,mcn,X,Y,d,cell,tid) where {Tv, Ti <: Integer}
@@ -129,10 +171,10 @@ function assemblecell!(A::ExtendableSparseMatrixParallel{Tv, Ti},n,m,mcn,X,Y,d,c
     assembleedge!(A,0.5*hy/hx,ij00,ij10,tid)
     assembleedge!(A,0.5*hy/hx,ij01,ij11,tid)
     v=0.25*hx*hy
-    ExtendableSparse.addtoentry!(A, ij00, ij00, tid, v*d)
-    ExtendableSparse.addtoentry!(A, ij01, ij01, tid, v*d)
-    ExtendableSparse.addtoentry!(A, ij10, ij10, tid, v*d)
-    ExtendableSparse.addtoentry!(A, ij11, ij11, tid, v*d)
+    addtoentry!(A, ij00, ij00, tid, v*d)
+    addtoentry!(A, ij01, ij01, tid, v*d)
+    addtoentry!(A, ij10, ij10, tid, v*d)
+    addtoentry!(A, ij11, ij11, tid, v*d)
 end
 
 

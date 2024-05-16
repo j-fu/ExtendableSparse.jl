@@ -75,8 +75,6 @@ end
 
 include("ilu0.jl")
 include("iluzero.jl")
-include("iluam.jl")
-include("piluam.jl")
 include("parallel_jacobi.jl")
 include("parallel_ilu0.jl")
 include("sparspak.jl")
@@ -86,8 +84,6 @@ include("jacobi.jl")
 @eval begin
     @makefrommatrix ILU0Preconditioner
     @makefrommatrix ILUZeroPreconditioner
-    @makefrommatrix ILUAMPreconditioner
-    @makefrommatrix PILUAMPreconditioner
     @makefrommatrix PointBlockILUZeroPreconditioner
     @makefrommatrix JacobiPreconditioner
     @makefrommatrix ParallelJacobiPreconditioner
@@ -110,40 +106,8 @@ function factorize!(p::AbstractFactorization, A::ExtendableSparseMatrix)
     update!(p)
     p
 end
-
-function factorize!(p::PILUAMPreconditioner, A::ExtendableSparseMatrixParallel)
-    p.A = A
-    update!(p)
-    p
-end
-
-#function factorize!(p::AbstractFactorization, A::ExtendableSparseMatrixParallel)
-#    p.A = A
-#    update!(p)
-#    p
-#end
-
-#factorize!(p::AbstractFactorization, A::ExtendableSparseMatrixParallel)=factorize!(p,ExtendableSparseMatrix(A.cscmatrix))
-
-#factorize!(p::PILUAMPrecon, A::ExtendableSparseMatrixParallel)=factorize!(p,ExtendableSparseMatrix(A.cscmatrix))
-
 factorize!(p::AbstractFactorization, A::SparseMatrixCSC)=factorize!(p,ExtendableSparseMatrix(A))
 
-#function factorize!(p::PILUAMPrecon, A::ExtendableSparseMatrixParallel)
-#    factorize!(p, A)
-#end
-
-#function factorize!(p::AbstractFactorization, A::ExtendableSparseMatrixParallel)
-#    factorize!(p, A.cscmatrix)
-#end
-
-
-#function factorize!(p::AbstractFactorization, A::ExtendableSparseMatrix)
-#    factorize!(p, A.cscmatrix)
-#end
-
-
-#factorize!(p::PILUAMPrecon, A::ExtendableSparseMatrixParallel)=factorize!(p,A)
 
 """
 ```

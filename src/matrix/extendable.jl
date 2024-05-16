@@ -26,6 +26,29 @@ mutable struct ExtendableSparseMatrix{Tv, Ti <: Integer} <: AbstractSparseMatrix
     phash::UInt64
 end
 
+mutable struct Locking
+    locking::Bool
+end
+
+const locking=Locking(true)
+
+function with_locking!(l::Bool)
+    global locking
+    locking.locking=l
+end
+
+function with_locking()
+    global locking
+    locking.locking
+end
+
+mylock(x)=with_locking() ? Base.lock(x) : nothing
+myunlock(x)=with_locking() ? Base.unlock(x) : nothing
+
+
+#mylock(x)=nothing
+#myunlock(x)=nothing
+
 """
 ```
 ExtendableSparseMatrix(Tv,Ti,m,n)
@@ -57,7 +80,7 @@ ExtendableSparseMatrix(m, n) = ExtendableSparseMatrix{Float64, Int}(m, n)
 """
 $(SIGNATURES)
 
- Create ExtendableSparseMatrix from SparseMatrixCSC
+Create ExtendableSparseMatrix from SparseMatrixCSC
 """
 
 function ExtendableSparseMatrix(csc::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti <: Integer}
@@ -171,14 +194,14 @@ function updateindex!(ext::ExtendableSparseMatrix{Tv, Ti},
     if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)
     else
-        lock(ext.lock)
+        mylock(ext.lock)
         try
             if ext.lnkmatrix == nothing
                 ext.lnkmatrix = SparseMatrixLNK{Tv, Ti}(ext.cscmatrix.m, ext.cscmatrix.n)
             end
             updateindex!(ext.lnkmatrix, op, v, i, j)
         finally
-            unlock(ext.lock)
+            myunlock(ext.lock)
         end
     end
     ext
@@ -198,14 +221,14 @@ function rawupdateindex!(ext::ExtendableSparseMatrix{Tv, Ti},
     if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)
     else
-        lock(ext.lock)
+        mylock(ext.lock)
         try
             if ext.lnkmatrix == nothing
                 ext.lnkmatrix = SparseMatrixLNK{Tv, Ti}(ext.cscmatrix.m, ext.cscmatrix.n)
             end
             rawupdateindex!(ext.lnkmatrix, op, v, i, j)
         finally
-            unlock(ext.lock)
+            myunlock(ext.lock)
         end
     end
     ext
@@ -225,14 +248,14 @@ function Base.setindex!(ext::ExtendableSparseMatrix{Tv, Ti},
     if k > 0
         ext.cscmatrix.nzval[k] = v
     else
-        lock(ext.lock)
+        mylock(ext.lock)
         try
             if ext.lnkmatrix == nothing
                 ext.lnkmatrix = SparseMatrixLNK{Tv, Ti}(ext.cscmatrix.m, ext.cscmatrix.n)
             end
             ext.lnkmatrix[i, j] = v
         finally
-            unlock(ext.lock)
+            myunlock(ext.lock)
         end
     end
 end
@@ -253,11 +276,11 @@ function Base.getindex(ext::ExtendableSparseMatrix{Tv, Ti},
         return zero(Tv)
     else
         v=zero(Tv)
-        lock(ext.lock)
+        mylock(ext.lock)
         try
             v=ext.lnkmatrix[i, j]
         finally
-            unlock(ext.lock)
+            myunlock(ext.lock)
         end
     end
 end

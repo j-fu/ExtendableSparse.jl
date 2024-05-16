@@ -66,10 +66,10 @@ Assemble edge for finite volume laplacian.
 Used by [`partassemble!`](@ref).
 """
 function assembleedge!(A,v,k,l)
-    A[k,k]+=v
-    A[k,l]-=v
-    A[l,k]-=v
-    A[l,l]+=v
+    rawupdateindex!(A,+,v,k,k)
+    rawupdateindex!(A,+,-v,k,l)
+    rawupdateindex!(A,+,-v,l,k)
+    rawupdateindex!(A,+,v,l,l)
 end
 
 """
@@ -92,10 +92,10 @@ function assemblecell!(A,lindexes,X,Y,i,j,d)
     assembleedge!(A,0.5*hy/hx,ij00,ij10)
     assembleedge!(A,0.5*hy/hx,ij01,ij11)
     v=0.25*hx*hy
-    A[ij00,ij00]+=v*d
-    A[ij01,ij01]+=v*d
-    A[ij10,ij10]+=v*d
-    A[ij11,ij11]+=v*d
+    rawupdateindex!(A,+,v*d,ij00,ij00)
+    rawupdateindex!(A,+,v*d,ij01,ij01)
+    rawupdateindex!(A,+,v*d,ij10,ij10)
+    rawupdateindex!(A,+,v*d,ij11,ij11)
 end
 
 """
