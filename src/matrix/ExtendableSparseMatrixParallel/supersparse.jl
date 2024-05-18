@@ -1,7 +1,4 @@
 
-using SparseArrays
-using ExtendableSparse
-
 mutable struct SuperSparseMatrixLNK{Tv, Ti <: Integer} <: AbstractSparseMatrix{Tv, Ti}
     """
     Number of rows
@@ -70,7 +67,7 @@ function SuperSparseMatrixLNK{Tv, Ti}(m, n) where {Tv, Ti <: Integer}
 end
 
 
-function findindex(lnk::SuperSparseMatrixLNK, i, j)
+function ExtendableSparse.findindex(lnk::SuperSparseMatrixLNK, i, j)
     if !((1 <= i <= lnk.m) & (1 <= j <= lnk.n))
         throw(BoundsError(lnk, (i, j)))
     end

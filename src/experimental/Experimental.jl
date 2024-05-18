@@ -1,11 +1,15 @@
 module Experimental
 using ExtendableSparse, SparseArrays
-import ExtendableSparse: flush!, reset!, rawupdateindex!
+using LinearAlgebra
+using SparseArrays: AbstractSparseMatrixCSC
+import SparseArrays: nonzeros, getcolptr,nzrange
+import ExtendableSparse: flush!, reset!, rawupdateindex!, findindex
 using ExtendableSparse: ColEntry, AbstractPreconditioner, @makefrommatrix, phash
 using DocStringExtensions
 using Metis
 using Base.Threads
-using LinearAlgebra
+using OhMyThreads: @tasks
+
 
 include(joinpath(@__DIR__, "..", "matrix", "ExtendableSparseMatrixParallel", "ExtendableSparseParallel.jl"))
 
@@ -34,8 +38,16 @@ export     ILUAMPreconditioner,    PILUAMPreconditioner
 export     reorderlinsys, nnz_noflush
 
 
+include("abstractextendable.jl")
+
+include("sparsematrixdict.jl")
+export SparseMatrixDict
+
+include("extendablesparsematrixdict.jl")
+export ExtendableSparseMatrixParallelDict, partcolors!
+
 include("parallel_testtools.jl")
-export part2d, showgrid, partassemble!
+export part2d, showgrid, partassemble!,  assemblepartition!
 
 end
 
