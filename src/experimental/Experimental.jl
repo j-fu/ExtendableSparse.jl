@@ -4,7 +4,7 @@ using LinearAlgebra
 using SparseArrays: AbstractSparseMatrixCSC
 import SparseArrays: nonzeros, getcolptr,nzrange
 import ExtendableSparse: flush!, reset!, rawupdateindex!, findindex
-using ExtendableSparse: ColEntry, AbstractPreconditioner, @makefrommatrix, phash
+using ExtendableSparse: ColEntry, AbstractPreconditioner, @makefrommatrix, phash, AbstractExtendableSparseMatrix
 using DocStringExtensions
 using Metis
 using Base.Threads
@@ -37,8 +37,6 @@ export addtoentry!, reset!, dummy_assembly!, preparatory_multi_ps_less_reverse, 
 export     ILUAMPreconditioner,    PILUAMPreconditioner
 export     reorderlinsys, nnz_noflush
 
-
-include("abstractextendable.jl")
 
 include("sparsematrixdict.jl")
 export SparseMatrixDict

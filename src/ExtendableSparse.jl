@@ -23,6 +23,7 @@ import SparseArrays: AbstractSparseMatrixCSC, rowvals, getcolptr, nonzeros
 
 include("matrix/sparsematrixcsc.jl")
 include("matrix/sparsematrixlnk.jl")
+include("matrix/abstractextendable.jl")
 include("matrix/extendable.jl")
 
 export SparseMatrixLNK, ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse, reset!
