@@ -15,32 +15,16 @@ end
 
 function rawupdateindex!(m::SparseMatrixDict{Tv,Ti},op,v,i,j) where {Tv,Ti}
     p=Pair(i,j)
-    haskey(m.values,p) ?  vnew=op(m.values[p],v) : vnew=op(zero(Tv),v)
-    m.values[p]=vnew
+    m.values[p]=op(get(m.values, p, zero(Tv)),v)
 end
 
 function Base.getindex(m::SparseMatrixDict{Tv},i,j) where Tv
-    haskey(m.values,Pair(i,j)) ? m.values[Pair(i,j)] : zero(Tv)
+    get(m.values,Pair(i,j),zero(Tv)) 
 end
 
 Base.size(m::SparseMatrixDict)=(m.m,m.n)
 
 flush!(m::SparseMatrixDict)=nothing
-
-function SparseArrays.sparse(m::SparseMatrixDict{Tv,Ti}) where {Tv,Ti}
-	l=length(m.values)
-	I=Vector{Ti}(undef,l)
-	J=Vector{Ti}(undef,l)
-	V=Vector{Tv}(undef,l)
-	i=1
-	for (p,v) in m.values
-		I[i]=first(p)
-		J[i]=last(p)
-		V[i]=v
-		i=i+1
-	end
-	SparseArrays.sparse!(I,J,V,size(m)...,+)
-end
 
 sumlength(mv::Vector{SparseMatrixDict{Tv,Ti}}) where{Tv,Ti}=sum(m->length(m.values),mv)
 
@@ -62,3 +46,4 @@ function SparseArrays.sparse(mv::Vector{SparseMatrixDict{Tv,Ti}}) where {Tv,Ti}
 end
 
 
+SparseArrays.sparse(m::SparseMatrixDict{Tv,Ti}) where {Tv,Ti} = sparse([m])

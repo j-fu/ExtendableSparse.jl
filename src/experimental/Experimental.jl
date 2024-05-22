@@ -44,7 +44,11 @@ include("sparsematrixdict.jl")
 export SparseMatrixDict
 
 include("extendablesparsematrixdict.jl")
+export ExtendableSparseMatrixDict
+
+include("extendablesparsematrixparalleldict.jl")
 export ExtendableSparseMatrixParallelDict, partcolors!
+
 
 include("parallel_testtools.jl")
 export part2d, showgrid, partassemble!,  assemblepartition!

@@ -4,7 +4,7 @@ SparseArrays.nnz(ext::AbstractExtendableSparseMatrix)=nnz(sparse(ext))
 
 SparseArrays.nonzeros(ext::AbstractExtendableSparseMatrix)=nonzeros(sparse(ext))
 
-Base.size(ext::AbstractExtendableSparseMatrix)=size(sparse(ext))
+Base.size(ext::AbstractExtendableSparseMatrix)=size(ext.cscmatrix)
 
 function Base.show(io::IO, ::MIME"text/plain", ext::AbstractExtendableSparseMatrix)
     A=sparse(ext)
@@ -31,4 +31,5 @@ function Base.show(io::IO, ::MIME"text/plain", ext::AbstractExtendableSparseMatr
     end
 end
 
-    
+
+LinearAlgebra.mul!(r, ext::AbstractExtendableSparseMatrix{Tv,Ti}, x) where {Tv,Ti} = mul!(r,sparse(ext),x)

@@ -1,3 +1,5 @@
+module ExperimentalParallelDict
+
 using ExtendableSparse,SparseArrays, ExtendableSparse.Experimental
 using DocStringExtensions
 using BenchmarkTools
@@ -48,10 +50,9 @@ function test_correctness_build(N)
     end
 end
 
-function test_correctness_mul(N; nps=5)
+function test_correctness_mul(N;     allnp=[4,5,6,7,8])
     X=1:N
     Y=1:N
-    allnp=[4,5,6,7,8]
     A0=ExtendableSparseMatrix(N^2,N^2)
     partassemble!(A0,X,Y)
 
@@ -88,16 +89,23 @@ end
 function speedup_build(N; allnp=[4,5,6,7,8,9,10])
     X=1:N
     Y=1:N
+    A0=ExtendableSparseMatrixParallelDict(N^2,N^2,1)
     A=ExtendableSparseMatrixParallelDict(N^2,N^2,1)
+    partassemble!(A0,X,Y)
+    nz=copy(nonzeros(A0))
+    reset!(A0)
+    partassemble!(A0,X,Y)
+    @assert nonzeros(A0)≈(nz)
+
     partassemble!(A,X,Y)
     nz=copy(nonzeros(A))
     reset!(A)
     partassemble!(A,X,Y)
     @assert nonzeros(A)≈(nz)
-    
+
     # Get the base timing
     # During setup, reset matrix to empty state.
-    t0=@belapsed partassemble!($A,$X,$Y) seconds=1 setup=(reset!($A))
+    t0=@belapsed partassemble!($A0,$X,$Y) seconds=1 setup=(reset!($A0))
     
     result=[]
     for np in allnp
@@ -128,3 +136,6 @@ function speedup_mul(N; allnp=[4,5,6,7,8,9,10])
     end
     result
 end
+
+end
+
