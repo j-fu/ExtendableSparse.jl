@@ -8,6 +8,21 @@ using BenchmarkTools
 using MultiFloats
 using ForwardDiff
 
+
+@testset "ExperimentalParallelLocking" begin
+    include("ExperimentalParallelLocking.jl")
+    @testset "update correctness" begin
+        ExperimentalParallelLocking.test_correctness_update(50)
+        ExperimentalParallelLocking.test_correctness_update(100)
+        ExperimentalParallelLocking.test_correctness_update(rand(30:200))
+    end
+    
+    @testset "build correctness" begin
+        ExperimentalParallelLocking.test_correctness_build(50)
+        ExperimentalParallelLocking.test_correctness_build(100)
+        ExperimentalParallelLocking.test_correctness_build(rand(30:200))
+    end
+end
 @testset "ExperimentalDict" begin
     include("ExperimentalDict.jl")
     ExperimentalDict.test_correctness_build(100)

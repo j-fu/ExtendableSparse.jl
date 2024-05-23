@@ -30,7 +30,11 @@ mutable struct Locking
     locking::Bool
 end
 
-const locking=Locking(true)
+#
+# Locking functionality just for developing parallelization.
+# To be removed before merging into main branch.
+#
+const locking=Locking(false)
 
 function with_locking!(l::Bool)
     global locking

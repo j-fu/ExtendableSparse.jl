@@ -1,6 +1,8 @@
+module ExperimentalParallelLocking
+
 using ExtendableSparse,SparseArrays
+using ExtendableSparse: with_locking!
 using ExtendableSparse.Experimental
-using DocStringExtensions
 using BenchmarkTools
 using Test
 
@@ -11,6 +13,7 @@ Test correctness of parallel assembly on NxN grid  during
 update phase, assuming that the structure has been assembled.
 """
 function test_correctness_update(N)
+    with_locking!(true)
     X=1:N
     Y=1:N
     A=ExtendableSparseMatrix(N^2,N^2)
@@ -29,6 +32,7 @@ function test_correctness_update(N)
         partassemble!(A,X,Y, np)
         @test nonzeros(A)≈nz
     end
+    with_locking!(false)
 end
 
 """
@@ -38,6 +42,7 @@ Test correctness of parallel assembly on NxN grid  during
 build phase, assuming that no structure has been assembled.
 """
 function test_correctness_build(N)
+    with_locking!(true)
     X=1:N
     Y=1:N
     allnp=[4,5,6,7,8]
@@ -52,20 +57,10 @@ function test_correctness_build(N)
         partassemble!(A,X,Y, np)
         @test nonzeros(A)≈nz
     end
+    with_locking!(false)
 end
 
 
-@testset "update correctness" begin
-    test_correctness_update(50)
-    test_correctness_update(100)
-    test_correctness_update(rand(30:200))
-end
-
-@testset "build correctness" begin
-    test_correctness_build(50)
-    test_correctness_build(100)
-    test_correctness_build(rand(30:200))
-end
 
 """
     speedup_update(N)
@@ -74,6 +69,7 @@ Benchmark parallel speedup of update phase of parallel assembly on NxN grid.
 Check for correctness as well.
 """
 function speedup_update(N; allnp=[4,5,6,7,8,9,10])
+    with_locking!(true)
     X=1:N
     Y=1:N
     A=ExtendableSparseMatrix(N^2,N^2)
@@ -90,18 +86,10 @@ function speedup_update(N; allnp=[4,5,6,7,8,9,10])
         @assert nonzeros(A)≈nz
         push!(result,(np,round(t0/t,digits=2)))
     end
+    with_locking!(false)
     result
 end
 
-"""
-    reset!(A)
-
-Reset ExtenableSparseMatrix into state similar to that after creation.
-"""
-function ExtendableSparse.reset!(A::ExtendableSparseMatrix)
-    A.cscmatrix=spzeros(size(A)...)
-    A.lnkmatrix=nothing
-end
 
 """
     speedup_build(N)
@@ -112,6 +100,7 @@ Check for correctness as well.
 Works in the moment with locking.
 """
 function speedup_build(N; allnp=[4,5,6,7,8,9,10])
+    with_locking!(true)
     X=1:N
     Y=1:N
     A=ExtendableSparseMatrix(N^2,N^2)
@@ -133,5 +122,7 @@ function speedup_build(N; allnp=[4,5,6,7,8,9,10])
         @assert nonzeros(A)≈nz
         push!(result,(np,round(t0/t,digits=2)))
     end
+    with_locking!(false)
     result
+end
 end
