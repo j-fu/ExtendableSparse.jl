@@ -1,7 +1,6 @@
 module ExperimentalDict
 
 using ExtendableSparse,SparseArrays, ExtendableSparse.Experimental
-using DocStringExtensions
 using BenchmarkTools
 using Test
 

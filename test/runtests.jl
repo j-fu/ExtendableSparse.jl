@@ -8,6 +8,18 @@ using BenchmarkTools
 using MultiFloats
 using ForwardDiff
 
+@testset "ExperimentalDict" begin
+    include("ExperimentalDict.jl")
+    ExperimentalDict.test_correctness_build(100)
+end
+
+@testset "ExperimentalParallelDict" begin
+    include("ExperimentalParallelDict.jl")
+    ExperimentalParallelDict.test_correctness_update(200)
+    ExperimentalParallelDict.test_correctness_build(200)
+    ExperimentalParallelDict.test_correctness_mul(200)
+end
+
 @testset "Constructors" begin include("test_constructors.jl") end
 
 @testset "Copy-Methods" begin include("test_copymethods.jl") end

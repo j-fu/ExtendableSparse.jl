@@ -1,7 +1,6 @@
 module ExperimentalParallelDict
 
 using ExtendableSparse,SparseArrays, ExtendableSparse.Experimental
-using DocStringExtensions
 using BenchmarkTools
 using Test
 
