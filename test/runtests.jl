@@ -2,6 +2,7 @@ using Test
 using LinearAlgebra
 using SparseArrays
 using ExtendableSparse
+using ExtendableSparse.Experimental
 using Printf
 using BenchmarkTools
 
@@ -12,27 +13,35 @@ using ForwardDiff
 @testset "ExperimentalParallelLocking" begin
     include("ExperimentalParallelLocking.jl")
     @testset "update correctness" begin
-        ExperimentalParallelLocking.test_correctness_update(50)
-        ExperimentalParallelLocking.test_correctness_update(100)
-        ExperimentalParallelLocking.test_correctness_update(rand(30:200))
+        for N in [100,rand(30:200),500]
+            ExperimentalParallelLocking.test_correctness_update(N)
+        end
     end
     
     @testset "build correctness" begin
-        ExperimentalParallelLocking.test_correctness_build(50)
-        ExperimentalParallelLocking.test_correctness_build(100)
-        ExperimentalParallelLocking.test_correctness_build(rand(30:200))
+        for N in [100,rand(30:200),500]
+            ExperimentalParallelLocking.test_correctness_build(N)
+        end
     end
 end
-@testset "ExperimentalDict" begin
-    include("ExperimentalDict.jl")
-    ExperimentalDict.test_correctness_build(100)
+@testset "ExperimentalScalar" begin
+    include("ExperimentalScalar.jl")
+    for Tm in [ExtendableSparseMatrixLNK,ExtendableSparseMatrixDict,ExtendableSparseMatrixLNKDict]
+        for N in [100,rand(30:200),500]
+            ExperimentalScalar.test_correctness_build(N,Tm)
+        end
+    end
 end
 
-@testset "ExperimentalParallelDict" begin
-    include("ExperimentalParallelDict.jl")
-    ExperimentalParallelDict.test_correctness_update(200)
-    ExperimentalParallelDict.test_correctness_build(200)
-    ExperimentalParallelDict.test_correctness_mul(200)
+@testset "ExperimentalXParallel" begin
+    include("ExperimentalXParallel.jl")
+    for Tm in [ExtendableSparseMatrixParallelDict,ExtendableSparseMatrixParallelLNKDict]
+        for N in [100,rand(30:200),500]
+            ExperimentalXParallel.test_correctness_update(N,Tm)
+            ExperimentalXParallel.test_correctness_build(N,Tm)
+            ExperimentalXParallel.test_correctness_mul(N,Tm)
+        end
+    end
 end
 
 @testset "Constructors" begin include("test_constructors.jl") end

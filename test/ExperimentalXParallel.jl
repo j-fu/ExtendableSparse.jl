@@ -1,14 +1,14 @@
-module ExperimentalParallelDict
+module ExperimentalXParallel
 
 using ExtendableSparse,SparseArrays, ExtendableSparse.Experimental
 using BenchmarkTools
 using Test
 
 
-function test_correctness_update(N)
+function test_correctness_update(N,Tm::Type{<:AbstractSparseMatrix})
     X=1:N
     Y=1:N
-    A=ExtendableSparseMatrixParallelDict{Float64,Int}(N^2,N^2,1)
+    A=Tm{Float64,Int}(N^2,N^2,1)
     allnp=[4,5,6,7,8]
 
     # Assembele without partitioning
@@ -32,7 +32,7 @@ end
 Test correctness of parallel assembly on NxN grid  during 
 build phase, assuming that no structure has been assembled.
 """
-function test_correctness_build(N)
+function test_correctness_build(N,Tm::Type{<:AbstractSparseMatrix})
     X=1:N
     Y=1:N
     allnp=[4,5,6,7,8]
@@ -43,27 +43,27 @@ function test_correctness_build(N)
     for np in allnp
         # Make a new matrix and assemble parallel.
         # this should result in the same nonzeros
-        A=ExtendableSparseMatrixParallelDict(N^2,N^2,1)
+        A=Tm(N^2,N^2,1)
         partassemble!(A,X,Y, np)
         @test nonzeros(A)≈nz
     end
 end
 
-function test_correctness_mul(N;     allnp=[4,5,6,7,8])
+function test_correctness_mul(N,Tm::Type{<:AbstractSparseMatrix};     allnp=[4,5,6,7,8])
     X=1:N
     Y=1:N
     A0=ExtendableSparseMatrix(N^2,N^2)
     partassemble!(A0,X,Y)
 
     for np in allnp
-        A=ExtendableSparseMatrixParallelDict(N^2,N^2,1)
+        A=Tm(N^2,N^2,1)
         partassemble!(A,X,Y,np)
         b=rand(N^2)
         @test A*b ≈ A0*b
     end    
 end
 
-function speedup_update(N; allnp=[4,5,6,7,8,9,10])
+function speedup_update(N,Tm::Type{<:AbstractSparseMatrix}; allnp=[4,5,6,7,8,9,10])
     X=1:N
     Y=1:N
     A=ExtendableSparseMatrix(N^2,N^2)
@@ -73,7 +73,7 @@ function speedup_update(N; allnp=[4,5,6,7,8,9,10])
     # During setup, set matrix entries to zero while keeping  the structure 
     t0=@belapsed partassemble!($A,$X,$Y) seconds=1 setup=(nonzeros($A).=0)
     result=[]
-    A=ExtendableSparseMatrixParallelDict(N^2,N^2,1)
+    A=Tm(N^2,N^2,1)
     for np in allnp
         # Get the parallel timing
         # During setup, set matrix entries to zero while keeping  the structure
@@ -85,11 +85,11 @@ function speedup_update(N; allnp=[4,5,6,7,8,9,10])
     result
 end
 
-function speedup_build(N; allnp=[4,5,6,7,8,9,10])
+function speedup_build(N,Tm::Type{<:AbstractSparseMatrix}; allnp=[4,5,6,7,8,9,10])
     X=1:N
     Y=1:N
-    A0=ExtendableSparseMatrixParallelDict(N^2,N^2,1)
-    A=ExtendableSparseMatrixParallelDict(N^2,N^2,1)
+    A0=ExtendableSparseMatrix(N^2,N^2)
+    A=Tm(N^2,N^2,1)
     partassemble!(A0,X,Y)
     nz=copy(nonzeros(A0))
     reset!(A0)
@@ -117,7 +117,7 @@ function speedup_build(N; allnp=[4,5,6,7,8,9,10])
     result
 end
 
-function speedup_mul(N; allnp=[4,5,6,7,8,9,10])
+function speedup_mul(N,Tm::Type{<:AbstractSparseMatrix}; allnp=[4,5,6,7,8,9,10])
     X=1:N
     Y=1:N
     
@@ -128,7 +128,7 @@ function speedup_mul(N; allnp=[4,5,6,7,8,9,10])
     
     result=[]
     for np in allnp
-        A=ExtendableSparseMatrixParallelDict(N^2,N^2,1)
+        A=Tm(N^2,N^2,1)
         partassemble!(A,X,Y,np)
         t=@belapsed $A*$b seconds=1
         push!(result,(np,round(t0/t,digits=2)))

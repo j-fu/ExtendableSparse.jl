@@ -139,7 +139,7 @@ function LinearAlgebra.mul!(r, ext::ExtendableSparseMatrixXParallel, x)
     rows = SparseArrays.rowvals(A)
     vals = nonzeros(A)
     
-    r.=zero(Tv)
+    r.=zero(eltype(ext))
     m,n=size(A)
     for icol=1:length(colparts)
         part=colparts[icol]

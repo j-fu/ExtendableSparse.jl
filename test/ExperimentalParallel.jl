@@ -1,7 +1,9 @@
+module ExperimentalParallel
+
 using ExtendableSparse,SparseArrays
 using ExtendableSparse.Experimental
-using DocStringExtensions
 using BenchmarkTools
+using OhMyThreads: @tasks
 using Test
 
 
@@ -48,39 +50,59 @@ function test_ESMP(n, nt; depth=1, Tv=Float64, Ti=Int64, k=10)
 end
 
 
-function speedup_build_ESMP(n, depth=1, Tv=Float64, Ti=Int64, allnp=[4,5,6,7,8,9,10])
+function speedup_build(n, depth=1, Tv=Float64, Ti=Int64, allnp=[4,5,6,7,8,9,10])
     m = n
     lindexes = LinearIndices((1:n,1:m))
     X = collect(1:n) #LinRange(0,1,n)
     Y = collect(1:n) #LinRange(0,1,m)
 
-
-    ExtendableSparse.with_locking!(false)
-    A = ExtendableSparseMatrix{Tv, Ti}(n*m, n*m)
-    t0=@belapsed partassemble!($A,$X,$Y) seconds=1 setup=(reset!($A))
-    ExtendableSparse.with_locking!(true)
-
     mat_cell_node, nc, nn = generate_rectangle_grid(lindexes, Ti)
+
+    A0 = ExtendableSparseMatrix{Tv, Ti}(n*m, n*m)
+    t0=@belapsed assemble_ESMP($A0, $n-1, $m-1, $mat_cell_node, $X, $Y; set_CSC_zero=false) seconds=1 setup=(reset!($A0))
+    
     result=[]
 
     for nt in allnp
         A = ExtendableSparseMatrixParallel{Tv, Ti}(mat_cell_node, nc, nn, nt, depth; block_struct=false)
         t=@belapsed assemble_ESMP($A, $n-1, $m-1, $mat_cell_node, $X, $Y; set_CSC_zero=false) setup=(ExtendableSparse.reset!($A)) seconds=1
+        @assert A.cscmatrix≈A0.cscmatrix
         push!(result,(nt,round(t0/t,digits=2)))
     end
 
-    # #update
-    # times_update = zeros(k)
-    # for i=1:k
-    #     times_update[i] = @elapsed assemble_ESMP(A, n-1, m-1, mat_cell_node, X, Y; set_CSC_zero=true)
-    # end
-
-    # @info "TIMES:  MIN,  AVG,  MAX"
-    # info_minmax(times_build, "build ")
-    # info_minmax(times_update, "update")
     result
     
 end
+
+
+function speedup_update(n, depth=1, Tv=Float64, Ti=Int64, allnp=[4,5,6,7,8,9,10])
+    m = n
+    lindexes = LinearIndices((1:n,1:m))
+    X = collect(1:n) #LinRange(0,1,n)
+    Y = collect(1:n) #LinRange(0,1,m)
+
+    mat_cell_node, nc, nn = generate_rectangle_grid(lindexes, Ti)
+
+    A0 = ExtendableSparseMatrix{Tv, Ti}(n*m, n*m)
+    assemble_ESMP(A0, n-1, m-1, mat_cell_node, X, Y)
+    t0=@belapsed assemble_ESMP($A0, $n-1, $m-1, $mat_cell_node, $X, $Y; set_CSC_zero=false) seconds=1 setup=(nonzeros($A0.cscmatrix).=0)
+    
+
+
+    result=[]
+
+    for nt in allnp
+        A = ExtendableSparseMatrixParallel{Tv, Ti}(mat_cell_node, nc, nn, nt, depth; block_struct=false)
+        assemble_ESMP(A, n-1, m-1, mat_cell_node, X, Y; set_CSC_zero=false)
+        t=@belapsed assemble_ESMP($A, $n-1, $m-1, $mat_cell_node, $X, $Y; set_CSC_zero=false) setup=(nonzeros($A.cscmatrix).=0) seconds=1
+        @assert A.cscmatrix≈A0.cscmatrix
+        push!(result,(nt,round(t0/t,digits=2)))
+    end
+
+    result
+    
+end
+
 
 """
 `generate_rectangle_grid(lindexes, Ti)`
@@ -126,7 +148,7 @@ function assemble_ESMP(A::ExtendableSparseMatrixParallel{Tv, Ti}, n, m, mat_cell
     end
 
     for level=1:A.depth
-        Threads.@threads for tid=1:A.nt
+        @tasks for tid=1:A.nt
             for cell in A.cellsforpart[(level-1)*A.nt+tid]
                 assemblecell!(A, n, m, mat_cell_node, X, Y, d, cell, tid)
             end
@@ -146,6 +168,7 @@ function assemble_ESMP(A::ExtendableSparseMatrixParallel{Tv, Ti}, n, m, mat_cell
         #dense flush
     end 
 end
+
 
 function assembleedge!(A::ExtendableSparseMatrixParallel{Tv, Ti},v,k,l,tid) where {Tv, Ti <: Integer}
     addtoentry!(A, k, k, tid, +v)
@@ -221,4 +244,5 @@ function assemblecell!(A::ExtendableSparseMatrix{Tv, Ti},n,m,mcn,X,Y,d,cell) whe
     A[ij01,ij01]+=v*d
     A[ij10,ij10]+=v*d
     A[ij11,ij11]+=v*d
+end
 end

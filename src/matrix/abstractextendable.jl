@@ -1,9 +1,10 @@
 """
 
-Must implement:
-sparse
-Constructor from SparseMatrixCSC
+Subtypes must implement:
+- SparseArrays.sparse (may be should be sparse! ?) flush+return SparseMatrixCSC
+- Constructor from SparseMatrixCSC
 rawupdateindex!
+reset!: empty all internals, just keep size 
 """
 
 abstract type AbstractExtendableSparseMatrix{Tv,Ti} <: AbstractSparseMatrixCSC{Tv,Ti} end
