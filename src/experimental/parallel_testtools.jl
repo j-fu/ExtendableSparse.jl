@@ -179,7 +179,7 @@ function partassemble!(A,X,Y,nt=1;d=0.1)
 
     lindexes=LinearIndices((1:Nx,1:Ny))
     if nt==1
-	assemblepartition!(A,lindexes,X,Y,1:Nx-1,1:Nx-1,d)
+        assemblepartition!(A,lindexes,X,Y,1:Nx-1,1:Nx-1,d)
     else
         p=part2d(X,Y,nt)
         for icol=1:length(p)
@@ -192,7 +192,7 @@ function partassemble!(A,X,Y,nt=1;d=0.1)
 end
 
 
-function partassemble!(A::ExtendableSparseMatrixParallelDict,X,Y,nt=1;d=0.1, reset=true)
+function partassemble!(A::Union{ExtendableSparseMatrixParallelDict,ExtendableSparseMatrixParallelLNKDict},X,Y,nt=1;d=0.1, reset=true)
     Nx=length(X)
     Ny=length(Y)
     size(A,1)==Nx*Ny || error("incompatible size of A")

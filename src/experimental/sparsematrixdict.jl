@@ -1,3 +1,8 @@
+"""
+    $(TYPEDEF)    
+
+Sparse matrix where entries are organized as dictionary.
+"""
 mutable struct SparseMatrixDict{Tv,Ti} <: AbstractSparseMatrix{Tv,Ti}
     m::Ti
     n::Ti
@@ -24,26 +29,81 @@ end
 
 Base.size(m::SparseMatrixDict)=(m.m,m.n)
 
-flush!(m::SparseMatrixDict)=nothing
-
-sumlength(mv::Vector{SparseMatrixDict{Tv,Ti}}) where{Tv,Ti}=sum(m->length(m.values),mv)
-
-function SparseArrays.sparse(mv::Vector{SparseMatrixDict{Tv,Ti}}) where {Tv,Ti}
-    l=sumlength(mv)
+function SparseArrays.sparse(m::SparseMatrixDict{Tv,Ti}) where {Tv,Ti} 
+    l=length(m.values)
     I=Vector{Ti}(undef,l)
     J=Vector{Ti}(undef,l)
     V=Vector{Tv}(undef,l)
     i=1
-    for m in mv
-        for (p,v) in m.values
+    for (p,v) in m.values
+	I[i]=first(p)
+	J[i]=last(p)
+	V[i]=v
+	i=i+1
+    end
+    SparseArrays.sparse!(I,J,V,size(mv[1])...,+)
+end
+
+function Base.:+(dictmatrix::SparseMatrixDict{Tv,Ti}, cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti} 
+    lnew=length(dictmatrix.values)
+    if lnew>0
+        (;colptr,nzval,rowval,m,n)=cscmatrix
+        l=lnew+nnz(cscmatrix)
+        I=Vector{Ti}(undef,l)
+        J=Vector{Ti}(undef,l)
+        V=Vector{Tv}(undef,l)
+        i=1
+        for icsc=1:length(colptr)-1
+            for j=colptr[icsc]:colptr[icsc+1]-1
+                I[i]=icsc
+                J[i]=rowval[j]
+                V[i]=nzval[j]
+                i=i+1
+            end            
+        end
+        
+        for (p,v) in dictmatrix.values
 	    I[i]=first(p)
 	    J[i]=last(p)
 	    V[i]=v
 	    i=i+1
         end
+        return SparseArrays.sparse!(I,J,V,m,n,+)
     end
-    SparseArrays.sparse!(I,J,V,size(mv[1])...,+)
+    cscmatrix
 end
 
-
-SparseArrays.sparse(m::SparseMatrixDict{Tv,Ti}) where {Tv,Ti} = sparse([m])
+function sum!(nodeparts, dictmatrices::Vector{SparseMatrixDict{Tv,Ti}}, cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}
+    lnew=sum(m->length(m.values),dictmatrices)
+    if lnew>0
+        (;colptr,nzval,rowval,m,n)=cscmatrix
+        l=lnew+nnz(cscmatrix)
+        I=Vector{Ti}(undef,l)
+        J=Vector{Ti}(undef,l)
+        V=Vector{Tv}(undef,l)
+        i=1
+        
+        for icsc=1:length(colptr)-1
+            for j=colptr[icsc]:colptr[icsc+1]-1
+                I[i]=icsc
+                J[i]=rowval[j]
+                V[i]=nzval[j]
+                i=i+1
+            end            
+        end
+        
+        ip=1
+        for m in dictmatrices
+            for (p,v) in m.values
+                nodeparts[last(p)]=ip
+	        I[i]=first(p)
+	        J[i]=last(p)
+	        V[i]=v
+	        i=i+1
+            end
+            ip=ip+1
+        end
+        return SparseArrays.sparse!(I,J,V,m,n,+)
+    end
+    return cscmatrix
+end

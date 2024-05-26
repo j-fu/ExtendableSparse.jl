@@ -41,11 +41,32 @@ export     reorderlinsys, nnz_noflush
 include("sparsematrixdict.jl")
 export SparseMatrixDict
 
-include("extendablesparsematrixdict.jl")
+include("sparsematrixlnkdict.jl")
+export SparseMatrixLNKDict
+
+include("extendablesparsematrixscalar.jl")
+export ExtendableSparseMatrixScalar
+
+const ExtendableSparseMatrixDict{Tv,Ti}=ExtendableSparseMatrixScalar{SparseMatrixDict{Tv,Ti},Tv,Ti}
 export ExtendableSparseMatrixDict
 
-include("extendablesparsematrixparalleldict.jl")
+
+const ExtendableSparseMatrixLNKDict{Tv,Ti}=ExtendableSparseMatrixScalar{SparseMatrixLNKDict{Tv,Ti},Tv,Ti}
+export ExtendableSparseMatrixLNKDict
+
+const ExtendableSparseMatrixLNK{Tv,Ti}=ExtendableSparseMatrixScalar{SparseMatrixLNK{Tv,Ti},Tv,Ti}
+export ExtendableSparseMatrixLNK
+
+
+include("extendablesparsematrixparallel.jl")
+const ExtendableSparseMatrixParallelDict{Tv,Ti}=ExtendableSparseMatrixXParallel{SparseMatrixDict{Tv,Ti},Tv,Ti}
+ExtendableSparseMatrixParallelDict(m,n,p)= ExtendableSparseMatrixParallelDict{Float64,Int64}(m,n,p)
 export ExtendableSparseMatrixParallelDict, partcolors!
+
+
+const ExtendableSparseMatrixParallelLNKDict{Tv,Ti}=ExtendableSparseMatrixXParallel{SparseMatrixLNKDict{Tv,Ti},Tv,Ti}
+ExtendableSparseMatrixParallelLNKDict(m,n,p)= ExtendableSparseMatrixParallelLNKDict{Float64,Int64}(m,n,p)
+export ExtendableSparseMatrixParallelLNKDict, partcolors!
 
 
 include("parallel_testtools.jl")
