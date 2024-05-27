@@ -269,7 +269,7 @@ function add_via_COO(lnk::SparseMatrixLNKX{Tv, Ti},
     @static if VERSION>=v"1.10"
         return SparseArrays.sparse!(I,J,V,m,n,+)
     else
-        return SparseArrays.sparse!(I,J,V,m,n,+)
+        return SparseArrays.sparse(I,J,V,m,n,+)
     end
 end
 
@@ -414,7 +414,7 @@ function sum!(nodeparts, lnkdictmatrices::Vector{SparseMatrixLNKX{Tv,Ti}}, cscma
         @static if VERSION>=v"1.10"
             return SparseArrays.sparse!(I,J,V,m,n,+)
         else
-            return SparseArrays.sparse!(I,J,V,m,n,+)
+            return SparseArrays.sparse(I,J,V,m,n,+)
         end
     end
     return cscmatrix

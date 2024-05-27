@@ -46,7 +46,7 @@ function SparseArrays.sparse(m::SparseMatrixDict{Tv,Ti}) where {Tv,Ti}
     @static if VERSION>=v"1.10"
         return SparseArrays.sparse!(I,J,V,m,n,+)
     else
-        return SparseArrays.sparse!(I,J,V,m,n,+)
+        return SparseArrays.sparse(I,J,V,m,n,+)
     end
 end
 
@@ -77,7 +77,7 @@ function Base.:+(dictmatrix::SparseMatrixDict{Tv,Ti}, cscmatrix::SparseMatrixCSC
         @static if VERSION>=v"1.10"
             return SparseArrays.sparse!(I,J,V,m,n,+)
         else
-            return SparseArrays.sparse!(I,J,V,m,n,+)
+            return SparseArrays.sparse(I,J,V,m,n,+)
         end
     end
     cscmatrix
@@ -113,7 +113,11 @@ function sum!(nodeparts, dictmatrices::Vector{SparseMatrixDict{Tv,Ti}}, cscmatri
             end
             ip=ip+1
         end
-        return SparseArrays.sparse!(I,J,V,m,n,+)
+        @static if VERSION>=v"1.10"
+            return SparseArrays.sparse!(I,J,V,m,n,+)
+        else
+            return SparseArrays.sparse(I,J,V,m,n,+)
+        end
     end
     return cscmatrix
 end
