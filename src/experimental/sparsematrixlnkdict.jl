@@ -4,7 +4,7 @@
 Modification of SparseMatrixLNK where the pointer to first index of
 column j is stored in a dictionary.
 """
-mutable struct SparseMatrixLNKDict{Tv, Ti <: Integer} <: AbstractSparseMatrix{Tv, Ti}
+mutable struct SparseMatrixLNKDict{Tv, Ti <: Integer} <: AbstractSparseMatrixExtension{Tv, Ti}
     """
     Number of rows
     """
@@ -240,15 +240,6 @@ Return number of nonzero entries.
 """
 SparseArrays.nnz(lnk::SparseMatrixLNKDict) = lnk.nnz
 
-"""
-$(SIGNATURES)
-
-Dummy flush! method for SparseMatrixLNKDict. Just
-used in test methods
-"""
-function flush!(lnk::SparseMatrixLNKDict{Tv, Ti}) where {Tv, Ti}
-    return lnk
-end
 
 """
     $(SIGNATURES)
@@ -262,13 +253,15 @@ function add_via_COO(lnk::SparseMatrixLNKDict{Tv, Ti},
     J=Vector{Ti}(undef,l)
     V=Vector{Tv}(undef,l)
     i=1
-    for icsc=1:length(colptr)-1
-        for j=colptr[icsc]:colptr[icsc+1]-1
-            I[i]=icsc
-            J[i]=rowval[j]
-            V[i]=nzval[j]
-            i=i+1
-        end            
+    if nnz(csc)>0
+        for icsc=1:length(colptr)-1
+            for j=colptr[icsc]:colptr[icsc+1]-1
+                I[i]=icsc
+                J[i]=rowval[j]
+                V[i]=nzval[j]
+                i=i+1
+            end            
+        end
     end
     for (j,k) in lnk.colstart
         while k>0

@@ -22,6 +22,7 @@ using DocStringExtensions
 import SparseArrays: AbstractSparseMatrixCSC, rowvals, getcolptr, nonzeros
 
 include("matrix/sparsematrixcsc.jl")
+include("matrix/abstractextension.jl")
 include("matrix/sparsematrixlnk.jl")
 include("matrix/abstractextendable.jl")
 include("matrix/extendable.jl")

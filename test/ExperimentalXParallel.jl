@@ -32,10 +32,9 @@ end
 Test correctness of parallel assembly on NxN grid  during 
 build phase, assuming that no structure has been assembled.
 """
-function test_correctness_build(N,Tm::Type{<:AbstractSparseMatrix})
+function test_correctness_build(N,Tm::Type{<:AbstractSparseMatrix}, allnp=[4,5,6,7,8])
     X=1:N
     Y=1:N
-    allnp=[4,5,6,7,8]
     # Get the "ground truth"
     A=ExtendableSparseMatrix(N^2,N^2)
     partassemble!(A,X,Y)

@@ -3,7 +3,7 @@
 
 Sparse matrix where entries are organized as dictionary.
 """
-mutable struct SparseMatrixDict{Tv,Ti} <: AbstractSparseMatrix{Tv,Ti}
+mutable struct SparseMatrixDict{Tv,Ti} <: AbstractSparseMatrixExtension{Tv,Ti}
     m::Ti
     n::Ti
     values::Dict{Pair{Ti,Ti}, Tv}
@@ -28,6 +28,8 @@ function Base.getindex(m::SparseMatrixDict{Tv},i,j) where Tv
 end
 
 Base.size(m::SparseMatrixDict)=(m.m,m.n)
+
+SparseArrays.nnz(m::SparseMatrixDict)=length(m.values)
 
 function SparseArrays.sparse(m::SparseMatrixDict{Tv,Ti}) where {Tv,Ti} 
     l=length(m.values)

@@ -50,6 +50,25 @@ function test_ESMP(n, nt; depth=1, Tv=Float64, Ti=Int64, k=10)
 end
 
 
+function test_correctness_build(n, depth=1, Tv=Float64, Ti=Int64, allnp=[4,5,6,7,8,9,10])
+    m = n
+    lindexes = LinearIndices((1:n,1:m))
+    X = collect(1:n) #LinRange(0,1,n)
+    Y = collect(1:n) #LinRange(0,1,m)
+    
+    mat_cell_node, nc, nn = generate_rectangle_grid(lindexes, Ti)
+    
+    A0 = ExtendableSparseMatrix{Tv, Ti}(n*m, n*m)
+    assemble_ESMP(A0, n-1, m-1, mat_cell_node, X, Y; set_CSC_zero=false)
+
+    for nt in allnp
+        A = ExtendableSparseMatrixParallel{Tv, Ti}(mat_cell_node, nc, nn, nt, depth; block_struct=false)
+        assemble_ESMP(A, n-1, m-1, mat_cell_node, X, Y; set_CSC_zero=false)
+        @assert A.cscmatrix≈A0.cscmatrix
+    end
+end
+
+
 function speedup_build(n, depth=1, Tv=Float64, Ti=Int64, allnp=[4,5,6,7,8,9,10])
     m = n
     lindexes = LinearIndices((1:n,1:m))
@@ -158,7 +177,6 @@ function assemble_ESMP(A::ExtendableSparseMatrixParallel{Tv, Ti}, n, m, mat_cell
     for cell in A.cellsforpart[A.depth*A.nt+1]
         assemblecell!(A, n, m, mat_cell_node, X, Y, d, cell, 1)
     end
-
     nnzCSC, nnzLNK = nnz_noflush(A)
     if nnzCSC > 0 && nnzLNK > 0	
         flush!(A; do_dense=false)
@@ -166,7 +184,7 @@ function assemble_ESMP(A::ExtendableSparseMatrixParallel{Tv, Ti}, n, m, mat_cell
     elseif nnzCSC == 0 && nnzLNK > 0
         flush!(A; do_dense=true)
         #dense flush
-    end 
+    end
 end
 
 

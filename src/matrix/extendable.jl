@@ -17,8 +17,6 @@ mutable struct ExtendableSparseMatrix{Tv, Ti <: Integer} <: AbstractExtendableSp
     Linked list structure holding data of extension
     """
     lnkmatrix::Union{SparseMatrixLNK{Tv, Ti}, Nothing}
-
-    lock::Base.ReentrantLock
     
     """
     Pattern hash
@@ -26,32 +24,6 @@ mutable struct ExtendableSparseMatrix{Tv, Ti <: Integer} <: AbstractExtendableSp
     phash::UInt64
 end
 
-mutable struct Locking
-    locking::Bool
-end
-
-#
-# Locking functionality just for developing parallelization.
-# To be removed before merging into main branch.
-#
-const locking=Locking(false)
-
-function with_locking!(l::Bool)
-    global locking
-    locking.locking=l
-end
-
-function with_locking()
-    global locking
-    locking.locking
-end
-
-mylock(x)=with_locking() ? Base.lock(x) : nothing
-myunlock(x)=with_locking() ? Base.unlock(x) : nothing
-
-
-#mylock(x)=nothing
-#myunlock(x)=nothing
 
 """
 ```
@@ -65,7 +37,7 @@ Create empty ExtendableSparseMatrix. This is equivalent to `spzeros(m,n)` for
 """
 
 function ExtendableSparseMatrix{Tv, Ti}(m, n) where {Tv, Ti <: Integer}
-    ExtendableSparseMatrix{Tv, Ti}(spzeros(Tv, Ti, m, n), nothing,Base.ReentrantLock(), 0)
+    ExtendableSparseMatrix{Tv, Ti}(spzeros(Tv, Ti, m, n), nothing, 0)
 end
 
 function ExtendableSparseMatrix(valuetype::Type{Tv},
@@ -87,11 +59,11 @@ $(SIGNATURES)
 Create ExtendableSparseMatrix from SparseMatrixCSC
 """
 function ExtendableSparseMatrix(csc::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti <: Integer}
-    ExtendableSparseMatrix{Tv, Ti}(csc, nothing, Base.ReentrantLock(), phash(csc))
+    ExtendableSparseMatrix{Tv, Ti}(csc, nothing, phash(csc))
 end
 
 function ExtendableSparseMatrix{Tv,Ti}(csc::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti <: Integer}
-    ExtendableSparseMatrix{Tv, Ti}(csc, nothing, Base.ReentrantLock(), phash(csc))
+    ExtendableSparseMatrix{Tv, Ti}(csc, nothing, phash(csc))
 end
 
 """
@@ -193,15 +165,10 @@ function updateindex!(ext::ExtendableSparseMatrix{Tv, Ti},
     if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)
     else
-        mylock(ext.lock)
-        try
-            if ext.lnkmatrix == nothing
-                ext.lnkmatrix = SparseMatrixLNK{Tv, Ti}(ext.cscmatrix.m, ext.cscmatrix.n)
-            end
-            updateindex!(ext.lnkmatrix, op, v, i, j)
-        finally
-            myunlock(ext.lock)
+        if ext.lnkmatrix == nothing
+            ext.lnkmatrix = SparseMatrixLNK{Tv, Ti}(ext.cscmatrix.m, ext.cscmatrix.n)
         end
+        updateindex!(ext.lnkmatrix, op, v, i, j)
     end
     ext
 end
@@ -220,15 +187,10 @@ function rawupdateindex!(ext::ExtendableSparseMatrix{Tv, Ti},
     if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)
     else
-        mylock(ext.lock)
-        try
             if ext.lnkmatrix == nothing
                 ext.lnkmatrix = SparseMatrixLNK{Tv, Ti}(ext.cscmatrix.m, ext.cscmatrix.n)
             end
             rawupdateindex!(ext.lnkmatrix, op, v, i, j)
-        finally
-            myunlock(ext.lock)
-        end
     end
     ext
 end
@@ -247,15 +209,10 @@ function Base.setindex!(ext::ExtendableSparseMatrix{Tv, Ti},
     if k > 0
         ext.cscmatrix.nzval[k] = v
     else
-        mylock(ext.lock)
-        try
-            if ext.lnkmatrix == nothing
-                ext.lnkmatrix = SparseMatrixLNK{Tv, Ti}(ext.cscmatrix.m, ext.cscmatrix.n)
-            end
-            ext.lnkmatrix[i, j] = v
-        finally
-            myunlock(ext.lock)
+        if ext.lnkmatrix == nothing
+            ext.lnkmatrix = SparseMatrixLNK{Tv, Ti}(ext.cscmatrix.m, ext.cscmatrix.n)
         end
+        ext.lnkmatrix[i, j] = v
     end
 end
 
@@ -275,12 +232,7 @@ function Base.getindex(ext::ExtendableSparseMatrix{Tv, Ti},
         return zero(Tv)
     else
         v=zero(Tv)
-        mylock(ext.lock)
-        try
-            v=ext.lnkmatrix[i, j]
-        finally
-            myunlock(ext.lock)
-        end
+        v=ext.lnkmatrix[i, j]
     end
 end
 
@@ -325,9 +277,9 @@ $(SIGNATURES)
 """
 function Base.copy(S::ExtendableSparseMatrix)
     if isnothing(S.lnkmatrix)
-        ExtendableSparseMatrix(copy(S.cscmatrix), nothing,  Base.ReentrantLock(),S.phash)
+        ExtendableSparseMatrix(copy(S.cscmatrix), nothing,S.phash)
     else
-        ExtendableSparseMatrix(copy(S.cscmatrix), copy(S.lnkmatrix), Base.ReentrantLock(), S.phash)
+        ExtendableSparseMatrix(copy(S.cscmatrix), copy(S.lnkmatrix), S.phash)
     end
 end
 

@@ -9,21 +9,6 @@ using BenchmarkTools
 using MultiFloats
 using ForwardDiff
 
-
-@testset "ExperimentalParallelLocking" begin
-    include("ExperimentalParallelLocking.jl")
-    @testset "update correctness" begin
-        for N in [100,rand(30:200),500]
-            ExperimentalParallelLocking.test_correctness_update(N)
-        end
-    end
-    
-    @testset "build correctness" begin
-        for N in [100,rand(30:200),500]
-            ExperimentalParallelLocking.test_correctness_build(N)
-        end
-    end
-end
 @testset "ExperimentalScalar" begin
     include("ExperimentalScalar.jl")
     for Tm in [ExtendableSparseMatrixLNK,ExtendableSparseMatrixDict,ExtendableSparseMatrixLNKDict]
@@ -43,6 +28,16 @@ end
         end
     end
 end
+
+@testset "ExperimentalParallel" begin
+    include("ExperimentalParallel.jl")
+    for d=[1,2,3]
+        for N in [100,rand(30:200),500]
+            ExperimentalParallel.test_correctness_build(N,d)
+        end
+    end
+end
+
 
 @testset "Constructors" begin include("test_constructors.jl") end
 

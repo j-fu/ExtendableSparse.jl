@@ -20,9 +20,9 @@ function speed_build(N,Tm::Type{<:AbstractSparseMatrix})
     A0=ExtendableSparseMatrix{Float64,Int}(N^2,N^2)
     A=Tm{Float64,Int}(N^2,N^2)
 
-    tlnk= @belapsed partassemble!($A0,$X,$Y) seconds=1 setup=(reset!($A0))
-    tdict= @belapsed partassemble!($A,$X,$Y) seconds=1 setup=(reset!($A))
-    tlnk/tdict
+    tbase= @belapsed partassemble!($A0,$X,$Y) seconds=1 setup=(reset!($A0))
+    tx= @belapsed partassemble!($A,$X,$Y) seconds=1 setup=(reset!($A))
+    tbase/tx
 end
 
 end

@@ -1,4 +1,4 @@
-mutable struct ExtendableSparseMatrixXParallel{Tm, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrix{Tv, Ti}
+mutable struct ExtendableSparseMatrixXParallel{Tm<:AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrix{Tv, Ti}
     """
     Final matrix data
     """
@@ -15,7 +15,7 @@ mutable struct ExtendableSparseMatrixXParallel{Tm, Tv, Ti <: Integer} <: Abstrac
 end
 
 
-function ExtendableSparseMatrixXParallel{Tm, Tv, Ti}(n,m,p::Integer) where{Tm, Tv, Ti}
+function ExtendableSparseMatrixXParallel{Tm, Tv, Ti}(n,m,p::Integer) where{Tm<:AbstractSparseMatrixExtension, Tv, Ti}
     ExtendableSparseMatrixXParallel(spzeros(Tv, Ti, m, n),
                                     [Tm(m,n) for i=1:p],
                                     zeros(Ti,n),

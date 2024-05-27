@@ -1,4 +1,4 @@
-mutable struct ExtendableSparseMatrixScalar{Tm, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrix{Tv, Ti}
+mutable struct ExtendableSparseMatrixScalar{Tm<:AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrix{Tv, Ti}
     """
     Final matrix data
     """
@@ -11,7 +11,7 @@ mutable struct ExtendableSparseMatrixScalar{Tm, Tv, Ti <: Integer} <: AbstractEx
 end
 
 
-function ExtendableSparseMatrixScalar{Tm, Tv, Ti}(m::Integer,n::Integer) where{Tm, Tv, Ti<:Integer}
+function ExtendableSparseMatrixScalar{Tm, Tv, Ti}(m::Integer,n::Integer) where{Tm<:AbstractSparseMatrixExtension, Tv, Ti<:Integer}
     ExtendableSparseMatrixScalar(spzeros(Tv, Ti, m, n),
                                  Tm(m,n)
                                  )
@@ -27,8 +27,10 @@ end
 
 
 function flush!(ext::ExtendableSparseMatrixScalar{Tm,Tv,Ti}) where{Tm,Tv,Ti}
-    ext.cscmatrix=ext.xmatrix+ext.cscmatrix
-    ext.xmatrix=Tm(size(ext.cscmatrix)...)
+    if nnz(ext.xmatrix)>0
+        ext.cscmatrix=ext.xmatrix+ext.cscmatrix
+        ext.xmatrix=Tm(size(ext.cscmatrix)...)
+    end
     ext
 end
     
