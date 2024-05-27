@@ -62,7 +62,6 @@ function flush!(ext::ExtendableSparseMatrixXParallel{Tm,Tv,Ti}) where{Tm,Tv,Ti}
     np=length(ext.xmatrices)
     (m,n)=size(ext.cscmatrix)
     ext.xmatrices=[Tm(m,n) for i=1:np]
- 
     npts::Vector{Ti}=ext.nodeparts
     pn=zeros(Ti,np)
     for i=1:n
@@ -132,7 +131,14 @@ function rawupdateindex!(ext::ExtendableSparseMatrixXParallel,
     end
 end
 
+
+# Needed in 1.9
+function Base.:*(ext::ExtendableSparse.Experimental.ExtendableSparseMatrixXParallel{Tm, TA} where Tm<:ExtendableSparse.AbstractSparseMatrixExtension, x::Union{StridedVector, BitVector}) where TA
+    mul!(similar(x),ext,x)
+end
+
 function LinearAlgebra.mul!(r, ext::ExtendableSparseMatrixXParallel, x)
+    flush!(ext)
     A=ext.cscmatrix
     colparts=ext.colparts
     partnodes=ext.partnodes

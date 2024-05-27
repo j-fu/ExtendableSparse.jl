@@ -53,11 +53,12 @@ function test_correctness_mul(N,Tm::Type{<:AbstractSparseMatrix};     allnp=[4,5
     Y=1:N
     A0=ExtendableSparseMatrix(N^2,N^2)
     partassemble!(A0,X,Y)
-
     for np in allnp
         A=Tm(N^2,N^2,1)
         partassemble!(A,X,Y,np)
         b=rand(N^2)
+        flush!(A)
+        A*b
         @test A*b ≈ A0*b
     end    
 end
