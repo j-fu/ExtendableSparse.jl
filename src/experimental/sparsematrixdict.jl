@@ -43,7 +43,11 @@ function SparseArrays.sparse(m::SparseMatrixDict{Tv,Ti}) where {Tv,Ti}
 	V[i]=v
 	i=i+1
     end
-    SparseArrays.sparse!(I,J,V,size(mv[1])...,+)
+    @static if VERSION>=v"1.10"
+        return SparseArrays.sparse!(I,J,V,m,n,+)
+    else
+        return SparseArrays.sparse!(I,J,V,m,n,+)
+    end
 end
 
 function Base.:+(dictmatrix::SparseMatrixDict{Tv,Ti}, cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti} 
@@ -70,7 +74,11 @@ function Base.:+(dictmatrix::SparseMatrixDict{Tv,Ti}, cscmatrix::SparseMatrixCSC
 	    V[i]=v
 	    i=i+1
         end
-        return SparseArrays.sparse!(I,J,V,m,n,+)
+        @static if VERSION>=v"1.10"
+            return SparseArrays.sparse!(I,J,V,m,n,+)
+        else
+            return SparseArrays.sparse!(I,J,V,m,n,+)
+        end
     end
     cscmatrix
 end

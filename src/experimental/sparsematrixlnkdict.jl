@@ -272,7 +272,11 @@ function add_via_COO(lnk::SparseMatrixLNKDict{Tv, Ti},
             i=i+1
         end
     end
-    return SparseArrays.sparse!(I,J,V,m,n,+)
+    @static if VERSION>=v"1.10"
+        return SparseArrays.sparse!(I,J,V,m,n,+)
+    else
+        return SparseArrays.sparse!(I,J,V,m,n,+)
+    end
 end
 
 

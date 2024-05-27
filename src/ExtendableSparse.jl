@@ -3,7 +3,7 @@ using SparseArrays,StaticArrays
 using LinearAlgebra
 using Sparspak
 using ILUZero
-
+using OhMyThreads: @tasks
 
 if  !isdefined(Base, :get_extension)
     using Requires
