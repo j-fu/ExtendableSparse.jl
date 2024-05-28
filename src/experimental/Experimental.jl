@@ -10,6 +10,7 @@ using DocStringExtensions
 using Metis
 using Base.Threads
 using OhMyThreads: @tasks
+import ExtendableSparse: factorize!, update!
 
 
 include(joinpath(@__DIR__, "..", "matrix", "ExtendableSparseMatrixParallel", "ExtendableSparseParallel.jl"))
