@@ -150,13 +150,10 @@ function LinearAlgebra.mul!(r, ext::ExtendableSparseMatrixXParallel, x)
     for icol=1:length(colparts)
         part=colparts[icol]
         @tasks for ip=1:length(part)
-            @inbounds begin
-                for j in partnodes[part[ip]]
-                    for i in nzrange(A,j)
-                        row = rows[i]
-                        val = vals[i]
-                        r[row]+=val*x[j]
-                    end
+            pnodes=partnodes[part[ip]]
+            for j in  pnodes
+                @inbounds for i in nzrange(A,j)
+                    r[rows[i]]+=vals[i]*x[j]
                 end
             end
         end

@@ -31,22 +31,22 @@ Base.size(m::SparseMatrixDict)=(m.m,m.n)
 
 SparseArrays.nnz(m::SparseMatrixDict)=length(m.values)
 
-function SparseArrays.sparse(m::SparseMatrixDict{Tv,Ti}) where {Tv,Ti} 
-    l=length(m.values)
+function SparseArrays.sparse(mat::SparseMatrixDict{Tv,Ti}) where {Tv,Ti} 
+    l=length(mat.values)
     I=Vector{Ti}(undef,l)
     J=Vector{Ti}(undef,l)
     V=Vector{Tv}(undef,l)
     i=1
-    for (p,v) in m.values
+    for (p,v) in mat.values
 	I[i]=first(p)
 	J[i]=last(p)
 	V[i]=v
 	i=i+1
     end
     @static if VERSION>=v"1.10"
-        return SparseArrays.sparse!(I,J,V,m,n,+)
+        return SparseArrays.sparse!(I,J,V,size(mat)...,+)
     else
-        return SparseArrays.sparse(I,J,V,m,n,+)
+        return SparseArrays.sparse(I,J,V,size(mat)...,+)
     end
 end
 

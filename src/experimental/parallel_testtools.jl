@@ -195,6 +195,7 @@ end
 function partassemble!(A::Union{ExtendableSparseMatrixParallelDict,ExtendableSparseMatrixParallelLNKDict,ExtendableSparseMatrixParallelLNKX},X,Y,nt=1;d=0.1, reset=true)
     Nx=length(X)
     Ny=length(Y)
+
     size(A,1)==Nx*Ny || error("incompatible size of A")
     size(A,2)==Nx*Ny || error("incompatible size of A")
 
@@ -219,3 +220,5 @@ function partassemble!(A::Union{ExtendableSparseMatrixParallelDict,ExtendableSpa
     end
     flush!(A)
 end
+
+

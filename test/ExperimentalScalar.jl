@@ -3,25 +3,25 @@ using ExtendableSparse,SparseArrays, ExtendableSparse.Experimental
 using BenchmarkTools
 using Test
 
+include("test_parallel.jl")
 
-function test_correctness_build(N,Tm::Type{<:AbstractSparseMatrix})
-    X=1:N
-    Y=1:N
-    A0=ExtendableSparseMatrix{Float64,Int}(N^2,N^2)
-    A=Tm{Float64,Int}(N^2,N^2)
-    partassemble!(A0,X,Y)
-    partassemble!(A,X,Y)
+function test_correctness_build(N,Tm::Type{<:AbstractSparseMatrix}; dim=3)
+    grid=testgrid(N;dim)
+    nnodes=num_nodes(grid)
+    A0=ExtendableSparseMatrix{Float64,Int}(nnodes,nnodes)
+    A=Tm{Float64,Int}(nnodes,nnodes)
+    testassemble!(A0,grid)
+    testassemble!(A,grid)
     @test sparse(A0)≈sparse(A)
 end
 
-function speed_build(N,Tm::Type{<:AbstractSparseMatrix})
-    X=1:N
-    Y=1:N
-    A0=ExtendableSparseMatrix{Float64,Int}(N^2,N^2)
-    A=Tm{Float64,Int}(N^2,N^2)
-
-    tbase= @belapsed partassemble!($A0,$X,$Y) seconds=1 setup=(reset!($A0))
-    tx= @belapsed partassemble!($A,$X,$Y) seconds=1 setup=(reset!($A))
+function speed_build(N,Tm::Type{<:AbstractSparseMatrix}; dim=3)
+    grid=testgrid(N;dim)
+    nnodes=num_nodes(grid)
+    A0=ExtendableSparseMatrix{Float64,Int}(nnodes,nnodes)
+    A=Tm{Float64,Int}(nnodes,nnodes)
+    tbase= @belapsed testassemble!($A0,$grid) seconds=1 setup=(reset!($A0))
+    tx= @belapsed testassemble!($A,$grid) seconds=1 setup=(reset!($A))
     tbase/tx
 end
 

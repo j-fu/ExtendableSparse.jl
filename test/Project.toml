@@ -2,6 +2,7 @@
 AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288"
 AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+ExtendableGrids = "cfc395e8-590f-11e8-1f13-43a2532b2fa8"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 ILUZero = "88f59080-6952-5380-9ea5-54057fb9a43f"
 IncompleteLU = "40713840-3770-5561-ab4c-a76e7d0d7895"
