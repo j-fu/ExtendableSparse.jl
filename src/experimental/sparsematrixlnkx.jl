@@ -377,7 +377,7 @@ Add SparseMatrixCSC matrix and [`SparseMatrixLNKX`](@ref)  lnk, returning a Spar
 """
 Base.:+(lnk::SparseMatrixLNKX, csc::SparseMatrixCSC) = add_directly(lnk, csc)
 
-function sum!(nodeparts, lnkdictmatrices::Vector{SparseMatrixLNKX{Tv,Ti}}, cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}
+function Base.sum(lnkdictmatrices::Vector{SparseMatrixLNKX{Tv,Ti}}, cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}
     lnew=sum(nnz,lnkdictmatrices)
     if lnew>0
         (;colptr,nzval,rowval,m,n)=cscmatrix

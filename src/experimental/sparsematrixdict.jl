@@ -83,7 +83,7 @@ function Base.:+(dictmatrix::SparseMatrixDict{Tv,Ti}, cscmatrix::SparseMatrixCSC
     cscmatrix
 end
 
-function sum!(nodeparts, dictmatrices::Vector{SparseMatrixDict{Tv,Ti}}, cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}
+function Base.sum(dictmatrices::Vector{SparseMatrixDict{Tv,Ti}}, cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}
     lnew=sum(m->length(m.values),dictmatrices)
     if lnew>0
         (;colptr,nzval,rowval,m,n)=cscmatrix
@@ -105,7 +105,6 @@ function sum!(nodeparts, dictmatrices::Vector{SparseMatrixDict{Tv,Ti}}, cscmatri
         ip=1
         for m in dictmatrices
             for (p,v) in m.values
-                nodeparts[last(p)]=ip
 	        I[i]=first(p)
 	        J[i]=last(p)
 	        V[i]=v

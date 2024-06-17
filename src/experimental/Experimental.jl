@@ -79,9 +79,5 @@ const ExtendableSparseMatrixParallelLNKDict{Tv,Ti}=ExtendableSparseMatrixXParall
 ExtendableSparseMatrixParallelLNKDict(m,n,p)= ExtendableSparseMatrixParallelLNKDict{Float64,Int64}(m,n,p)
 export ExtendableSparseMatrixParallelLNKDict
 
-
-include("parallel_testtools.jl")
-export part2d, showgrid, partassemble!,  assemblepartition!
-
 end
 
