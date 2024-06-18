@@ -13,15 +13,15 @@ using OhMyThreads: @tasks
 import ExtendableSparse: factorize!, update!
 
 
-include(joinpath(@__DIR__, "..", "matrix", "ExtendableSparseMatrixParallel", "ExtendableSparseParallel.jl"))
+include(joinpath(@__DIR__, "ExtendableSparseMatrixParallel", "ExtendableSparseParallel.jl"))
 
-include(joinpath(@__DIR__, "..", "factorizations","ilu_Al-Kurdi_Mittal.jl"))
+include(joinpath(@__DIR__, "ExtendableSparseMatrixParallel", "ilu_Al-Kurdi_Mittal.jl"))
 #using .ILUAM
-include(joinpath(@__DIR__, "..", "factorizations","pilu_Al-Kurdi_Mittal.jl"))
+include(joinpath(@__DIR__, "ExtendableSparseMatrixParallel", "pilu_Al-Kurdi_Mittal.jl"))
 #using .PILUAM
 
-include(joinpath(@__DIR__, "..", "factorizations","iluam.jl"))
-include(joinpath(@__DIR__, "..", "factorizations","piluam.jl"))
+include(joinpath(@__DIR__, "ExtendableSparseMatrixParallel" ,"iluam.jl"))
+include(joinpath(@__DIR__, "ExtendableSparseMatrixParallel", "piluam.jl"))
 
 @eval begin
     @makefrommatrix ILUAMPreconditioner
