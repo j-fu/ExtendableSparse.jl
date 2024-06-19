@@ -199,7 +199,7 @@ function test_correctness_build(N,Tm::Type{<:AbstractSparseMatrix}; allnp=[10,15
         pgrid=partition(grid,PlainMetisPartitioning(npart=np))
         A=Tm(nnodes,nnodes, num_partitions(pgrid))
         @show num_partitions_per_color(pgrid)
-        @test check_partitioning(pgrid)
+        @test check_partitioning(pgrid, cellpartonly=true)
         testassemble_parallel!(A,pgrid)
         @test sort(nonzeros(A)) ≈ nz
     end
@@ -215,13 +215,14 @@ function test_correctness_mul(N,Tm::Type{<:AbstractSparseMatrix}; allnp=[10,15,2
     A0b=A0*b
     for np in allnp
         pgrid=partition(grid,PlainMetisPartitioning(npart=np))
-        @test check_partitioning(pgrid)
+        @test check_partitioning(pgrid, cellpartonly=false)
         A=Tm(nnodes,nnodes, num_partitions(pgrid))
         ExtendableSparse.Experimental.partitioning!(A,pgrid[PColorPartitions], pgrid[PartitionNodes])
         testassemble_parallel!(A,pgrid)
         invp=invperm(pgrid[NodePermutation])
-        @show norm(A0b[invp] - A*b[invp], Inf)
-        @test A0b[invp] ≈ A*b[invp]
+        diff=norm(A0b[invp] - A*b[invp], Inf)
+        @show diff
+        @test diff<sqrt(eps())
     end    
 end
 

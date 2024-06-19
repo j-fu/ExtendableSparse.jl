@@ -113,16 +113,14 @@ function LinearAlgebra.mul!(r, ext::ExtendableSparseMatrixXParallel, x)
     flush!(ext)
     A=ext.cscmatrix
     colparts=ext.colparts
-    @show colparts
     partnodes=ext.partnodes
-    @show partnodes
     rows = SparseArrays.rowvals(A)
     vals = nonzeros(A)
     r.=zero(eltype(ext))
     m,n=size(A)
     for icol=1:length(colparts)-1
-        @tasks for ip=colparts[icol]:colparts[icol+1]-1
-            for inode in  partnodes[ip]:partnodes[ip+1]-1
+        @tasks for ip in colparts[icol]:colparts[icol+1]-1
+            @inbounds for inode in  partnodes[ip]:partnodes[ip+1]-1
                 @inbounds for i in nzrange(A,inode)
                     r[rows[i]]+=vals[i]*x[inode]
                 end

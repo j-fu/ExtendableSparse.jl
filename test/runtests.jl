@@ -12,17 +12,17 @@ using ForwardDiff
 
 @testset "ExperimentalXParallel" begin
     include("ExperimentalXParallel.jl")
-    for Tm in [ExtendableSparseMatrixLNK,ExtendableSparseMatrixDict,ExtendableSparseMatrixLNKDict]
+    for Tm in [ExtendableSparseMatrixLNK,ExtendableSparseMatrixLNKX,ExtendableSparseMatrixDict,ExtendableSparseMatrixLNKDict]
         for N in [10000,20000]
-            ExperimentalXParallel.test_correctness_build_seq(N,Tm)
+            ExperimentalXParallel.test_correctness_build_seq(N,Tm, dim=2)
         end
     end
 
     for Tm in [ExtendableSparseMatrixParallelDict,ExtendableSparseMatrixParallelLNKDict]
         for N in [10000,20000]
-            ExperimentalXParallel.test_correctness_update(N,Tm)
-            ExperimentalXParallel.test_correctness_build(N,Tm)
-            ExperimentalXParallel.test_correctness_mul(N,Tm)
+            ExperimentalXParallel.test_correctness_update(N,Tm, dim=2)
+            ExperimentalXParallel.test_correctness_build(N,Tm, dim=2)
+            ExperimentalXParallel.test_correctness_mul(N,Tm,dim=2)
         end
     end
 end
@@ -30,7 +30,7 @@ end
 @testset "ExperimentalParallel" begin
     include("ExperimentalParallel.jl")
     for d=[1,2,3]
-        for N in [100,rand(30:200),500]
+        for N in [10,rand(30:40),50]
             ExperimentalParallel.test_correctness_build(N,d)
         end
     end

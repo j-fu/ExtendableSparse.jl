@@ -400,7 +400,6 @@ function Base.sum(lnkdictmatrices::Vector{SparseMatrixLNKX{Tv,Ti}}, cscmatrix::S
         for lnk in lnkdictmatrices
             for j=1:n
                 k=lnk.colstart[j]
-                nodeparts[j]=ip
                 while k>0
                     I[i]=lnk.rowval[k]
                     J[i]=j
