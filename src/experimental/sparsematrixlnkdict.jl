@@ -216,7 +216,7 @@ It assumes that `op(0,0)==0`. If `v` is zero a new entry
 is created nevertheless.
 """
 function rawupdateindex!(lnk::SparseMatrixLNKDict{Tv, Ti}, op, v, i, j) where {Tv, Ti}
-    k, k0 = findindex(lnk, i, j)
+@time    k, k0 = findindex(lnk, i, j)
     if k > 0
         lnk.nzval[k] = op(lnk.nzval[k], v)
     else
@@ -423,6 +423,15 @@ function Base.sum(lnkdictmatrices::Vector{SparseMatrixLNKDict{Tv,Ti}}, cscmatrix
     return cscmatrix
 end
         
+function reset!(m::SparseMatrixLNKDict{Tv,Ti}) where {Tv,Ti}
+    m.nnz=0
+    m.nentries=0
+    m.colptr=zeros(Ti,10)
+    m.colstart::Dict{Ti,Ti}
+    m.rowval=zeros(Ti,10)
+    m.nzval=zeros(Ti,10)
+    m
+end
 
 
 """
