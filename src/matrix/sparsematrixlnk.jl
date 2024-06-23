@@ -117,13 +117,13 @@ function SparseMatrixLNK(csc::SparseArrays.SparseMatrixCSC{Tv, Ti}) where {Tv, T
     lnk
 end
 
-function findindex(lnk::SparseMatrixLNK, i, j)
+function findindex(lnk::SparseMatrixLNK{Tv,Ti}, i, j) where {Tv,Ti}
     if !((1 <= i <= lnk.m) & (1 <= j <= lnk.n))
         throw(BoundsError(lnk, (i, j)))
     end
 
-    k = j
-    k0 = j
+    k::Ti = j
+    k0::Ti = j
     while k > 0
         if lnk.rowval[k] == i
             return k, 0
