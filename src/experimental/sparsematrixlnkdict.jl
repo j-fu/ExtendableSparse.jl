@@ -216,7 +216,7 @@ It assumes that `op(0,0)==0`. If `v` is zero a new entry
 is created nevertheless.
 """
 function rawupdateindex!(lnk::SparseMatrixLNKDict{Tv, Ti}, op, v, i, j) where {Tv, Ti}
-@time    k, k0 = findindex(lnk, i, j)
+    k, k0 = findindex(lnk, i, j)
     if k > 0
         lnk.nzval[k] = op(lnk.nzval[k], v)
     else

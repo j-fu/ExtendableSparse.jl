@@ -192,7 +192,7 @@ function test_correctness_build(N,
         pgrid = partition(grid, Tp(; npart=np))
         A = Tm(nnodes, nnodes, num_partitions(pgrid))
         @show num_partitions_per_color(pgrid)
-        @test check_partitioning(pgrid, cellpartonly=true)
+        @test check_partitioning(pgrid)
         testassemble_parallel!(A, pgrid)
         @test sort(nonzeros(A)) ≈ nz
     end
@@ -212,7 +212,7 @@ function test_correctness_mul(N,
     A0b = A0 * b
     for np in allnp
         pgrid = partition(grid, Tp(; npart=np))
-        @test check_partitioning(pgrid, cellpartonly=false)
+        @test check_partitioning(pgrid)
         A = Tm(nnodes, nnodes, num_partitions(pgrid))
         ExtendableSparse.Experimental.partitioning!(A, pgrid[PColorPartitions],
                                                     pgrid[PartitionNodes])
