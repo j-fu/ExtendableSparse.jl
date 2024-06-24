@@ -22,12 +22,20 @@ using DocStringExtensions
 import SparseArrays: AbstractSparseMatrixCSC, rowvals, getcolptr, nonzeros
 
 include("matrix/sparsematrixcsc.jl")
-include("matrix/abstractextension.jl")
+include("matrix/abstractsparsematrixextension.jl")
 include("matrix/sparsematrixlnk.jl")
-include("matrix/abstractextendable.jl")
+include("matrix/sparsematrixdilnkc.jl")
+include("matrix/abstractextendablesparsematrixcsc.jl")
 include("matrix/extendable.jl")
+include("matrix/genericmtextendablesparsematrixcsc.jl")
 
-export SparseMatrixLNK, ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse, reset!
+const ExtendableSparseMatrix=ExtendableSparseMatrixCSC
+const MTExtendableSparseMatrixCSC=GenericMTExtendableSparseMatrixCSC{SparseMatrixDILNKC}
+MTExtendableSparseMatrixCSC(m,n,args...)=MTExtendableSparseMatrixCSC{Float64,Int64}(m,n,args...)
+
+export ExtendableSparseMatrixCSC, MTExtendableSparseMatrixCSC,GenericMTExtendableSparseMatrixCSC
+export SparseMatrixLNK, ExtendableSparseMatrix,flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse, reset!
+export partitioning!
 
 export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 

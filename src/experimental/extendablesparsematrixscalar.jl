@@ -1,4 +1,4 @@
-mutable struct ExtendableSparseMatrixScalar{Tm<:AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrix{Tv, Ti}
+mutable struct ExtendableSparseMatrixScalar{Tm<:AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrixCSC{Tv, Ti}
     """
     Final matrix data
     """

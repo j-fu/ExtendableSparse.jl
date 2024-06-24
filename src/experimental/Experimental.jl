@@ -5,13 +5,12 @@ using SparseArrays: AbstractSparseMatrixCSC
 import SparseArrays: nonzeros, getcolptr,nzrange
 import ExtendableSparse: flush!, reset!, rawupdateindex!, findindex
 using ExtendableSparse: ColEntry, AbstractPreconditioner, @makefrommatrix, phash
-using ExtendableSparse:  AbstractExtendableSparseMatrix, AbstractSparseMatrixExtension
+using ExtendableSparse:  AbstractExtendableSparseMatrixCSC, AbstractSparseMatrixExtension
 using DocStringExtensions
 using Metis
 using Base.Threads
 using OhMyThreads: @tasks
-import ExtendableSparse: factorize!, update!
-
+import ExtendableSparse: factorize!, update!, partitioning!
 
 include(joinpath(@__DIR__, "ExtendableSparseMatrixParallel", "ExtendableSparseParallel.jl"))
 
@@ -66,16 +65,15 @@ const ExtendableSparseMatrixLNK{Tv,Ti}=ExtendableSparseMatrixScalar{SparseMatrix
 export ExtendableSparseMatrixLNK
 
 
-include("extendablesparsematrixparallel.jl")
-const ExtendableSparseMatrixParallelDict{Tv,Ti}=ExtendableSparseMatrixXParallel{SparseMatrixDict{Tv,Ti},Tv,Ti}
+const ExtendableSparseMatrixParallelDict{Tv,Ti}=GenericMTExtendableSparseMatrixCSC{SparseMatrixDict{Tv,Ti},Tv,Ti}
 ExtendableSparseMatrixParallelDict(m,n,p)= ExtendableSparseMatrixParallelDict{Float64,Int64}(m,n,p)
-export ExtendableSparseMatrixParallelDict, partcolors!
+export ExtendableSparseMatrixParallelDict
 
-const ExtendableSparseMatrixParallelLNKX{Tv,Ti}=ExtendableSparseMatrixXParallel{SparseMatrixLNKX{Tv,Ti},Tv,Ti}
+const ExtendableSparseMatrixParallelLNKX{Tv,Ti}=GenericMTExtendableSparseMatrixCSC{SparseMatrixLNKX{Tv,Ti},Tv,Ti}
 ExtendableSparseMatrixParallelLNKX(m,n,p)= ExtendableSparseMatrixParallelLNKX{Float64,Int64}(m,n,p)
 export ExtendableSparseMatrixParallelLNKX
 
-const ExtendableSparseMatrixParallelLNKDict{Tv,Ti}=ExtendableSparseMatrixXParallel{SparseMatrixLNKDict{Tv,Ti},Tv,Ti}
+const ExtendableSparseMatrixParallelLNKDict{Tv,Ti}=GenericMTExtendableSparseMatrixCSC{SparseMatrixLNKDict{Tv,Ti},Tv,Ti}
 ExtendableSparseMatrixParallelLNKDict(m,n,p)= ExtendableSparseMatrixParallelLNKDict{Float64,Int64}(m,n,p)
 export ExtendableSparseMatrixParallelLNKDict
 

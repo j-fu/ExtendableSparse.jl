@@ -18,7 +18,7 @@ using ForwardDiff
         end
     end
 
-    for Tm in [ExtendableSparseMatrixParallelDict,ExtendableSparseMatrixParallelLNKDict]
+    for Tm in [MTExtendableSparseMatrixCSC,ExtendableSparseMatrixParallelDict,ExtendableSparseMatrixParallelLNKDict]
         for N in [10000,20000]
             ExperimentalXParallel.test_correctness_update(N,Tm, dim=2)
             ExperimentalXParallel.test_correctness_build(N,Tm, dim=2)

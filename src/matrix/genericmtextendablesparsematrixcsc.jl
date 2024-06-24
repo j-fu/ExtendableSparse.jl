@@ -1,7 +1,7 @@
-mutable struct ExtendableSparseMatrixXParallel{Tm<:AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrixCSC{Tv, Ti}
+mutable struct GenericMTExtendableSparseMatrixCSC{Tm<:AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrixCSC{Tv, Ti}
     """
     Final matrix data
-    """
+        """
     cscmatrix::SparseMatrixCSC{Tv, Ti}
 
     """
@@ -13,28 +13,22 @@ mutable struct ExtendableSparseMatrixXParallel{Tm<:AbstractSparseMatrixExtension
     partnodes::Vector{Ti}
 end
 
-
-function ExtendableSparseMatrixXParallel{Tm, Tv, Ti}(n,m,p::Integer) where{Tm<:AbstractSparseMatrixExtension, Tv, Ti}
-    
-    ExtendableSparseMatrixXParallel(spzeros(Tv, Ti, m, n),
-                                    [Tm(m,n) for i=1:p],
-                                    Ti[1,2],
-                                    Ti[1,n+1],
-                                    )
+function GenericMTExtendableSparseMatrixCSC{Tm, Tv, Ti}(n,m,p::Integer=1) where{Tm<:AbstractSparseMatrixExtension, Tv, Ti}
+    GenericMTExtendableSparseMatrixCSC(spzeros(Tv, Ti, m, n),
+                                [Tm(m,n) for i=1:p],
+                                Ti[1,2],
+                                Ti[1,n+1],
+                                )
 end
 
-function partitioning!(ext::ExtendableSparseMatrixXParallel{Tm,Tv,Ti}, colparts, partnodes) where {Tm, Tv, Ti}
+function partitioning!(ext::GenericMTExtendableSparseMatrixCSC{Tm,Tv,Ti}, colparts, partnodes) where {Tm, Tv, Ti}
     ext.partnodes=partnodes
     ext.colparts=colparts
     ext
 end
 
-function ExtendableSparseMatrixXParallel{Tm, Tv, Ti}(n,m, pc::Vector) where{Tm, Tv, Ti}
-    ext=ExtendableSparseMatrixXParallel(m,n,length(pc))
-end
 
-
-function reset!(ext::ExtendableSparseMatrixXParallel{Tm,Tv,Ti},p::Integer) where {Tm,Tv,Ti}
+function reset!(ext::GenericMTExtendableSparseMatrixCSC{Tm,Tv,Ti},p::Integer) where {Tm,Tv,Ti}
     m,n=size(ext.cscmatrix)
     ext.cscmatrix=spzeros(Tv, Ti, m, n)
     ext.xmatrices=[Tm(m,n) for i=1:p]
@@ -43,12 +37,12 @@ function reset!(ext::ExtendableSparseMatrixXParallel{Tm,Tv,Ti},p::Integer) where
     ext
 end
 
-function reset!(ext::ExtendableSparseMatrixXParallel)
+function reset!(ext::GenericMTExtendableSparseMatrixCSC)
     reset!(ext,length(ext.xmatrices))
 end
 
 
-function flush!(ext::ExtendableSparseMatrixXParallel{Tm,Tv,Ti}) where{Tm,Tv,Ti}
+function flush!(ext::GenericMTExtendableSparseMatrixCSC{Tm,Tv,Ti}) where{Tm,Tv,Ti}
     ext.cscmatrix=Base.sum(ext.xmatrices, ext.cscmatrix)
     np=length(ext.xmatrices)
     (m,n)=size(ext.cscmatrix)
@@ -57,14 +51,12 @@ function flush!(ext::ExtendableSparseMatrixXParallel{Tm,Tv,Ti}) where{Tm,Tv,Ti}
 end
 
 
-function SparseArrays.sparse(ext::ExtendableSparseMatrixXParallel)
+function SparseArrays.sparse(ext::GenericMTExtendableSparseMatrixCSC)
     flush!(ext)
     ext.cscmatrix
 end
 
-
-
-function Base.setindex!(ext::ExtendableSparseMatrixXParallel,
+function Base.setindex!(ext::GenericMTExtendableSparseMatrixCSC,
                         v::Union{Number,AbstractVecOrMat},
                         i::Integer,
                         j::Integer)
@@ -72,12 +64,11 @@ function Base.setindex!(ext::ExtendableSparseMatrixXParallel,
     if k > 0
         ext.cscmatrix.nzval[k] = v
     else
-        error("use rawupdateindex! for new entries into ExtendableSparseMatrixXParallel")
+        error("use rawupdateindex! for new entries into GenericMTExtendableSparseMatrixCSC")
     end
 end
 
-
-function Base.getindex(ext::ExtendableSparseMatrixXParallel,
+function Base.getindex(ext::GenericMTExtendableSparseMatrixCSC,
                        i::Integer,
                        j::Integer)
     k = findindex(ext.cscmatrix, i, j)
@@ -86,16 +77,16 @@ function Base.getindex(ext::ExtendableSparseMatrixXParallel,
     elseif sum(nnz,ext.xmatrices) == 0
         return zero(eltype(ext.cscmatrix))
     else
-        error("flush! ExtendableSparseMatrixXParallel before using getindex")
+        error("flush! GenericMTExtendableSparseMatrixCSC before using getindex")
     end
 end
 
-function rawupdateindex!(ext::ExtendableSparseMatrixXParallel,
+function rawupdateindex!(ext::GenericMTExtendableSparseMatrixCSC,
                          op,
                          v,
                          i,
                          j,
-                         tid)
+                         tid=1)
     k = findindex(ext.cscmatrix, i, j)
     if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)
@@ -105,11 +96,11 @@ function rawupdateindex!(ext::ExtendableSparseMatrixXParallel,
 end
 
 # Needed in 1.9
-function Base.:*(ext::ExtendableSparse.Experimental.ExtendableSparseMatrixXParallel{Tm, TA} where Tm<:ExtendableSparse.AbstractSparseMatrixExtension, x::Union{StridedVector, BitVector}) where TA
+function Base.:*(ext::GenericMTExtendableSparseMatrixCSC{Tm, TA} where Tm<:ExtendableSparse.AbstractSparseMatrixExtension, x::Union{StridedVector, BitVector}) where TA
     mul!(similar(x),ext,x)
 end
 
-function LinearAlgebra.mul!(r, ext::ExtendableSparseMatrixXParallel, x)
+function LinearAlgebra.mul!(r, ext::GenericMTExtendableSparseMatrixCSC, x)
     flush!(ext)
     A=ext.cscmatrix
     colparts=ext.colparts

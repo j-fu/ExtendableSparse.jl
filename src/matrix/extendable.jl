@@ -7,7 +7,7 @@ either in cscmatrix, or in lnkmatrix, never in both.
 
 $(TYPEDFIELDS)
 """
-mutable struct ExtendableSparseMatrix{Tv, Ti <: Integer} <: AbstractExtendableSparseMatrix{Tv, Ti}
+mutable struct ExtendableSparseMatrixCSC{Tv, Ti <: Integer} <: AbstractExtendableSparseMatrixCSC{Tv, Ti}
     """
     Final matrix data
     """
@@ -27,92 +27,92 @@ end
 
 """
 ```
-ExtendableSparseMatrix(Tv,Ti,m,n)
-ExtendableSparseMatrix(Tv,m,n)
-ExtendableSparseMatrix(m,n)
+ExtendableSparseMatrixCSC(Tv,Ti,m,n)
+ExtendableSparseMatrixCSC(Tv,m,n)
+ExtendableSparseMatrixCSC(m,n)
 ```
-Create empty ExtendableSparseMatrix. This is equivalent to `spzeros(m,n)` for
+Create empty ExtendableSparseMatrixCSC. This is equivalent to `spzeros(m,n)` for
 `SparseMartrixCSC`.
 
 """
 
-function ExtendableSparseMatrix{Tv, Ti}(m, n) where {Tv, Ti <: Integer}
-    ExtendableSparseMatrix{Tv, Ti}(spzeros(Tv, Ti, m, n), nothing, 0)
+function ExtendableSparseMatrixCSC{Tv, Ti}(m, n) where {Tv, Ti <: Integer}
+    ExtendableSparseMatrixCSC{Tv, Ti}(spzeros(Tv, Ti, m, n), nothing, 0)
 end
 
-function ExtendableSparseMatrix(valuetype::Type{Tv},
+function ExtendableSparseMatrixCSC(valuetype::Type{Tv},
                                 indextype::Type{Ti},
                                 m,
                                 n) where {Tv, Ti <: Integer}
-    ExtendableSparseMatrix{Tv, Ti}(m, n)
+    ExtendableSparseMatrixCSC{Tv, Ti}(m, n)
 end
 
-function ExtendableSparseMatrix(valuetype::Type{Tv}, m, n) where {Tv}
-    ExtendableSparseMatrix{Tv, Int}(m, n)
+function ExtendableSparseMatrixCSC(valuetype::Type{Tv}, m, n) where {Tv}
+    ExtendableSparseMatrixCSC{Tv, Int}(m, n)
 end
 
-ExtendableSparseMatrix(m, n) = ExtendableSparseMatrix{Float64, Int}(m, n)
+ExtendableSparseMatrixCSC(m, n) = ExtendableSparseMatrixCSC{Float64, Int}(m, n)
 
 """
 $(SIGNATURES)
 
-Create ExtendableSparseMatrix from SparseMatrixCSC
+Create ExtendableSparseMatrixCSC from SparseMatrixCSC
 """
-function ExtendableSparseMatrix(csc::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti <: Integer}
-    ExtendableSparseMatrix{Tv, Ti}(csc, nothing, phash(csc))
+function ExtendableSparseMatrixCSC(csc::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti <: Integer}
+    ExtendableSparseMatrixCSC{Tv, Ti}(csc, nothing, phash(csc))
 end
 
-function ExtendableSparseMatrix{Tv,Ti}(csc::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti <: Integer}
-    ExtendableSparseMatrix{Tv, Ti}(csc, nothing, phash(csc))
+function ExtendableSparseMatrixCSC{Tv,Ti}(csc::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti <: Integer}
+    ExtendableSparseMatrixCSC{Tv, Ti}(csc, nothing, phash(csc))
 end
 
 """
 $(SIGNATURES)
 
- Create ExtendableSparseMatrix from Diagonal
+ Create ExtendableSparseMatrixCSC from Diagonal
 """
-ExtendableSparseMatrix(D::Diagonal) = ExtendableSparseMatrix(sparse(D))
+ExtendableSparseMatrixCSC(D::Diagonal) = ExtendableSparseMatrixCSC(sparse(D))
 
 """
 $(SIGNATURES)
 
- Create ExtendableSparseMatrix from AbstractMatrix, dropping all zero entries.
+ Create ExtendableSparseMatrixCSC from AbstractMatrix, dropping all zero entries.
  This is the equivalent to `sparse(A)`.
 """
-ExtendableSparseMatrix(A::AbstractMatrix) = ExtendableSparseMatrix(sparse(A))
+ExtendableSparseMatrixCSC(A::AbstractMatrix) = ExtendableSparseMatrixCSC(sparse(A))
 
 """
-    ExtendableSparseMatrix(I,J,V)
-    ExtendableSparseMatrix(I,J,V,m,n)
-    ExtendableSparseMatrix(I,J,V,combine::Function)
-    ExtendableSparseMatrix(I,J,V,m,n,combine::Function)
+    ExtendableSparseMatrixCSC(I,J,V)
+    ExtendableSparseMatrixCSC(I,J,V,m,n)
+    ExtendableSparseMatrixCSC(I,J,V,combine::Function)
+    ExtendableSparseMatrixCSC(I,J,V,m,n,combine::Function)
 
-Create ExtendableSparseMatrix from triplet (COO) data.
+Create ExtendableSparseMatrixCSC from triplet (COO) data.
 """
-ExtendableSparseMatrix(I, J, V::AbstractVector) = ExtendableSparseMatrix(sparse(I, J, V))
+ExtendableSparseMatrixCSC(I, J, V::AbstractVector) = ExtendableSparseMatrixCSC(sparse(I, J, V))
 
-function ExtendableSparseMatrix(I, J, V::AbstractVector, m, n)
-    ExtendableSparseMatrix(sparse(I, J, V, m, n))
+function ExtendableSparseMatrixCSC(I, J, V::AbstractVector, m, n)
+    ExtendableSparseMatrixCSC(sparse(I, J, V, m, n))
 end
 
-function ExtendableSparseMatrix(I, J, V::AbstractVector, combine::Function)
-    ExtendableSparseMatrix(sparse(I, J, V, combine))
+function ExtendableSparseMatrixCSC(I, J, V::AbstractVector, combine::Function)
+    ExtendableSparseMatrixCSC(sparse(I, J, V, combine))
 end
 
-function ExtendableSparseMatrix(I, J, V::AbstractVector, m, n, combine::Function)
-    ExtendableSparseMatrix(sparse(I, J, V, m, n, combine))
+function ExtendableSparseMatrixCSC(I, J, V::AbstractVector, m, n, combine::Function)
+    ExtendableSparseMatrixCSC(sparse(I, J, V, m, n, combine))
 end
 
 # THese are probably too much...
-# function Base.transpose(A::ExtendableSparseMatrix)
+# function Base.transpose(A::ExtendableSparseMatrixCSC)
 #     flush!(A)
-#     ExtendableSparseMatrix(Base.transpose(sparse(A)))
+#     ExtendableSparseMatrixCSC(Base.transpose(sparse(A)))
 # end
-# function Base.adjoint(A::ExtendableSparseMatrix)
+# function Base.adjoint(A::ExtendableSparseMatrixCSC)
 #     flush!(A)
-#     ExtendableSparseMatrix(Base.adjoint(sparse(A)))
+#     ExtendableSparseMatrixCSC(Base.adjoint(sparse(A)))
 # end
-# function SparseArrays.sparse(text::LinearAlgebra.Transpose{Tv,ExtendableSparseMatrix{Tv,Ti}}) where {Tv,Ti}
+# function SparseArrays.sparse(text::LinearAlgebra.Transpose{Tv,ExtendableSparseMatrixCSC{Tv,Ti}}) where {Tv,Ti}
 #     transpose(sparse(parent(text)))
 # end
 
@@ -123,12 +123,12 @@ $(SIGNATURES)
 
 Create similar but emtpy extendableSparseMatrix
 """
-function Base.similar(m::ExtendableSparseMatrix{Tv, Ti}) where {Tv, Ti}
-    ExtendableSparseMatrix{Tv, Ti}(size(m)...)
+function Base.similar(m::ExtendableSparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
+    ExtendableSparseMatrixCSC{Tv, Ti}(size(m)...)
 end
 
-function Base.similar(m::ExtendableSparseMatrix{Tv, Ti}, ::Type{T}) where {Tv, Ti, T}
-    ExtendableSparseMatrix{T, Ti}(size(m)...)
+function Base.similar(m::ExtendableSparseMatrixCSC{Tv, Ti}, ::Type{T}) where {Tv, Ti, T}
+    ExtendableSparseMatrixCSC{T, Ti}(size(m)...)
 end
 
 """
@@ -140,7 +140,7 @@ search during acces:
 
 ```@example
 using ExtendableSparse # hide
-A=ExtendableSparseMatrix(3,3)
+A=ExtendableSparseMatrixCSC(3,3)
 A[1,2]+=0.1
 A
 ```
@@ -148,7 +148,7 @@ A
 ```@example
 using ExtendableSparse # hide
 
-A=ExtendableSparseMatrix(3,3)
+A=ExtendableSparseMatrixCSC(3,3)
 updateindex!(A,+,0.1,1,2)
 A
 ```
@@ -156,7 +156,7 @@ A
 If `v` is zero, no new entry is created.
 """
 
-function updateindex!(ext::ExtendableSparseMatrix{Tv, Ti},
+function updateindex!(ext::ExtendableSparseMatrixCSC{Tv, Ti},
                       op,
                       v,
                       i,
@@ -178,7 +178,7 @@ $(SIGNATURES)
 Like [`updateindex!`](@ref) but without 
 checking if v is zero.
 """
-function rawupdateindex!(ext::ExtendableSparseMatrix{Tv, Ti},
+function rawupdateindex!(ext::ExtendableSparseMatrixCSC{Tv, Ti},
                          op,
                          v,
                          i,
@@ -201,7 +201,7 @@ $(SIGNATURES)
 Find index in CSC matrix and set value if it exists. Otherwise,
 set index in extension if `v` is nonzero.
 """
-function Base.setindex!(ext::ExtendableSparseMatrix{Tv, Ti},
+function Base.setindex!(ext::ExtendableSparseMatrixCSC{Tv, Ti},
                         v::Union{Number,AbstractVecOrMat},
                         i::Integer,
                         j::Integer) where {Tv, Ti}
@@ -222,7 +222,7 @@ $(SIGNATURES)
 Find index in CSC matrix and return value, if it exists.
 Otherwise, return value from extension.
 """
-function Base.getindex(ext::ExtendableSparseMatrix{Tv, Ti},
+function Base.getindex(ext::ExtendableSparseMatrixCSC{Tv, Ti},
                        i::Integer,
                        j::Integer) where {Tv, Ti <: Integer}
     k = findindex(ext.cscmatrix, i, j)
@@ -244,7 +244,7 @@ $(SIGNATURES)
 If there are new entries in extension, create new CSC matrix by adding the
 cscmatrix and linked list matrix and reset the linked list based extension.
 """
-function flush!(ext::ExtendableSparseMatrix)
+function flush!(ext::ExtendableSparseMatrixCSC)
     if ext.lnkmatrix != nothing && nnz(ext.lnkmatrix) > 0
         ext.cscmatrix = ext.lnkmatrix + ext.cscmatrix
         ext.lnkmatrix = nothing
@@ -254,7 +254,7 @@ function flush!(ext::ExtendableSparseMatrix)
 end
 
 
-function SparseArrays.sparse(ext::ExtendableSparseMatrix)
+function SparseArrays.sparse(ext::ExtendableSparseMatrixCSC)
     flush!(ext)
     ext.cscmatrix
 end
@@ -265,7 +265,7 @@ $(SIGNATURES)
 
 Reset ExtenableSparseMatrix into state similar to that after creation.
 """
-function reset!(A::ExtendableSparseMatrix)
+function reset!(A::ExtendableSparseMatrixCSC)
     A.cscmatrix=spzeros(size(A)...)
     A.lnkmatrix=nothing
 end
@@ -275,11 +275,11 @@ end
 """
 $(SIGNATURES)
 """
-function Base.copy(S::ExtendableSparseMatrix)
+function Base.copy(S::ExtendableSparseMatrixCSC)
     if isnothing(S.lnkmatrix)
-        ExtendableSparseMatrix(copy(S.cscmatrix), nothing,S.phash)
+        ExtendableSparseMatrixCSC(copy(S.cscmatrix), nothing,S.phash)
     else
-        ExtendableSparseMatrix(copy(S.cscmatrix), copy(S.lnkmatrix), S.phash)
+        ExtendableSparseMatrixCSC(copy(S.cscmatrix), copy(S.lnkmatrix), S.phash)
     end
 end
 
@@ -288,7 +288,7 @@ end
 
 Create a pointblock matrix.
 """
-function pointblock(A0::ExtendableSparseMatrix{Tv,Ti},blocksize) where {Tv,Ti}
+function pointblock(A0::ExtendableSparseMatrixCSC{Tv,Ti},blocksize) where {Tv,Ti}
     A=SparseMatrixCSC(A0)
     colptr=A.colptr
     rowval=A.rowval
@@ -298,7 +298,7 @@ function pointblock(A0::ExtendableSparseMatrix{Tv,Ti},blocksize) where {Tv,Ti}
     nblock=n÷blocksize
     b=SMatrix{blocksize,blocksize}(block)
     Tb=typeof(b)
-    Ab=ExtendableSparseMatrix{Tb,Ti}(nblock,nblock)
+    Ab=ExtendableSparseMatrixCSC{Tb,Ti}(nblock,nblock)
     
     
     for i=1:n
