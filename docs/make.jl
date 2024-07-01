@@ -5,6 +5,7 @@ function mkdocs()
     makedocs(; sitename = "ExtendableSparse.jl",
              modules = [ExtendableSparse],
              doctest = false,
+             warnonly = true,
              clean = false,
              authors = "J. Fuhrmann",
              repo = "https://github.com/j-fu/ExtendableSparse.jl",

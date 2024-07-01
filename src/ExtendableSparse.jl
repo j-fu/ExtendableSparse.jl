@@ -3,6 +3,7 @@ using SparseArrays,StaticArrays
 using LinearAlgebra
 using Sparspak
 using ILUZero
+using OhMyThreads: @tasks
 
 if  !isdefined(Base, :get_extension)
     using Requires
@@ -16,34 +17,36 @@ if USE_GPL_LIBS
     using SuiteSparse
 end
 
-
 using DocStringExtensions
 
 import SparseArrays: AbstractSparseMatrixCSC, rowvals, getcolptr, nonzeros
 
 include("matrix/sparsematrixcsc.jl")
+include("matrix/abstractsparsematrixextension.jl")
 include("matrix/sparsematrixlnk.jl")
+include("matrix/sparsematrixdilnkc.jl")
+include("matrix/abstractextendablesparsematrixcsc.jl")
 include("matrix/extendable.jl")
+include("matrix/genericmtextendablesparsematrixcsc.jl")
+include("matrix/genericextendablesparsematrixcsc.jl")
 
-export SparseMatrixLNK,
-       ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse
+const ExtendableSparseMatrix=ExtendableSparseMatrixCSC
+const MTExtendableSparseMatrixCSC{Tv,Ti}=GenericMTExtendableSparseMatrixCSC{SparseMatrixDILNKC{Tv,Ti},Tv,Ti}
+MTExtendableSparseMatrixCSC(m,n,args...)=MTExtendableSparseMatrixCSC{Float64,Int64}(m,n,args...)
+
+const STExtendableSparseMatrixCSC{Tv,Ti}=GenericExtendableSparseMatrixCSC{SparseMatrixDILNKC{Tv,Ti},Tv,Ti}
+STExtendableSparseMatrixCSC(m,n,args...)=STExtendableSparseMatrixCSC{Float64,Int64}(m,n,args...)
+
+
+export ExtendableSparseMatrixCSC, MTExtendableSparseMatrixCSC, STExtendableSparseMatrixCSC, GenericMTExtendableSparseMatrixCSC
+export SparseMatrixLNK, ExtendableSparseMatrix,flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse, reset!
+export partitioning!
 
 export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
 include("factorizations/factorizations.jl")
 
-export JacobiPreconditioner,
-    ILU0Preconditioner,
-    ILUZeroPreconditioner,
-    PointBlockILUZeroPreconditioner,
-    ParallelJacobiPreconditioner,
-    ParallelILU0Preconditioner,
-    BlockPreconditioner,allow_views,
-    reorderlinsys
-
-export AbstractFactorization, LUFactorization, CholeskyFactorization, SparspakLU
-export issolver
-export factorize!, update!
+include("experimental/Experimental.jl")
 
 include("factorizations/simple_iteration.jl")
 export simple, simple!
@@ -51,6 +54,22 @@ export simple, simple!
 include("matrix/sprand.jl")
 export sprand!, sprand_sdd!, fdrand, fdrand!, fdrand_coo, solverbenchmark
 
+export rawupdateindex!, updateindex!
+
+
+
+
+export JacobiPreconditioner,
+    ILU0Preconditioner,
+    ILUZeroPreconditioner,
+    PointBlockILUZeroPreconditioner,
+    ParallelJacobiPreconditioner,
+    ParallelILU0Preconditioner,
+    BlockPreconditioner,allow_views
+
+export AbstractFactorization, LUFactorization, CholeskyFactorization, SparspakLU
+export issolver
+export factorize!, update!
 
 @static if  !isdefined(Base, :get_extension)
     function __init__()
