@@ -381,7 +381,8 @@ end
 
 Add SparseMatrixCSC matrix and [`SparseMatrixDILNKC`](@ref)  lnk, returning a SparseMatrixCSC
 """
-Base.:+(lnk::SparseMatrixDILNKC, csc::SparseMatrixCSC) = add_directly(lnk, csc)
+#Base.:+(lnk::SparseMatrixDILNKC, csc::SparseMatrixCSC) = add_directly(lnk, csc)
+Base.:+(lnk::SparseMatrixDILNKC, csc::SparseMatrixCSC) = sum([lnk],csc)
 
 function Base.sum(lnkdictmatrices::Vector{SparseMatrixDILNKC{Tv,Ti}}, cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}
     lnew=sum(nnz,lnkdictmatrices)
@@ -395,14 +396,13 @@ function Base.sum(lnkdictmatrices::Vector{SparseMatrixDILNKC{Tv,Ti}}, cscmatrix:
         
         for icsc=1:length(colptr)-1
             for j=colptr[icsc]:colptr[icsc+1]-1
-                I[i]=icsc
-                J[i]=rowval[j]
+                I[i]=rowval[j]
+                J[i]=icsc
                 V[i]=nzval[j]
                 i=i+1
             end            
         end
 
-        ip=1
         for lnk in lnkdictmatrices
             for (j,k) in lnk.colstart
                 while k>0
@@ -413,8 +413,8 @@ function Base.sum(lnkdictmatrices::Vector{SparseMatrixDILNKC{Tv,Ti}}, cscmatrix:
                     i=i+1
                 end
             end
-            ip=ip+1
         end
+        @assert l==i-1
         @static if VERSION>=v"1.10"
             return SparseArrays.sparse!(I,J,V,m,n,+)
         else

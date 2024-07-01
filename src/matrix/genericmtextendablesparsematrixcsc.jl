@@ -1,7 +1,7 @@
 mutable struct GenericMTExtendableSparseMatrixCSC{Tm<:AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrixCSC{Tv, Ti}
     """
     Final matrix data
-        """
+    """
     cscmatrix::SparseMatrixCSC{Tv, Ti}
 
     """
@@ -94,6 +94,24 @@ function rawupdateindex!(ext::GenericMTExtendableSparseMatrixCSC,
         rawupdateindex!(ext.xmatrices[tid],op,v,i,j)
     end
 end
+
+
+function updateindex!(ext::GenericMTExtendableSparseMatrixCSC,
+                      op,
+                      v,
+                      i,
+                      j,
+                      tid=1)
+    k = findindex(ext.cscmatrix, i, j)
+    if k > 0
+        ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)
+    else
+        updateindex!(ext.xmatrices[tid],op,v,i,j)
+    end
+end
+
+
+
 
 # Needed in 1.9
 function Base.:*(ext::GenericMTExtendableSparseMatrixCSC{Tm, TA} where Tm<:ExtendableSparse.AbstractSparseMatrixExtension, x::Union{StridedVector, BitVector}) where TA

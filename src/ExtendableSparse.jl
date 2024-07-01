@@ -28,12 +28,17 @@ include("matrix/sparsematrixdilnkc.jl")
 include("matrix/abstractextendablesparsematrixcsc.jl")
 include("matrix/extendable.jl")
 include("matrix/genericmtextendablesparsematrixcsc.jl")
+include("matrix/genericextendablesparsematrixcsc.jl")
 
 const ExtendableSparseMatrix=ExtendableSparseMatrixCSC
-const MTExtendableSparseMatrixCSC=GenericMTExtendableSparseMatrixCSC{SparseMatrixDILNKC}
+const MTExtendableSparseMatrixCSC{Tv,Ti}=GenericMTExtendableSparseMatrixCSC{SparseMatrixDILNKC{Tv,Ti},Tv,Ti}
 MTExtendableSparseMatrixCSC(m,n,args...)=MTExtendableSparseMatrixCSC{Float64,Int64}(m,n,args...)
 
-export ExtendableSparseMatrixCSC, MTExtendableSparseMatrixCSC,GenericMTExtendableSparseMatrixCSC
+const STExtendableSparseMatrixCSC{Tv,Ti}=GenericExtendableSparseMatrixCSC{SparseMatrixDILNKC{Tv,Ti},Tv,Ti}
+STExtendableSparseMatrixCSC(m,n,args...)=STExtendableSparseMatrixCSC{Float64,Int64}(m,n,args...)
+
+
+export ExtendableSparseMatrixCSC, MTExtendableSparseMatrixCSC, STExtendableSparseMatrixCSC, GenericMTExtendableSparseMatrixCSC
 export SparseMatrixLNK, ExtendableSparseMatrix,flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse, reset!
 export partitioning!
 

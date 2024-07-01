@@ -297,4 +297,3 @@ function eliminate_dirichlet!(A::AbstractExtendableSparseMatrixCSC,dirichlet)
     eliminate_dirichlet!(sparse(A),dirichlet)
     A
 end
-
