@@ -39,7 +39,7 @@ STExtendableSparseMatrixCSC(m,n,args...)=STExtendableSparseMatrixCSC{Float64,Int
 
 
 export ExtendableSparseMatrixCSC, MTExtendableSparseMatrixCSC, STExtendableSparseMatrixCSC, GenericMTExtendableSparseMatrixCSC
-export SparseMatrixLNK, ExtendableSparseMatrix,flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse, reset!
+export SparseMatrixLNK, ExtendableSparseMatrix,flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse, reset!, nnznew
 export partitioning!
 
 export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet

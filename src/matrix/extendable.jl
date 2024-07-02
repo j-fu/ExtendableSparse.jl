@@ -182,7 +182,8 @@ function rawupdateindex!(ext::ExtendableSparseMatrixCSC{Tv, Ti},
                          op,
                          v,
                          i,
-                         j) where {Tv, Ti <: Integer}
+                         j,
+                         part=1) where {Tv, Ti <: Integer}
     k = findindex(ext.cscmatrix, i, j)
     if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)

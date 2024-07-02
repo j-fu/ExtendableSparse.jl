@@ -18,6 +18,8 @@ function GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(m::Integer,n::Integer) whe
 end
 
 
+nnznew(ext::GenericExtendableSparseMatrixCSC)=nnz(ext.xmatrix)
+
 function reset!(ext::GenericExtendableSparseMatrixCSC{Tm,Tv,Ti}) where {Tm,Tv,Ti}
     m,n=size(ext.cscmatrix)
     ext.cscmatrix=spzeros(Tv, Ti, m, n)

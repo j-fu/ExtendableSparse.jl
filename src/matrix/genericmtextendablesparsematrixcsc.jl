@@ -81,6 +81,9 @@ function Base.getindex(ext::GenericMTExtendableSparseMatrixCSC,
     end
 end
 
+nnznew(ext::GenericMTExtendableSparseMatrixCSC)=sum(nnz,ext.xmatrices)
+
+
 function rawupdateindex!(ext::GenericMTExtendableSparseMatrixCSC,
                          op,
                          v,
