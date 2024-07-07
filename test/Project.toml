@@ -1,8 +1,10 @@
 [deps]
 AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288"
 AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 ChunkSplitters = "ae650224-84b6-46f8-82ea-d812ca08434e"
+ExplicitImports = "7d51a73a-1435-4ff3-83d9-f097790105c7"
 ExtendableGrids = "cfc395e8-590f-11e8-1f13-43a2532b2fa8"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 ILUZero = "88f59080-6952-5380-9ea5-54057fb9a43f"

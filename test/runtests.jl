@@ -8,7 +8,12 @@ using BenchmarkTools
 
 using MultiFloats
 using ForwardDiff
+using ExplicitImports
 
+@testset "ExplicitImports" begin
+    @test ExplicitImports.check_no_implicit_imports(ExtendableSparse, allow_unanalyzable=(ExtendableSparse.Experimental,)) === nothing
+    @test ExplicitImports.check_no_stale_explicit_imports(ExtendableSparse, allow_unanalyzable=(ExtendableSparse.Experimental,)) === nothing
+end
 
 @testset "Parallel" begin
     include("test_parallel.jl")
