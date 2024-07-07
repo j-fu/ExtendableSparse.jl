@@ -1,4 +1,4 @@
-module ExperimentalXParallel
+module test_parallel
 
 using ExtendableSparse, SparseArrays, ExtendableSparse.Experimental
 using BenchmarkTools
@@ -53,7 +53,7 @@ function test_correctness_update(N,
         # Reset the nonzeros, keeping the structure intact
         nonzeros(A) .= 0
         # Parallel assembly whith np threads
-        pgrid = partition(grid, Tp(; npart=np))
+        pgrid = partition(grid, Tp(; npart=np), nodes=true, keep_nodepermutation=true)
         reset!(A, np)
         @show num_partitions_per_color(pgrid)
         testassemble_parallel!(A, pgrid)
@@ -81,7 +81,7 @@ function test_correctness_build(N,
     for np in allnp
         # Make a new matrix and assemble parallel.
         # this should result in the same nonzeros
-        pgrid = partition(grid, Tp(; npart=np))
+        pgrid = partition(grid, Tp(; npart=np), nodes=true, keep_nodepermutation=true)
         A = Tm(nnodes, nnodes, num_partitions(pgrid))
         @show num_partitions_per_color(pgrid)
         @test check_partitioning(pgrid)
@@ -103,7 +103,7 @@ function test_correctness_mul(N,
     b = rand(nnodes)
     A0b = A0 * b
     for np in allnp
-        pgrid = partition(grid, Tp(; npart=np))
+        pgrid = partition(grid, Tp(; npart=np), nodes=true, keep_nodepermutation=true)
         @test check_partitioning(pgrid)
         A = Tm(nnodes, nnodes, num_partitions(pgrid))
         partitioning!(A, pgrid[PColorPartitions],
@@ -135,7 +135,7 @@ function speedup_update(N,
     for np in allnp
         # Get the parallel timing
         # During setup, set matrix entries to zero while keeping  the structure
-        pgrid = partition(grid, Tp(; npart=np))
+        pgrid = partition(grid, Tp(; npart=np), nodes=true, keep_nodepermutation=true)
         @show num_partitions_per_color(pgrid)
         reset!(A, num_partitions(pgrid))
         testassemble_parallel!(A, pgrid)
@@ -171,7 +171,7 @@ function speedup_build(N,
     for np in allnp
         # Get the parallel timing
         # During setup, reset matrix to empty state.
-        pgrid = partition(grid, Tp(; npart=np))
+        pgrid = partition(grid, Tp(; npart=np), nodes=true, keep_nodepermutation=true)
         reset!(A, num_partitions(pgrid))
         @show num_partitions_per_color(pgrid)
         t = @belapsed testassemble_parallel!($A, $pgrid) seconds = 1 setup = (reset!($A,
@@ -198,7 +198,7 @@ function speedup_mul(N,
     result = []
     A = Tm(nnodes, nnodes, 1)
     for np in allnp
-        pgrid = partition(grid, Tp(; npart=np))
+        pgrid = partition(grid, Tp(; npart=np), nodes=true, keep_nodepermutation=true)
         @show num_partitions_per_color(pgrid)
         reset!(A, num_partitions(pgrid))
         testassemble_parallel!(A, pgrid)

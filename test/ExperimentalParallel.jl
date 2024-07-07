@@ -195,7 +195,7 @@ function partassemble!(A,X,Y,nt=1;d=0.1)
 end
 
 
-function partassemble!(A::Union{ExtendableSparseMatrixParallelDict,ExtendableSparseMatrixParallelLNKDict,ExtendableSparseMatrixParallelLNKX},X,Y,nt=1;d=0.1, reset=true)
+function partassemble!(A::Union{MTExtendableSparseMatrixCSC},X,Y,nt=1;d=0.1, reset=true)
     Nx=length(X)
     Ny=length(Y)
 

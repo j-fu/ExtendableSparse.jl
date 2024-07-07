@@ -1,7 +1,7 @@
 QUARRY
 docs/build
 *~
-Manifest.toml
+Manifest*.toml
 .repl_history
 quarry
 
