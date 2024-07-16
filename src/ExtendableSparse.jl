@@ -1,12 +1,17 @@
 module ExtendableSparse
-using SparseArrays,StaticArrays
-using LinearAlgebra
-using Sparspak
-using ILUZero
 
-if  !isdefined(Base, :get_extension)
-    using Requires
-end
+using DocStringExtensions: DocStringExtensions, SIGNATURES, TYPEDEF,TYPEDFIELDS
+using ILUZero: ILUZero, ldiv!, nnz
+using OhMyThreads: @tasks
+using LinearAlgebra: LinearAlgebra, Diagonal, Hermitian, Symmetric, Tridiagonal,
+    cholesky, cholesky!, convert, lu!, mul!, norm, transpose
+using SparseArrays: SparseArrays, AbstractSparseMatrix, SparseMatrixCSC,
+    dropzeros!, findnz, nzrange, sparse, spzeros
+using Sparspak: Sparspak, sparspaklu, sparspaklu!
+using StaticArrays: StaticArrays, SMatrix, SVector
+using SuiteSparse: SuiteSparse
+import SparseArrays: AbstractSparseMatrixCSC, rowvals, getcolptr, nonzeros
+
 
 # Define our own constant here in order to be able to
 # test things at least a little bit..
@@ -17,33 +22,33 @@ if USE_GPL_LIBS
 end
 
 
-using DocStringExtensions
-
-import SparseArrays: AbstractSparseMatrixCSC, rowvals, getcolptr, nonzeros
 
 include("matrix/sparsematrixcsc.jl")
+include("matrix/abstractsparsematrixextension.jl")
 include("matrix/sparsematrixlnk.jl")
+include("matrix/sparsematrixdilnkc.jl")
+include("matrix/abstractextendablesparsematrixcsc.jl")
 include("matrix/extendable.jl")
+include("matrix/genericmtextendablesparsematrixcsc.jl")
+include("matrix/genericextendablesparsematrixcsc.jl")
 
-export SparseMatrixLNK,
-       ExtendableSparseMatrix, flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse
+const ExtendableSparseMatrix=ExtendableSparseMatrixCSC
+const MTExtendableSparseMatrixCSC{Tv,Ti}=GenericMTExtendableSparseMatrixCSC{SparseMatrixDILNKC{Tv,Ti},Tv,Ti}
+MTExtendableSparseMatrixCSC(m,n,args...)=MTExtendableSparseMatrixCSC{Float64,Int64}(m,n,args...)
+
+const STExtendableSparseMatrixCSC{Tv,Ti}=GenericExtendableSparseMatrixCSC{SparseMatrixDILNKC{Tv,Ti},Tv,Ti}
+STExtendableSparseMatrixCSC(m,n,args...)=STExtendableSparseMatrixCSC{Float64,Int64}(m,n,args...)
+
+
+export ExtendableSparseMatrixCSC, MTExtendableSparseMatrixCSC, STExtendableSparseMatrixCSC, GenericMTExtendableSparseMatrixCSC
+export SparseMatrixLNK, ExtendableSparseMatrix,flush!, nnz, updateindex!, rawupdateindex!, colptrs, sparse, reset!, nnznew
+export partitioning!
 
 export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
 include("factorizations/factorizations.jl")
 
-export JacobiPreconditioner,
-    ILU0Preconditioner,
-    ILUZeroPreconditioner,
-    PointBlockILUZeroPreconditioner,
-    ParallelJacobiPreconditioner,
-    ParallelILU0Preconditioner,
-    BlockPreconditioner,allow_views,
-    reorderlinsys
-
-export AbstractFactorization, LUFactorization, CholeskyFactorization, SparspakLU
-export issolver
-export factorize!, update!
+include("experimental/Experimental.jl")
 
 include("factorizations/simple_iteration.jl")
 export simple, simple!
@@ -51,23 +56,22 @@ export simple, simple!
 include("matrix/sprand.jl")
 export sprand!, sprand_sdd!, fdrand, fdrand!, fdrand_coo, solverbenchmark
 
+export rawupdateindex!, updateindex!
 
-@static if  !isdefined(Base, :get_extension)
-    function __init__()
-        @require Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"  begin
-            include("../ext/ExtendableSparsePardisoExt.jl")
-        end
-        @require IncompleteLU = "40713840-3770-5561-ab4c-a76e7d0d7895"  begin
-            include("../ext/ExtendableSparseIncompleteLUExt.jl")
-        end
-        @require AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c" begin
-            include("../ext/ExtendableSparseAlgebraicMultigridExt.jl")
-        end
-        @require AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288" begin
-            include("../ext/ExtendableSparseAMGCLWrapExt.jl")
-        end
-    end
-end
+
+
+
+export JacobiPreconditioner,
+    ILU0Preconditioner,
+    ILUZeroPreconditioner,
+    PointBlockILUZeroPreconditioner,
+    ParallelJacobiPreconditioner,
+    ParallelILU0Preconditioner,
+    BlockPreconditioner,allow_views
+
+export AbstractFactorization, LUFactorization, CholeskyFactorization, SparspakLU
+export issolver
+export factorize!, update!
 
 """
 ```

@@ -13,6 +13,17 @@ Pages = ["sparsematrixlnk.jl"]
 Modules = [ExtendableSparse]
 Pages = ["sparsematrixcsc.jl"]
 ```
+## New API 
+Under development - aimed at multithreading
+```@autodocs
+Modules = [ExtendableSparse]
+Pages = ["abstractsparsematrixextension.jl",
+    "abstractextendablesparsematrixcsc.jl",
+    "sparsematrixdilnkc.jl",
+    "genericextendablesparsematrixcsc.jl",
+    "genericmtextendablesparsematrixcsc.jl"]
+```
+
 
 ## Misc methods
 

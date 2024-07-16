@@ -1,29 +1,15 @@
-
 """
-$(TYPEDEF)
-
-Struct to hold sparse matrix in the linked list format.
-
-Modeled after the linked list sparse matrix format described in 
-the  [whitepaper](https://www-users.cs.umn.edu/~saad/software/SPARSKIT/paper.ps)
-and the  [SPARSEKIT2 source code](https://www-users.cs.umn.edu/~saad/software/SPARSKIT/SPARSKIT2.tar.gz)
-by Y. Saad. He writes "This is one of the oldest data structures used for sparse matrix computations."
-
-The relevant source [formats.f](https://salsa.debian.org/science-team/sparskit/blob/master/FORMATS/formats.f)
-is also available in the debian/science gitlab.
-
-The advantage of the linked list structure is the fact that upon insertion
-of a new entry, the arrays describing the structure can grow at their respective ends and
-can be conveniently updated via `push!`.  No copying of existing data is necessary.
-
-$(TYPEDFIELDS)
-"""
-mutable struct SparseMatrixLNK{Tv, Ti <: Integer} <: AbstractSparseMatrixExtension{Tv, Ti}
+        $(TYPEDEF)
+    
+    Modification of SparseMatrixLNK where the pointer to first index of
+column j is stored in a dictionary.
     """
-    Number of rows
+mutable struct SparseMatrixDILNKC{Tv, Ti <: Integer} <: AbstractSparseMatrixExtension{Tv, Ti}
     """
+        Number of rows
+        """
     m::Ti
-
+    
     """
     Number of columns
     """
@@ -50,19 +36,19 @@ mutable struct SparseMatrixLNK{Tv, Ti <: Integer} <: AbstractSparseMatrixExtensi
     colptr::Vector{Ti}
 
     """
+    Dictionary to store start indices of columns
+    """
+    colstart::Dict{Ti,Ti}
+
+    """
     Row numbers. For each index it contains the zero (initial state)
     or the row numbers corresponding to the column entry list in colptr.
-
-    Initial length is n,
-    it grows with each new entry.
     """
     rowval::Vector{Ti}
 
     """
     Nonzero entry values correspondin to each pair
     (colptr[index],rowval[index])
-
-    Initial length is n,  it grows with each new entry.
     """
     nzval::Vector{Tv}
 end
@@ -72,8 +58,8 @@ $(SIGNATURES)
     
 Constructor of empty matrix.
 """
-function SparseMatrixLNK{Tv, Ti}(m, n) where {Tv, Ti <: Integer}
-    SparseMatrixLNK{Tv, Ti}(m, n, 0, n, zeros(Ti, n), zeros(Ti, n), zeros(Tv, n))
+function SparseMatrixDILNKC{Tv, Ti}(m, n) where {Tv, Ti <: Integer}
+    SparseMatrixDILNKC{Tv, Ti}(m, n, 0, 0,  zeros(Ti,10), Dict{Ti,Ti}(), zeros(Ti,10), zeros(Ti,10))
 end
 
 """
@@ -81,9 +67,9 @@ $(SIGNATURES)
     
 Constructor of empty matrix.
 """
-function SparseMatrixLNK(valuetype::Type{Tv}, indextype::Type{Ti}, m,
+function SparseMatrixDILNKC(valuetype::Type{Tv}, indextype::Type{Ti}, m,
                          n) where {Tv, Ti <: Integer}
-    SparseMatrixLNK{Tv, Ti}(m, n)
+    SparseMatrixDILNKC{Tv, Ti}(m, n)
 end
 
 """
@@ -91,14 +77,14 @@ $(SIGNATURES)
     
 Constructor of empty matrix.
 """
-SparseMatrixLNK(valuetype::Type{Tv}, m, n) where {Tv} = SparseMatrixLNK(Tv, Int, m, n)
+SparseMatrixDILNKC(valuetype::Type{Tv}, m, n) where {Tv} = SparseMatrixDILNKC(Tv, Int, m, n)
 
 """
 $(SIGNATURES)
     
 Constructor of empty matrix.
 """
-SparseMatrixLNK(m, n) = SparseMatrixLNK(Float64, m, n)
+SparseMatrixDILNKC(m, n) = SparseMatrixDILNKC(Float64, m, n)
 
 """
 $(SIGNATURES)
@@ -106,9 +92,9 @@ $(SIGNATURES)
 Constructor from SparseMatrixCSC.
 
 """
-function SparseMatrixLNK(csc::SparseArrays.SparseMatrixCSC{Tv, Ti}) where {Tv, Ti <:
+function SparseMatrixDILNKC(csc::SparseArrays.SparseMatrixCSC{Tv, Ti}) where {Tv, Ti <:
                                                                                Integer}
-    lnk = SparseMatrixLNK{Tv, Ti}(csc.m, csc.n)
+    lnk = SparseMatrixDILNKC{Tv, Ti}(csc.m, csc.n)
     for j = 1:(csc.n)
         for k = csc.colptr[j]:(csc.colptr[j + 1] - 1)
             lnk[csc.rowval[k], j] = csc.nzval[k]
@@ -117,13 +103,21 @@ function SparseMatrixLNK(csc::SparseArrays.SparseMatrixCSC{Tv, Ti}) where {Tv, T
     lnk
 end
 
-function findindex(lnk::SparseMatrixLNK{Tv,Ti}, i, j) where {Tv,Ti}
+"""
+$(SIGNATURES)
+    
+Find index in matrix.
+"""
+function findindex(lnk::SparseMatrixDILNKC, i, j)
     if !((1 <= i <= lnk.m) & (1 <= j <= lnk.n))
         throw(BoundsError(lnk, (i, j)))
     end
 
-    k::Ti = j
-    k0::Ti = j
+    k = get(lnk.colstart, j, 0)
+    if k==0
+        return 0,0
+    end
+    k0 = k
     while k > 0
         if lnk.rowval[k] == i
             return k, 0
@@ -139,7 +133,7 @@ $(SIGNATURES)
     
 Return value stored for entry or zero if not found
 """
-function Base.getindex(lnk::SparseMatrixLNK{Tv, Ti}, i, j) where {Tv, Ti}
+function Base.getindex(lnk::SparseMatrixDILNKC{Tv, Ti}, i, j) where {Tv, Ti}
     k, k0 = findindex(lnk, i, j)
     if k == 0
         return zero(Tv)
@@ -148,7 +142,12 @@ function Base.getindex(lnk::SparseMatrixLNK{Tv, Ti}, i, j) where {Tv, Ti}
     end
 end
 
-function addentry!(lnk::SparseMatrixLNK, i, j, k, k0)
+"""
+    $(SIGNATURES)
+
+Add entry.
+"""
+function addentry!(lnk::SparseMatrixDILNKC, i, j, k, k0)
     # increase number of entries
     lnk.nentries += 1
     if length(lnk.nzval) < lnk.nentries
@@ -157,14 +156,21 @@ function addentry!(lnk::SparseMatrixLNK, i, j, k, k0)
         resize!(lnk.rowval, newsize)
         resize!(lnk.colptr, newsize)
     end
+    
+    if k0==0
+        lnk.colstart[j]=lnk.nentries
+    end
 
     # Append entry if not found
     lnk.rowval[lnk.nentries] = i
 
     # Shift the end of the list
     lnk.colptr[lnk.nentries] = 0
-    lnk.colptr[k0] = lnk.nentries
 
+    if k0>0
+        lnk.colptr[k0] = lnk.nentries
+    end
+    
     # Update number of nonzero entries
     lnk.nnz += 1
     return lnk.nentries
@@ -175,17 +181,9 @@ $(SIGNATURES)
     
 Update value of existing entry, otherwise extend matrix if v is nonzero.
 """
-function Base.setindex!(lnk::SparseMatrixLNK, v, i, j)
+function Base.setindex!(lnk::SparseMatrixDILNKC, v, i, j)
     if !((1 <= i <= lnk.m) & (1 <= j <= lnk.n))
         throw(BoundsError(lnk, (i, j)))
-    end
-
-    # Set the first  column entry if it was not yet set.
-    if lnk.rowval[j] == 0 && !iszero(v)
-        lnk.rowval[j] = i
-        lnk.nzval[j] = v
-        lnk.nnz += 1
-        return lnk
     end
 
     k, k0 = findindex(lnk, i, j)
@@ -207,14 +205,7 @@ Update element of the matrix  with operation `op`.
 It assumes that `op(0,0)==0`. If `v` is zero, no new 
 entry is created.
 """
-function updateindex!(lnk::SparseMatrixLNK{Tv, Ti}, op, v, i, j) where {Tv, Ti}
-    # Set the first  column entry if it was not yet set.
-    if lnk.rowval[j] == 0 && !iszero(v)
-        lnk.rowval[j] = i
-        lnk.nzval[j] = op(lnk.nzval[j], v)
-        lnk.nnz += 1
-        return lnk
-    end
+function updateindex!(lnk::SparseMatrixDILNKC{Tv, Ti}, op, v, i, j) where {Tv, Ti}
     k, k0 = findindex(lnk, i, j)
     if k > 0
         lnk.nzval[k] = op(lnk.nzval[k], v)
@@ -234,14 +225,7 @@ Update element of the matrix  with operation `op`.
 It assumes that `op(0,0)==0`. If `v` is zero a new entry
 is created nevertheless.
 """
-function rawupdateindex!(lnk::SparseMatrixLNK{Tv, Ti}, op, v, i, j) where {Tv, Ti}
-    # Set the first  column entry if it was not yet set.
-    if lnk.rowval[j] == 0
-        lnk.rowval[j] = i
-        lnk.nzval[j] = op(lnk.nzval[j], v)
-        lnk.nnz += 1
-        return lnk
-    end
+function rawupdateindex!(lnk::SparseMatrixDILNKC{Tv, Ti}, op, v, i, j) where {Tv, Ti}
     k, k0 = findindex(lnk, i, j)
     if k > 0
         lnk.nzval[k] = op(lnk.nzval[k], v)
@@ -257,42 +241,62 @@ $(SIGNATURES)
 
 Return tuple containing size of the matrix.
 """
-Base.size(lnk::SparseMatrixLNK) = (lnk.m, lnk.n)
+Base.size(lnk::SparseMatrixDILNKC) = (lnk.m, lnk.n)
 
 """
 $(SIGNATURES)
 
 Return number of nonzero entries.
 """
-SparseArrays.nnz(lnk::SparseMatrixLNK) = lnk.nnz
+SparseArrays.nnz(lnk::SparseMatrixDILNKC) = lnk.nnz
+
 
 """
-$(SIGNATURES)
-
-Dummy flush! method for SparseMatrixLNK. Just
-used in test methods
+    $(SIGNATURES)
+Add lnk and csc via interim COO (coordinate) format, i.e. arrays I,J,V.
 """
-function flush!(lnk::SparseMatrixLNK{Tv, Ti}) where {Tv, Ti}
-    return lnk
+function add_via_COO(lnk::SparseMatrixDILNKC{Tv, Ti},
+                     csc::SparseMatrixCSC)::SparseMatrixCSC where {Tv, Ti <: Integer}
+    (;colptr,nzval,rowval,m,n)=csc
+    l=nnz(lnk)+nnz(csc)
+    I=Vector{Ti}(undef,l)
+    J=Vector{Ti}(undef,l)
+    V=Vector{Tv}(undef,l)
+    i=1
+    if nnz(csc)>0
+        for icsc=1:length(colptr)-1
+            for j=colptr[icsc]:colptr[icsc+1]-1
+                I[i]=icsc
+                J[i]=rowval[j]
+                V[i]=nzval[j]
+                i=i+1
+            end            
+        end
+    end
+    for (j,k) in lnk.colstart
+        while k>0
+            I[i]=lnk.rowval[k]
+            J[i]=j
+            V[i]=lnk.nzval[k]
+            k=lnk.colptr[k]
+            i=i+1
+        end
+    end
+    @static if VERSION>=v"1.10"
+        return SparseArrays.sparse!(I,J,V,m,n,+)
+    else
+        return SparseArrays.sparse(I,J,V,m,n,+)
+    end
 end
 
-# Struct holding pair of value and row
-# number, for sorting
-mutable struct ColEntry{Tv, Ti <: Integer}
-    rowval::Ti
-    nzval::Tv
-end
-
-# Comparison method for sorting
-Base.isless(x::ColEntry, y::ColEntry) = (x.rowval < y.rowval)
 
 """
-$(SIGNATURES)
-
-Add SparseMatrixCSC matrix and [`SparseMatrixLNK`](@ref)  lnk, returning a SparseMatrixCSC
+    $(SIGNATURES)
+Add lnk and csc without creation of intermediate data.
+(to be fixed)
 """
-function Base.:+(lnk::SparseMatrixLNK{Tv, Ti},
-                 csc::SparseMatrixCSC)::SparseMatrixCSC where {Tv, Ti <: Integer}
+function add_directly(lnk::SparseMatrixDILNKC{Tv, Ti},
+                      csc::SparseMatrixCSC)::SparseMatrixCSC where {Tv, Ti <: Integer}
     @assert(csc.m==lnk.m)
     @assert(csc.n==lnk.n)
 
@@ -305,9 +309,8 @@ function Base.:+(lnk::SparseMatrixLNK{Tv, Ti},
 
     # Detect the maximum column length of lnk
     lnk_maxcol = 0
-    for j = 1:(csc.n)
+    for (j,k) in lnk.colstart
         lcol = zero(Ti)
-        k = j
         while k > 0
             lcol += 1
             k = lnk.colptr[k]
@@ -327,7 +330,7 @@ function Base.:+(lnk::SparseMatrixLNK{Tv, Ti},
     # loop over all columns
     for j = 1:(csc.n)
         # Copy extension entries into col and sort them
-        k = j
+        k = get(lnk.colstart, j, 0)
         l_lnk_col = 0
         while k > 0
             if lnk.rowval[k] > 0
@@ -376,35 +379,94 @@ function Base.:+(lnk::SparseMatrixLNK{Tv, Ti},
         end
     end
     colptr[csc.n + 1] = inz
-    # Julia 1.7 wants this correct
     resize!(rowval, inz - 1)
     resize!(nzval, inz - 1)
     SparseMatrixCSC{Tv, Ti}(csc.m, csc.n, colptr, rowval, nzval)
 end
 
-Base.:+(csc::SparseMatrixCSC, lnk::SparseMatrixLNK) = lnk + csc
+
+
+"""
+    $(SIGNATURES)
+
+Add SparseMatrixCSC matrix and [`SparseMatrixDILNKC`](@ref)  lnk, returning a SparseMatrixCSC
+"""
+#Base.:+(lnk::SparseMatrixDILNKC, csc::SparseMatrixCSC) = add_directly(lnk, csc)
+Base.:+(lnk::SparseMatrixDILNKC, csc::SparseMatrixCSC) = sum([lnk],csc)
+
+function Base.sum(lnkdictmatrices::Vector{SparseMatrixDILNKC{Tv,Ti}}, cscmatrix::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}
+    lnew=sum(nnz,lnkdictmatrices)
+    if lnew>0
+        (;colptr,nzval,rowval,m,n)=cscmatrix
+        l=lnew+nnz(cscmatrix)
+        I=Vector{Ti}(undef,l)
+        J=Vector{Ti}(undef,l)
+        V=Vector{Tv}(undef,l)
+        i=1
+        
+        for icsc=1:length(colptr)-1
+            for j=colptr[icsc]:colptr[icsc+1]-1
+                I[i]=rowval[j]
+                J[i]=icsc
+                V[i]=nzval[j]
+                i=i+1
+            end            
+        end
+
+        for lnk in lnkdictmatrices
+            for (j,k) in lnk.colstart
+                while k>0
+                    I[i]=lnk.rowval[k]
+                    J[i]=j
+                    V[i]=lnk.nzval[k]
+                    k=lnk.colptr[k]
+                    i=i+1
+                end
+            end
+        end
+        @assert l==i-1
+        @static if VERSION>=v"1.10"
+            return SparseArrays.sparse!(I,J,V,m,n,+)
+        else
+            return SparseArrays.sparse(I,J,V,m,n,+)
+        end
+    end
+    return cscmatrix
+end
+        
+function reset!(m::SparseMatrixDILNKC{Tv,Ti}) where {Tv,Ti}
+    m.nnz=0
+    m.nentries=0
+    m.colptr=zeros(Ti,10)
+    m.colstart::Dict{Ti,Ti}
+    m.rowval=zeros(Ti,10)
+    m.nzval=zeros(Ti,10)
+    m
+end
+
 
 """
 $(SIGNATURES)
     
-Constructor from SparseMatrixLNK.
+Constructor from SparseMatrixDILNKC.
 
 """
-function SparseArrays.SparseMatrixCSC(lnk::SparseMatrixLNK)::SparseMatrixCSC
+function SparseArrays.SparseMatrixCSC(lnk::SparseMatrixDILNKC)::SparseMatrixCSC
     csc = spzeros(lnk.m, lnk.n)
     lnk + csc
 end
 
-rowvals(S::SparseMatrixLNK) = getfield(S, :rowval)
-getcolptr(S::SparseMatrixLNK) = getfield(S, :colptr)
-nonzeros(S::SparseMatrixLNK) = getfield(S, :nzval)
+function SparseArrays.sparse(lnk::SparseMatrixDILNKC)
+    lnk + spzeros(lnk.m, lnk.n)
+end
 
-function Base.copy(S::SparseMatrixLNK)
-    SparseMatrixLNK(size(S, 1),
-                    size(S, 2),
-                    S.nnz,
-                    S.nentries,
-                    copy(getcolptr(S)),
-                    copy(rowvals(S)),
-                    copy(nonzeros(S)))
+function Base.copy(S::SparseMatrixDILNKC)
+    SparseMatrixDILNKC(size(S, 1),
+                        size(S, 2),
+                        S.nnz,
+                        S.nentries,
+                        copy(S.colptr),
+                        copy(S.colstart),
+                        copy(S.rowvals),
+                        copy(S.nzval))
 end

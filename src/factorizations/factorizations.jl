@@ -51,6 +51,48 @@ Determine if factorization is a solver or not
 issolver(::AbstractLUFactorization) = true
 issolver(::AbstractPreconditioner) = false
 
+
+
+""""
+    @makefrommatrix(fact)
+
+For an AbstractFactorization `MyFact`, provide methods
+```
+    MyFact(A::ExtendableSparseMatrix; kwargs...)
+    MyFact(A::SparseMatrixCSC; kwargs...)
+```
+"""
+macro makefrommatrix(fact)
+    return quote
+        function $(esc(fact))(A::ExtendableSparseMatrix; kwargs...)
+            factorize!($(esc(fact))(;kwargs...), A)
+        end
+        function $(esc(fact))(A::SparseMatrixCSC; kwargs...)
+            $(esc(fact))(ExtendableSparseMatrix(A); kwargs...)
+        end
+    end
+end
+
+include("ilu0.jl")
+include("iluzero.jl")
+include("parallel_jacobi.jl")
+include("parallel_ilu0.jl")
+include("sparspak.jl")
+include("blockpreconditioner.jl")
+include("jacobi.jl")
+
+@eval begin
+    @makefrommatrix ILU0Preconditioner
+    @makefrommatrix ILUZeroPreconditioner
+    @makefrommatrix PointBlockILUZeroPreconditioner
+    @makefrommatrix JacobiPreconditioner
+    @makefrommatrix ParallelJacobiPreconditioner
+    @makefrommatrix ParallelILU0Preconditioner
+    @makefrommatrix SparspakLU
+    @makefrommatrix UpdateteableBlockpreconditioner
+    @makefrommatrix BlockPreconditioner
+end
+
 """
 ```
 factorize!(factorization, matrix)
@@ -64,9 +106,9 @@ function factorize!(p::AbstractFactorization, A::ExtendableSparseMatrix)
     update!(p)
     p
 end
-
-
 factorize!(p::AbstractFactorization, A::SparseMatrixCSC)=factorize!(p,ExtendableSparseMatrix(A))
+
+
 """
 ```
 lu!(factorization, matrix)
@@ -134,45 +176,6 @@ LinearAlgebra.ldiv!(fact::AbstractFactorization, v) = ldiv!(fact.factorization, 
 
 
 
-""""
-    @makefrommatrix(fact)
-
-For an AbstractFactorization `MyFact`, provide methods
-```
-    MyFact(A::ExtendableSparseMatrix; kwargs...)
-    MyFact(A::SparseMatrixCSC; kwargs...)
-```
-"""
-macro makefrommatrix(fact)
-    return quote
-        function $(esc(fact))(A::ExtendableSparseMatrix; kwargs...)
-            factorize!($(esc(fact))(;kwargs...), A)
-        end
-        function $(esc(fact))(A::SparseMatrixCSC; kwargs...)
-            $(esc(fact))(ExtendableSparseMatrix(A); kwargs...)
-        end
-    end
-end
-
-include("jacobi.jl")
-include("ilu0.jl")
-include("iluzero.jl")
-include("parallel_jacobi.jl")
-include("parallel_ilu0.jl")
-include("sparspak.jl")
-include("blockpreconditioner.jl")
-
-@eval begin
-    @makefrommatrix ILU0Preconditioner
-    @makefrommatrix ILUZeroPreconditioner
-    @makefrommatrix PointBlockILUZeroPreconditioner
-    @makefrommatrix JacobiPreconditioner
-    @makefrommatrix ParallelJacobiPreconditioner
-    @makefrommatrix ParallelILU0Preconditioner
-    @makefrommatrix SparspakLU
-    @makefrommatrix UpdateteableBlockpreconditioner
-    @makefrommatrix BlockPreconditioner
-end
 
 if USE_GPL_LIBS
     #requires SuiteSparse which is not available in non-GPL builds
