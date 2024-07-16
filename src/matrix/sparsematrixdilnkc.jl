@@ -103,6 +103,11 @@ function SparseMatrixDILNKC(csc::SparseArrays.SparseMatrixCSC{Tv, Ti}) where {Tv
     lnk
 end
 
+"""
+$(SIGNATURES)
+    
+Find index in matrix.
+"""
 function findindex(lnk::SparseMatrixDILNKC, i, j)
     if !((1 <= i <= lnk.m) & (1 <= j <= lnk.n))
         throw(BoundsError(lnk, (i, j)))
@@ -137,6 +142,11 @@ function Base.getindex(lnk::SparseMatrixDILNKC{Tv, Ti}, i, j) where {Tv, Ti}
     end
 end
 
+"""
+    $(SIGNATURES)
+
+Add entry.
+"""
 function addentry!(lnk::SparseMatrixDILNKC, i, j, k, k0)
     # increase number of entries
     lnk.nentries += 1
