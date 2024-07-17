@@ -2,7 +2,7 @@ using Test
 using LinearAlgebra
 using SparseArrays
 using ExtendableSparse
-using ExtendableSparse.Experimental
+#using ExtendableSparse.Experimental
 using Printf
 using BenchmarkTools
 
@@ -11,8 +11,8 @@ using ForwardDiff
 using ExplicitImports
 
 @testset "ExplicitImports" begin
-    @test ExplicitImports.check_no_implicit_imports(ExtendableSparse, allow_unanalyzable=(ExtendableSparse.Experimental,)) === nothing
-    @test ExplicitImports.check_no_stale_explicit_imports(ExtendableSparse, allow_unanalyzable=(ExtendableSparse.Experimental,)) === nothing
+    @test ExplicitImports.check_no_implicit_imports(ExtendableSparse) === nothing
+    @test ExplicitImports.check_no_stale_explicit_imports(ExtendableSparse) === nothing
 end
 
 @testset "Parallel" begin
@@ -33,14 +33,14 @@ end
     end
 end
 
-@testset "ExperimentalParallel" begin
-    include("ExperimentalParallel.jl")
-    for d=[1,2,3]
-        for N in [10,rand(30:40),50]
-            ExperimentalParallel.test_correctness_build(N,d)
-        end
-    end
-end
+# @testset "ExperimentalParallel" begin
+#     include("ExperimentalParallel.jl")
+#     for d=[1,2,3]
+#         for N in [10,rand(30:40),50]
+#             ExperimentalParallel.test_correctness_build(N,d)
+#         end
+#     end
+# end
 
 
 @testset "Constructors" begin include("test_constructors.jl") end

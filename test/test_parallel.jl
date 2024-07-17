@@ -1,6 +1,7 @@
 module test_parallel
 
-using ExtendableSparse, SparseArrays, ExtendableSparse.Experimental
+using ExtendableSparse, SparseArrays
+# using ExtendableSparse.Experimental
 using BenchmarkTools
 using ExtendableGrids
 #using MKLSparse

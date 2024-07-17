@@ -1,8 +1,6 @@
 module ExtendableSparseIncompleteLUExt
-
 using ExtendableSparse
-
-isdefined(Base, :get_extension) ? using IncompleteLU : using ..IncompleteLU
+using IncompleteLU 
 
 import ExtendableSparse: @makefrommatrix, AbstractPreconditioner, update!
 

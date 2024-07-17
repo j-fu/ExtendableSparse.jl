@@ -1,8 +1,6 @@
 module ExtendableSparseAMGCLWrapExt
-
 using ExtendableSparse
-
-isdefined(Base, :get_extension) ? using AMGCLWrap : using ..AMGCLWrap
+using AMGCLWrap
 
 import ExtendableSparse: @makefrommatrix, AbstractPreconditioner, update!
 

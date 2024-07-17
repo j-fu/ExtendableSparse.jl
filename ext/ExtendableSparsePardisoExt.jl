@@ -1,8 +1,7 @@
 module ExtendableSparsePardisoExt
 using ExtendableSparse
 using LinearAlgebra
-
-isdefined(Base, :get_extension) ? using Pardiso : using ..Pardiso
+using Pardiso
 
 import ExtendableSparse: @makefrommatrix, update!, AbstractLUFactorization
 

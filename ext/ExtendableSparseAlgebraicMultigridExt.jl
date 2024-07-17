@@ -1,8 +1,6 @@
 module ExtendableSparseAlgebraicMultigridExt
-
 using ExtendableSparse
-
-isdefined(Base, :get_extension) ? using AlgebraicMultigrid : using ..AlgebraicMultigrid
+using AlgebraicMultigrid
 
 import ExtendableSparse: @makefrommatrix, AbstractPreconditioner, update!
 

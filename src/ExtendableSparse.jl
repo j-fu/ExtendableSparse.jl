@@ -48,7 +48,7 @@ export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
 include("factorizations/factorizations.jl")
 
-include("experimental/Experimental.jl")
+#include("experimental/Experimental.jl")
 
 include("factorizations/simple_iteration.jl")
 export simple, simple!
