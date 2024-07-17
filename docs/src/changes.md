@@ -1,4 +1,11 @@
 # Changes
+
+## v1.5, July 17, 2024
+- Multithreading
+
+## v1.4, Jan 25, 2024
+- Dirichlet elimination
+
 ## v1.3, Jan 16, 2024
 - AMGCLWrap extension, renamed AMGPreconditioner to RS_AMGPreconditioner
 - muted Pardiso
