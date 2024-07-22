@@ -9,7 +9,6 @@ using ExtendableSparse:  AbstractExtendableSparseMatrixCSC, AbstractSparseMatrix
 using DocStringExtensions
 using Metis
 using Base.Threads
-using OhMyThreads: @tasks
 import ExtendableSparse: factorize!, update!, partitioning!
 
 include(joinpath(@__DIR__, "ExtendableSparseMatrixParallel", "ExtendableSparseParallel.jl"))

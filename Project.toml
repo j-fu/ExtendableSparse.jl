@@ -1,14 +1,13 @@
 name = "ExtendableSparse"
 uuid = "95c220a8-a1cf-11e9-0c77-dbfce5f500b3"
 authors = ["Juergen Fuhrmann <juergen.fuhrmann@wias-berlin.de>"]
-version = "1.5.0"
+version = "1.5.1"
 
 [deps]
 AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 ILUZero = "88f59080-6952-5380-9ea5-54057fb9a43f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-OhMyThreads = "67456a42-1dca-4109-a031-0a68de7e3ad5"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
@@ -34,7 +33,6 @@ AlgebraicMultigrid = "0.4,0.5,0.6"
 DocStringExtensions = "0.8, 0.9"
 ILUZero = "0.2"
 IncompleteLU = "^0.2.1"
-OhMyThreads = "0.5.3"
 Pardiso = "0.5.1"
 Sparspak = "0.3.6"
 StaticArrays = "1.5.24"

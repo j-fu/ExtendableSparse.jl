@@ -131,7 +131,7 @@ function LinearAlgebra.mul!(r, ext::GenericMTExtendableSparseMatrixCSC, x)
     r.=zero(eltype(ext))
     m,n=size(A)
     for icol=1:length(colparts)-1
-        @tasks for ip in colparts[icol]:colparts[icol+1]-1
+        Threads.@threads for ip in colparts[icol]:colparts[icol+1]-1
             @inbounds for inode in  partnodes[ip]:partnodes[ip+1]-1
                 @inbounds for i in nzrange(A,inode)
                     r[rows[i]]+=vals[i]*x[inode]

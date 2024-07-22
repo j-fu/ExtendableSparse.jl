@@ -2,7 +2,6 @@ module ExtendableSparse
 
 using DocStringExtensions: DocStringExtensions, SIGNATURES, TYPEDEF,TYPEDFIELDS
 using ILUZero: ILUZero, ldiv!, nnz
-using OhMyThreads: @tasks
 using LinearAlgebra: LinearAlgebra, Diagonal, Hermitian, Symmetric, Tridiagonal,
     cholesky, cholesky!, convert, lu!, mul!, norm, transpose
 using SparseArrays: SparseArrays, AbstractSparseMatrix, SparseMatrixCSC,

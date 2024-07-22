@@ -49,7 +49,7 @@ function update!(precon::BlockPreconditioner)
 
     np=length(precon.partitioning)
     precon.facts=Vector{Any}(undef,np)
-    @tasks for ipart=1:np
+    Threads.@threads for ipart=1:np
         factorization=deepcopy(precon.factorization)
         AP=precon.A[precon.partitioning[ipart],precon.partitioning[ipart]]
         FP=factorization(AP)
@@ -66,11 +66,11 @@ function LinearAlgebra.ldiv!(p::BlockPreconditioner,v)
     np=length(partitioning)
 
     if allow_views(p.factorization)
-        @tasks for ipart=1:np
+        Threads.@threads for ipart=1:np
 	    ldiv!(facts[ipart],view(v,partitioning[ipart]))
         end
     else
-        @tasks for ipart=1:np
+        Threads.@threads for ipart=1:np
             vv=v[partitioning[ipart]]
 	    ldiv!(facts[ipart],vv)
             view(v,partitioning[ipart]).=vv
@@ -83,13 +83,12 @@ function LinearAlgebra.ldiv!(u,p::BlockPreconditioner,v)
     partitioning=p.partitioning
     facts=p.facts
     np=length(partitioning)
-    
-    if allow_views(p.factorization)
-        @tasks for ipart=1:np
+    if allow_views(p.factorization) 
+        Threads.@threads for ipart=1:np
 	    ldiv!(view(u,partitioning[ipart]),facts[ipart],view(v,partitioning[ipart]))
         end
     else
-        @tasks for ipart=1:np
+        Threads.@threads for ipart=1:np
             uu=u[partitioning[ipart]]
 	    ldiv!(uu,facts[ipart],v[partitioning[ipart]])
             view(u,partitioning[ipart]).=uu
